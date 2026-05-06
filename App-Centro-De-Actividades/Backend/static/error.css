@@ -1,0 +1,64 @@
+/* error.css */
+
+/* Estilo básico del cuerpo de la página */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #e74c3c;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Contenedor principal del error */
+.error-container {
+    text-align: center;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 400px;
+    width: 90%;
+}
+
+/* Estilo del código de error */
+.error-code {
+    font-size: 80px;
+    font-weight: bold;
+    color: #e74c3c; /* Rojo intenso para el código de error */
+    margin-bottom: 10px;
+}
+
+/* Estilo del mensaje de error */
+.error-message {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Estilo de los detalles del error */
+.error-details {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+/* Contenedor del enlace */
+.link-container {
+    margin-top: 20px;
+}
+
+/* Estilo del enlace */
+.more-link {
+    text-decoration: none;
+    color: #3498db; /* Azul para el enlace */
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.more-link:hover {
+    color: #2980b9; /* Azul más oscuro en el hover */
+}
