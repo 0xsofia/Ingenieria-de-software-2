@@ -1,7 +1,8 @@
 from flask import Blueprint
 
-login_bp = Blueprint("auths", __name__, url_prefix="/auths")
+login_bp = Blueprint("login", __name__, url_prefix="/api")
 
 
 @login_bp.route("/login", methods=["GET", "POST"])
-def index(): ...
+def index():
+    return "tests"

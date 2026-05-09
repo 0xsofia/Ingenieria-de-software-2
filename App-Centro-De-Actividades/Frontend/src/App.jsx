@@ -1,11 +1,25 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
+import { iniciarSesion } from './api/iniciar_sesion'
 import './App.css'
 
 function App() {
   const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    async function cargarLogin() {
+      try {
+        const result = await iniciarSesion()
+        console.log(result)
+      } catch (error) {
+        console.error(error)
+      }
+    }
+
+    cargarLogin()
+  }, [])
 
   return (
     <>
