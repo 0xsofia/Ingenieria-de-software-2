@@ -1,7 +1,14 @@
-from flask_sqlalchemy import SQLAlchemy
+from pathlib import Path
 
+import click
+from alembic import command
+from alembic.config import Config
+from alembic.script import ScriptDirectory
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 
 db = SQLAlchemy()
+
 
 def init_app(app):
     """Inicializar la base de datos."""
@@ -10,22 +17,49 @@ def init_app(app):
 
     return app
 
+
 def config(app):
     """Cerrar la session de la base de datos al finalizar el contexto de la app"""
+
     @app.teardown_appcontext
     def close_session(exception=None):
         db.session.close()
+
     return app
 
+
 def reset():
-    """Resetea la base de datos"""
-    print("Eliminando la base de datos")
-    db.drop_all()
-    print("Creando la base de datos")
-    db.create_all()
-    print("Finalizacion del reset de la base de datos!")
+    """Recrea el schema local y aplica todas las migraciones."""
+    alembic_config = _get_alembic_config()
+    heads = ScriptDirectory.from_config(alembic_config).get_heads()
+
+    if len(heads) > 1:
+        raise click.ClickException(
+            "Se detectaron multiples heads de Alembic. "
+            "Primero ejecuta `poetry run alembic heads`, luego resuelvelo con "
+            "`poetry run alembic merge heads -m \"merge migration heads\"` y "
+            "finalmente corre de nuevo `flask reset-db`."
+        )
+
+    click.echo("Eliminando schema public...")
+    db.session.remove()
+
+    with db.engine.begin() as connection:
+        connection.execute(text("DROP SCHEMA IF EXISTS public CASCADE"))
+        connection.execute(text("CREATE SCHEMA public"))
+
+    click.echo("Aplicando migraciones hasta head...")
+    command.upgrade(alembic_config, "head")
+    click.echo("Finalizacion del reset de la base de datos!")
+
+
+def _get_alembic_config():
+    backend_root = Path(__file__).resolve().parents[2]
+    alembic_ini_path = backend_root / "alembic.ini"
+    alembic_config = Config(str(alembic_ini_path))
+    alembic_config.set_main_option("script_location", str(backend_root / "alembic"))
+    return alembic_config
+
 
 def init():
     """Inicializa la base de datos"""
-
-    
