@@ -5,8 +5,8 @@ import {
   iniciarSesion,
   obtenerSesionActual,
   seleccionarRolDeSesion,
-} from './api/iniciar_sesion'
-import './App.css'
+} from '../api/iniciar_sesion'
+import '../App.css'
 
 const INITIAL_FORM = {
   email: '',
@@ -30,7 +30,7 @@ const ROLE_CONTENT = {
   },
 }
 
-function App() {
+function LoginPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState(INITIAL_FORM)
   const [fieldErrors, setFieldErrors] = useState({})
@@ -52,7 +52,7 @@ function App() {
         }
 
         if (result.authenticated) {
-          redirectToHome(navigate, result.session, '/inicio')
+          redirectToHome(navigate, result.redirect_to || '/inicio')
           return
         }
 
@@ -119,7 +119,7 @@ function App() {
         return
       }
 
-      redirectToHome(navigate, result.session, result.redirect_to)
+      redirectToHome(navigate, result.redirect_to)
     } catch (error) {
       applyApiError(error, setFieldErrors, setRequestError)
     } finally {
@@ -133,7 +133,7 @@ function App() {
 
     try {
       const result = await seleccionarRolDeSesion({ role })
-      redirectToHome(navigate, result.session, result.redirect_to)
+      redirectToHome(navigate, result.redirect_to)
     } catch (error) {
       applyApiError(error, setFieldErrors, setRequestError)
     } finally {
@@ -259,13 +259,10 @@ function applyApiError(error, setFieldErrors, setRequestError) {
   setRequestError(error?.data?.message || 'No se pudo iniciar la sesión.')
 }
 
-function redirectToHome(navigate, sessionData, redirectTo) {
+function redirectToHome(navigate, redirectTo) {
   startTransition(() => {
-    navigate(redirectTo || '/inicio', {
-      replace: true,
-      state: { session: sessionData },
-    })
+    navigate(redirectTo || '/inicio', { replace: true })
   })
 }
 
-export default App
+export default LoginPage

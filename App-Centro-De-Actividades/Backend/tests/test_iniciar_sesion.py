@@ -11,6 +11,7 @@ from src.core.models.persona import (
     RolPermisoPuente,
     Socio,
 )
+from src.core.seeds.usuarios import USERS_TO_SEED, seed_usuarios
 from src.web import create_app
 
 
@@ -174,6 +175,45 @@ class IniciarSesionTestCase(unittest.TestCase):
         self.assertTrue(allowed_response.json["authorized"])
         self.assertEqual(denied_response.status_code, 200)
         self.assertFalse(denied_response.json["authorized"])
+
+    def test_seed_usuarios_crea_los_tres_accesos_basicos(self):
+        seed_usuarios()
+
+        self.assertEqual(Persona.query.count(), 3)
+
+        for user_data in USERS_TO_SEED:
+            response = self.client.post(
+                "/api/login",
+                json={"email": user_data["email"], "password": "1234"},
+            )
+
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json["status"], "authenticated")
+
+    def test_cli_seed_db_puebla_usuarios_si_schema_esta_preparado(self):
+        runner = self.app.test_cli_runner()
+
+        result = runner.invoke(args=["seed_db"])
+
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(Persona.query.count(), 3)
+
+        response = self.client.post(
+            "/api/login",
+            json={"email": "admin@centro.test", "password": "1234"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["session"]["role"], "administrador")
+
+    def test_cli_seed_db_falla_si_schema_no_esta_preparado(self):
+        db.drop_all()
+        runner = self.app.test_cli_runner()
+
+        result = runner.invoke(args=["seed_db"])
+
+        self.assertNotEqual(result.exit_code, 0)
+        self.assertIn("Primero ejecuta `flask reset-db`", result.output)
 
     def _crear_persona(
         self,
