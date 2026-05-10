@@ -19,7 +19,7 @@ def create_app(env="development", static_folder="../../static"):
 
     bcrypt.init_app(app)
     session.init_app(app) 
-    CORS(app)
+    CORS(app, supports_credentials=True)
     cipher.init_app(app)
 
     @app.route("/")

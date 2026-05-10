@@ -1,3 +1,6 @@
 export const endpoints = {
-  login: `${import.meta.env.VITE_API_URL}/login`,
+  login: '/api/login',
+  selectLoginRole: '/api/login/select-role',
+  currentSession: '/api/login/session',
+  authorizePermission: '/api/login/authorize',
 }

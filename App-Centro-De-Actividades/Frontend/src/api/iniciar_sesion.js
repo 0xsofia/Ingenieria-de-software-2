@@ -1,11 +1,22 @@
 import { endpoints } from '../services/api'
+import { http } from './http'
 
-export async function iniciarSesion() {
-  const response = await fetch(endpoints.login)
+export async function iniciarSesion(payload) {
+  const { data } = await http.post(endpoints.login, payload)
+  return data
+}
 
-  if (!response.ok) {
-    throw new Error(`Error al llamar login: ${response.status}`)
-  }
+export async function seleccionarRolDeSesion(payload) {
+  const { data } = await http.post(endpoints.selectLoginRole, payload)
+  return data
+}
 
-  return response.text()
+export async function obtenerSesionActual() {
+  const { data } = await http.get(endpoints.currentSession)
+  return data
+}
+
+export async function autorizarPermiso(payload) {
+  const { data } = await http.post(endpoints.authorizePermission, payload)
+  return data
 }

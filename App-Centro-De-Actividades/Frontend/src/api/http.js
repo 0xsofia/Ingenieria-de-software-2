@@ -1,7 +1,20 @@
-import axios from "axios";
-import router from "@/router";
+import axios from 'axios'
+
+const baseURL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+
 export const http = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL,
   timeout: 10000,
   withCredentials: true,
-});
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
+
+http.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    error.data = error.response?.data
+    return Promise.reject(error)
+  },
+)

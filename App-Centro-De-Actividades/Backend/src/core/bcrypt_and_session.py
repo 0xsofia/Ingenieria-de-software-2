@@ -16,9 +16,15 @@ class Cipher:
             self.init_app(app)
 
     def init_app(self, app):
-        key = base64.urlsafe_b64decode(app.config["FERNET_KEY"])
+        configured_key = app.config["FERNET_KEY"]
+        if isinstance(configured_key, str):
+            configured_key = configured_key.encode("utf-8")
 
-        self.fernet = Fernet(key)
+        try:
+            self.fernet = Fernet(configured_key)
+        except (TypeError, ValueError):
+            decoded_key = base64.urlsafe_b64decode(configured_key)
+            self.fernet = Fernet(decoded_key)
 
         app.cipher = self
 

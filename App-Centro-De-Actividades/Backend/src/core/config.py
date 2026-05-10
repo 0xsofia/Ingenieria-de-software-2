@@ -1,15 +1,17 @@
 from os import environ
-from os import environ
 from dotenv import load_dotenv
 from datetime import timedelta
+from cryptography.fernet import Fernet
 
 load_dotenv(dotenv_path='.env')
 
 class Config(object):
     TESTING = False
+    SECRET_KEY = environ.get('SECRET_KEY', 'development-secret-key')
     SESSION_TYPE= "filesystem"
     SESSION_PERMANENT= True
     PERMANENT_SESSION_LIFETIME = timedelta(hours=1)
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     
 class ProductionConfig(Config):
     ...
@@ -27,6 +29,8 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    FERNET_KEY = Fernet.generate_key().decode('utf-8')
 
 config = {
     "development" : DevelopmentConfig,
