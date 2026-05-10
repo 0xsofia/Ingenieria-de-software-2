@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom'
 
+import AuthenticatedLayout from '../components/AuthenticatedLayout.jsx'
 import InicioPage from '../pages/InicioPage.jsx'
 import LoginPage from '../pages/LoginPage.jsx'
 
@@ -13,8 +14,13 @@ const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    path: '/inicio',
-    element: <InicioPage />,
+    element: <AuthenticatedLayout />,
+    children: [
+      {
+        path: '/inicio',
+        element: <InicioPage />,
+      },
+    ],
   },
 ])
 

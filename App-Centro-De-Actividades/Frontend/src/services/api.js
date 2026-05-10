@@ -3,4 +3,5 @@ export const endpoints = {
   selectLoginRole: '/api/login/select-role',
   currentSession: '/api/login/session',
   authorizePermission: '/api/login/authorize',
+  logout: '/api/session/logout',
 }

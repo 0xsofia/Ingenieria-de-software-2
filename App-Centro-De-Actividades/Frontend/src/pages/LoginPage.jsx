@@ -30,6 +30,24 @@ const ROLE_CONTENT = {
   },
 }
 
+const TEST_CREDENTIALS = [
+  {
+    role: 'Administrador',
+    email: 'admin@centro.test',
+    password: '1234',
+  },
+  {
+    role: 'Empleado',
+    email: 'empleado@centro.test',
+    password: '1234',
+  },
+  {
+    role: 'Socio',
+    email: 'socio@centro.test',
+    password: '1234',
+  },
+]
+
 function LoginPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState(INITIAL_FORM)
@@ -191,37 +209,60 @@ function LoginPage() {
               </div>
             </section>
           ) : (
-            <form className="auth-form" onSubmit={handleSubmit} noValidate>
-              <label className="field">
-                <span>Usuario</span>
-                <input
-                  autoComplete="email"
-                  name="email"
-                  type="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  aria-invalid={fieldErrors.email ? 'true' : 'false'}
-                />
-                {fieldErrors.email ? <small>{fieldErrors.email}</small> : null}
-              </label>
+            <>
+              <form className="auth-form" onSubmit={handleSubmit} noValidate>
+                <label className="field">
+                  <span>Usuario</span>
+                  <input
+                    autoComplete="email"
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    aria-invalid={fieldErrors.email ? 'true' : 'false'}
+                  />
+                  {fieldErrors.email ? <small>{fieldErrors.email}</small> : null}
+                </label>
 
-              <label className="field">
-                <span>Contraseña</span>
-                <input
-                  autoComplete="current-password"
-                  name="password"
-                  type="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  aria-invalid={fieldErrors.password ? 'true' : 'false'}
-                />
-                {fieldErrors.password ? <small>{fieldErrors.password}</small> : null}
-              </label>
+                <label className="field">
+                  <span>Contraseña</span>
+                  <input
+                    autoComplete="current-password"
+                    name="password"
+                    type="password"
+                    value={form.password}
+                    onChange={handleChange}
+                    aria-invalid={fieldErrors.password ? 'true' : 'false'}
+                  />
+                  {fieldErrors.password ? <small>{fieldErrors.password}</small> : null}
+                </label>
 
-              <button className="primary-action" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Validando credenciales...' : 'Iniciar sesión'}
-              </button>
-            </form>
+                <button className="primary-action" type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Validando credenciales...' : 'Iniciar sesión'}
+                </button>
+              </form>
+
+              <section className="test-credentials-card" aria-labelledby="test-credentials-title">
+                <div className="section-heading">
+                  <h2 id="test-credentials-title">Credenciales de prueba</h2>
+                  <p>Podés usar cualquiera de estas cuentas seed para entrar.</p>
+                </div>
+
+                <div className="test-credentials-grid">
+                  {TEST_CREDENTIALS.map((credential) => (
+                    <article key={credential.role} className="test-credential-item">
+                      <h3>{credential.role}</h3>
+                      <p>
+                        <strong>Email:</strong> {credential.email}
+                      </p>
+                      <p>
+                        <strong>Contraseña:</strong> {credential.password}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            </>
           )}
         </div>
       </section>

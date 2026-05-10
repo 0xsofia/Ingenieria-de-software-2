@@ -158,6 +158,27 @@ def autorizar_permiso(permission_code):
     }, 200
 
 
+def cerrar_sesion():
+    current_session = flask_session.get(AUTH_SESSION_KEY)
+
+    if current_session is None:
+        _limpiar_estado_login()
+        return {
+            "status": "logged_out",
+            "message": "La sesión ya estaba cerrada.",
+            "redirect_to": "/login",
+        }, 200
+
+    _limpiar_estado_login()
+    flask_session.modified = True
+
+    return {
+        "status": "logged_out",
+        "message": "Sesión cerrada exitosamente.",
+        "redirect_to": "/login",
+    }, 200
+
+
 def _finalizar_login(persona, role):
     _limpiar_estado_login()
 

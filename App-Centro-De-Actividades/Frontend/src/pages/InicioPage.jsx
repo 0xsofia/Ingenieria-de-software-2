@@ -75,7 +75,7 @@ function InicioPage() {
   }
 
   return (
-    <main className="dashboard-shell">
+    <section className="dashboard-shell">
       <section className="dashboard-frame">
         <header className="dashboard-header">
           <p className="auth-subtitle">Sesión activa</p>
@@ -107,7 +107,7 @@ function InicioPage() {
           </div>
         </section>
       </section>
-    </main>
+    </section>
   )
 }
 

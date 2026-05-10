@@ -1,3 +1,32 @@
+.app-shell {
+  min-height: 100svh;
+}
+
+.site-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 24px;
+  background: var(--surface);
+  border-bottom: 2px solid var(--border-strong);
+}
+
+.hero-action {
+  border: 2px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--button-bg);
+  color: var(--text-strong);
+  font: inherit;
+  cursor: pointer;
+  padding: 12px 18px;
+}
+
+.hero-action:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
 .auth-shell,
 .dashboard-shell {
   min-height: 100svh;
@@ -42,7 +71,7 @@
 }
 
 .auth-form-shell {
-  width: min(100%, 540px);
+  width: min(100%, 800px);
   margin: 56px auto 0;
   display: grid;
   gap: 24px;
@@ -52,6 +81,38 @@
 .role-panel {
   display: grid;
   gap: 28px;
+}
+
+.test-credentials-card {
+  border: 1px solid var(--border-muted);
+  background: var(--surface-soft);
+  padding: 20px;
+  display: grid;
+  gap: 18px;
+}
+
+.test-credentials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.test-credential-item {
+  border: 1px solid var(--border-muted);
+  background: var(--surface);
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.test-credential-item h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.test-credential-item strong{
+  display: block;
+  width: 100%;
 }
 
 .role-copy {
@@ -243,6 +304,11 @@
     margin-top: 40px;
   }
 
+  .site-hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .field span {
     font-size: 24px;
   }
@@ -252,6 +318,7 @@
   }
 
   .session-summary,
+  .test-credentials-grid,
   .permission-grid,
   .backend-grid {
     grid-template-columns: 1fr;

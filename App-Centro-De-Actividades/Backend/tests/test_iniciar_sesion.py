@@ -176,6 +176,27 @@ class IniciarSesionTestCase(unittest.TestCase):
         self.assertEqual(denied_response.status_code, 200)
         self.assertFalse(denied_response.json["authorized"])
 
+    def test_logout_cierra_sesion_y_desautentica(self):
+        self._crear_persona(
+            email="admin@example.com",
+            password="1234",
+            roles={"administrador": []},
+        )
+
+        self.client.post(
+            "/api/login",
+            json={"email": "admin@example.com", "password": "1234"},
+        )
+
+        logout_response = self.client.post("/api/session/logout")
+        session_response = self.client.get("/api/login/session")
+
+        self.assertEqual(logout_response.status_code, 200)
+        self.assertEqual(logout_response.json["status"], "logged_out")
+        self.assertEqual(logout_response.json["redirect_to"], "/login")
+        self.assertEqual(session_response.status_code, 200)
+        self.assertFalse(session_response.json["authenticated"])
+
     def test_seed_usuarios_crea_los_tres_accesos_basicos(self):
         seed_usuarios()
 
