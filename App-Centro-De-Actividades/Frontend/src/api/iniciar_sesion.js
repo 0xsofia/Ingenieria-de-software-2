@@ -16,11 +16,6 @@ export async function obtenerSesionActual() {
   return data
 }
 
-export async function autorizarPermiso(payload) {
-  const { data } = await http.post(endpoints.authorizePermission, payload)
-  return data
-}
-
 export async function cerrarSesion() {
   const { data } = await http.post(endpoints.logout)
   return data

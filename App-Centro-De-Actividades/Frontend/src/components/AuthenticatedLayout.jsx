@@ -1,12 +1,14 @@
 import { startTransition, useState } from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Navigate, Outlet, useNavigate } from 'react-router-dom'
 
 import { cerrarSesion } from '../api/iniciar_sesion'
 import '../App.css'
+import { useAuth } from '../hooks/useAuth'
 import Hero from './Hero.jsx'
 
 function AuthenticatedLayout() {
   const navigate = useNavigate()
+  const { clearAuth, isAuthenticated, isBootstrapping } = useAuth()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   async function handleLogout() {
@@ -14,16 +16,34 @@ function AuthenticatedLayout() {
 
     try {
       const result = await cerrarSesion()
+      clearAuth()
       startTransition(() => {
         navigate(result.redirect_to || '/login', { replace: true })
       })
     } catch {
+      clearAuth()
       startTransition(() => {
         navigate('/login', { replace: true })
       })
     } finally {
       setIsLoggingOut(false)
     }
+  }
+
+  if (isBootstrapping) {
+    return (
+      <main className="dashboard-shell">
+        <section className="dashboard-frame dashboard-frame--compact">
+          <p className="auth-subtitle">Cargando sesión</p>
+          <h1>Preparando tu inicio</h1>
+          <p className="dashboard-copy">Estamos verificando tu sesión activa.</p>
+        </section>
+      </main>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
   }
 
   return (

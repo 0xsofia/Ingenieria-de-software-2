@@ -1,10 +1,10 @@
 from flask import session as flask_session
+from flask_login import UserMixin, current_user, login_user, logout_user
 
-from src.core.bcrypt_and_session import bcrypt
+from src.core.bcrypt_and_session import bcrypt, login_manager
 from src.core.database import db
 from src.core.models.persona import Persona, Rol
 
-AUTH_SESSION_KEY = "auth_session"
 PENDING_LOGIN_KEY = "pending_login"
 
 ROLE_LABELS = {
@@ -13,6 +13,27 @@ ROLE_LABELS = {
     "socio": "Socio",
 }
 LOGIN_ROLE_NAMES = {"administrador", "empleado", "socio"}
+
+
+class AuthenticatedUser(UserMixin):
+    def __init__(self, persona, role):
+        normalized_role = _normalizar_rol(role.nombre)
+
+        self.persona_id = persona.persona_id
+        self.email = persona.email
+        self.display_name = persona.nombre_completo
+        self.role_id = role.rol_id
+        self.role = normalized_role
+        self.role_label = ROLE_LABELS.get(normalized_role, role.nombre.title())
+        self.permissions = role.permission_codes
+
+    def get_id(self):
+        return f"{self.persona_id}:{self.role_id}"
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return _cargar_usuario_autenticado(user_id)
 
 
 def autenticar_credenciales(email, password):
@@ -51,20 +72,15 @@ def autenticar_credenciales(email, password):
     if len(roles) > 1:
         flask_session[PENDING_LOGIN_KEY] = {
             "persona_id": persona.persona_id,
-            "email": persona.email,
-            "display_name": persona.nombre_completo,
             "available_roles": [_normalizar_rol(rol.nombre) for rol in roles],
         }
-        flask_session.modified = True
+        flask_session.permanent = True
 
         return {
             "status": "role_selection_required",
             "message": "Seleccioná cómo querés ingresar.",
             "available_roles": [_normalizar_rol(rol.nombre) for rol in roles],
-            "identity": {
-                "email": persona.email,
-                "display_name": persona.nombre_completo,
-            },
+            "identity": _build_identity(persona),
         }, 200
 
     return _finalizar_login(persona, roles[0])
@@ -104,64 +120,43 @@ def seleccionar_rol(role):
 
 
 def obtener_estado_sesion():
-    current_session = flask_session.get(AUTH_SESSION_KEY)
-    if current_session is not None:
-        session_payload = _reconstruir_sesion(current_session)
-        if session_payload is None:
-            _limpiar_estado_login()
-            return {"authenticated": False}, 200
-
-        flask_session[AUTH_SESSION_KEY] = session_payload
-        flask_session.modified = True
-
-        return {
-            "authenticated": True,
-            "session": session_payload,
-        }, 200
+    if current_user.is_authenticated:
+        return {"authenticated": True, "session": _build_auth_payload(current_user)}, 200
 
     pending_login = flask_session.get(PENDING_LOGIN_KEY)
     if pending_login is not None:
+        persona = db.session.get(Persona, pending_login["persona_id"])
+        if persona is None:
+            _limpiar_estado_login()
+            return {"authenticated": False}, 200
+
         return {
             "authenticated": False,
             "pending_role_selection": True,
             "available_roles": pending_login["available_roles"],
-            "identity": {
-                "email": pending_login["email"],
-                "display_name": pending_login["display_name"],
-            },
+            "identity": _build_identity(persona),
         }, 200
 
     return {"authenticated": False}, 200
 
 
 def autorizar_permiso(permission_code):
-    current_session = flask_session.get(AUTH_SESSION_KEY)
-    if current_session is None:
+    if not current_user.is_authenticated:
         return {
             "status": "error",
             "message": "Debes iniciar sesión para validar permisos.",
         }, 401
 
-    session_payload = _reconstruir_sesion(current_session)
-    if session_payload is None:
-        _limpiar_estado_login()
-        return {
-            "status": "error",
-            "message": "La sesión actual ya no es válida.",
-        }, 401
-
     return {
         "status": "ok",
-        "authorized": permission_code in session_payload["permissions"],
+        "authorized": permission_code in current_user.permissions,
         "permission": permission_code,
-        "role": session_payload["role"],
+        "role": current_user.role,
     }, 200
 
 
 def cerrar_sesion():
-    current_session = flask_session.get(AUTH_SESSION_KEY)
-
-    if current_session is None:
+    if not current_user.is_authenticated and flask_session.get(PENDING_LOGIN_KEY) is None:
         _limpiar_estado_login()
         return {
             "status": "logged_out",
@@ -170,7 +165,6 @@ def cerrar_sesion():
         }, 200
 
     _limpiar_estado_login()
-    flask_session.modified = True
 
     return {
         "status": "logged_out",
@@ -182,9 +176,11 @@ def cerrar_sesion():
 def _finalizar_login(persona, role):
     _limpiar_estado_login()
 
-    auth_payload = _build_auth_payload(persona, role)
-    flask_session[AUTH_SESSION_KEY] = auth_payload
-    flask_session.modified = True
+    authenticated_user = AuthenticatedUser(persona, role)
+    login_user(authenticated_user)
+    flask_session.permanent = True
+
+    auth_payload = _build_auth_payload(authenticated_user)
 
     return {
         "status": "authenticated",
@@ -238,9 +234,13 @@ def _roles_disponibles(persona):
     return list(roles.values()), None
 
 
-def _reconstruir_sesion(current_session):
-    persona = db.session.get(Persona, current_session.get("persona_id"))
-    role = db.session.get(Rol, current_session.get("role_id"))
+def _cargar_usuario_autenticado(user_id):
+    persona_id, role_id = _parse_user_id(user_id)
+    if persona_id is None or role_id is None:
+        return None
+
+    persona = db.session.get(Persona, persona_id)
+    role = db.session.get(Rol, role_id)
 
     if persona is None or role is None:
         return None
@@ -252,19 +252,34 @@ def _reconstruir_sesion(current_session):
     if not any(assigned_role.rol_id == role.rol_id for assigned_role in roles):
         return None
 
-    return _build_auth_payload(persona, role)
+    return AuthenticatedUser(persona, role)
 
 
-def _build_auth_payload(persona, role):
+def _build_auth_payload(authenticated_user):
     return {
-        "persona_id": persona.persona_id,
+        "persona_id": authenticated_user.persona_id,
+        "email": authenticated_user.email,
+        "display_name": authenticated_user.display_name,
+        "role_id": authenticated_user.role_id,
+        "role": authenticated_user.role,
+        "role_label": authenticated_user.role_label,
+        "permissions": authenticated_user.permissions,
+    }
+
+
+def _build_identity(persona):
+    return {
         "email": persona.email,
         "display_name": persona.nombre_completo,
-        "role_id": role.rol_id,
-        "role": _normalizar_rol(role.nombre),
-        "role_label": ROLE_LABELS.get(_normalizar_rol(role.nombre), role.nombre.title()),
-        "permissions": role.permission_codes,
     }
+
+
+def _parse_user_id(user_id):
+    try:
+        persona_id, role_id = user_id.split(":", maxsplit=1)
+        return int(persona_id), int(role_id)
+    except (AttributeError, TypeError, ValueError):
+        return None, None
 
 
 
@@ -273,7 +288,7 @@ def _normalizar_rol(role_name):
 
 
 def _limpiar_estado_login():
-    flask_session.pop(AUTH_SESSION_KEY, None)
+    logout_user()
     flask_session.pop(PENDING_LOGIN_KEY, None)
 
 

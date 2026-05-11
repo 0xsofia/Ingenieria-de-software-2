@@ -8,7 +8,6 @@ load_dotenv(dotenv_path='.env')
 class Config(object):
     TESTING = False
     SECRET_KEY = environ.get('SECRET_KEY', 'development-secret-key')
-    SESSION_TYPE= "filesystem"
     SESSION_PERMANENT= True
     SESSION_COOKIE_SAMESITE = "None"
     SESSION_COOKIE_SECURE = True
