@@ -22,20 +22,35 @@ ROLE_PERMISSIONS = {
 USERS_TO_SEED = [
     {
         "email": "admin@centro.test",
+        "dni": "30000001",
         "nombre": "Admin",
         "apellido": "Centro",
+        "telefono": "0111511111111",
+        "calle": "Calle 1",
+        "numero_puerta": "100",
+        "codigo_postal": "1900",
         "roles": ["administrador"],
     },
     {
         "email": "empleado@centro.test",
+        "dni": "30000002",
         "nombre": "Empleada",
         "apellido": "Mostrador",
+        "telefono": "0111522222222",
+        "calle": "Calle 2",
+        "numero_puerta": "200",
+        "codigo_postal": "1900",
         "roles": ["empleado"],
     },
     {
         "email": "socio@centro.test",
+        "dni": "30000003",
         "nombre": "Socia",
         "apellido": "Activa",
+        "telefono": "0111533333333",
+        "calle": "Calle 3",
+        "numero_puerta": "300",
+        "codigo_postal": "1900",
         "roles": ["socio"],
     },
 ]
@@ -60,9 +75,14 @@ def _get_or_create_persona(user_data):
 
     if persona is None:
         persona = Persona(
+            dni=user_data["dni"],
             email=email,
             nombre=user_data["nombre"],
             apellido=user_data["apellido"],
+            telefono=user_data["telefono"],
+            calle=user_data["calle"],
+            numero_puerta=user_data["numero_puerta"],
+            codigo_postal=user_data["codigo_postal"],
             estado="activo",
             password_hash=_hash_password(DEFAULT_PASSWORD),
         )
@@ -70,8 +90,13 @@ def _get_or_create_persona(user_data):
         db.session.flush()
         return persona
 
+    persona.dni = user_data["dni"]
     persona.nombre = user_data["nombre"]
     persona.apellido = user_data["apellido"]
+    persona.telefono = user_data["telefono"]
+    persona.calle = user_data["calle"]
+    persona.numero_puerta = user_data["numero_puerta"]
+    persona.codigo_postal = user_data["codigo_postal"]
     persona.estado = "activo"
     persona.password_hash = _hash_password(DEFAULT_PASSWORD)
     db.session.flush()

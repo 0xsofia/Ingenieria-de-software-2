@@ -1,0 +1,15 @@
+.register-copy {
+  max-width: 46ch;
+  margin: 12px auto 0;
+  color: var(--text-soft);
+}
+
+.register-top-link {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 32px;
+}
+
+.register-top-link .secondary-action {
+  min-width: 240px;
+}

@@ -13,6 +13,9 @@
   --danger: #7a2424;
   --danger-bg: #f1dfdf;
   --danger-border: rgba(122, 36, 36, 0.28);
+  --success: #1f5b36;
+  --success-bg: #dfeedf;
+  --success-border: rgba(31, 91, 54, 0.24);
   --shadow: rgba(0, 0, 0, 0.08) 0 18px 36px -26px;
 
   --sans: 'Trebuchet MS', 'Segoe UI', sans-serif;

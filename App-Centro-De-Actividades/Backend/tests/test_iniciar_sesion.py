@@ -268,10 +268,15 @@ class IniciarSesionTestCase(unittest.TestCase):
         roles=None,
     ):
         persona = Persona(
+            dni=f"3000000{Persona.query.count() + 1}",
             email=email,
             password_hash=bcrypt.generate_password_hash(password).decode("utf-8"),
             nombre="Ada",
             apellido="Lovelace",
+            telefono=f"01115{Persona.query.count() + 1:08d}",
+            calle="Calle Falsa",
+            numero_puerta="123",
+            codigo_postal="1900",
             estado="activo",
         )
         db.session.add(persona)

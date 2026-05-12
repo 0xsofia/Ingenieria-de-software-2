@@ -1,0 +1,31 @@
+.site-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 24px;
+  background: var(--surface);
+  border-bottom: 2px solid var(--border-strong);
+}
+
+.hero-action {
+  border: 2px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--button-bg);
+  color: var(--text-strong);
+  font: inherit;
+  cursor: pointer;
+  padding: 12px 18px;
+}
+
+.hero-action:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
+@media (max-width: 900px) {
+  .site-hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

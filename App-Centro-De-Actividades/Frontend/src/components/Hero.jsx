@@ -1,3 +1,5 @@
+import './Hero.css'
+
 function Hero({ onLogout, isLoggingOut = false }) {
   return (
     <header className="site-hero">
