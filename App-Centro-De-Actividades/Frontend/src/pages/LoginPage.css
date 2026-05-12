@@ -1,6 +1,6 @@
 .role-panel {
   display: grid;
-  gap: 28px;
+  gap: var(--section-gap);
 }
 
 .role-copy {
@@ -15,7 +15,8 @@
 
 .role-grid {
   display: grid;
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
 }
 
 .role-card {
@@ -25,7 +26,7 @@
   color: var(--text-strong);
   font: inherit;
   cursor: pointer;
-  padding: 20px;
+  padding: 18px;
   text-align: left;
   display: grid;
   gap: 10px;
@@ -46,16 +47,16 @@
 }
 
 .role-card__label {
-  font-size: 24px;
+  font-size: clamp(18px, 0.7vw + 0.9rem, 24px);
   line-height: 1.2;
 }
 
 .test-credentials-card {
   border: 1px solid var(--border-muted);
   background: var(--surface-soft);
-  padding: 20px;
+  padding: 18px;
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 
 .test-credentials-grid {
@@ -67,9 +68,9 @@
 .test-credential-item {
   border: 1px solid var(--border-muted);
   background: var(--surface);
-  padding: 16px;
+  padding: 14px;
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .test-credential-item h3 {
@@ -86,6 +87,8 @@
   margin: 0;
   text-align: center;
   color: var(--text-soft);
+  max-width: 42ch;
+  justify-self: center;
 }
 
 .login-register-link {
@@ -93,7 +96,17 @@
   font-weight: 600;
 }
 
+@media (max-width: 1100px) {
+  .test-credentials-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 900px) {
+  .role-grid {
+    grid-template-columns: 1fr;
+  }
+
   .test-credentials-grid {
     grid-template-columns: 1fr;
   }

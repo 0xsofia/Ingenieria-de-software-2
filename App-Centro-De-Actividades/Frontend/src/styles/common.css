@@ -5,32 +5,34 @@
 .auth-shell,
 .dashboard-shell {
   min-height: 100svh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--shell-padding);
   box-sizing: border-box;
 }
 
 .auth-frame,
 .dashboard-frame {
-  width: min(100%, 960px);
+  width: min(100%, 1180px);
   background: var(--surface);
   border: 2px solid var(--border-strong);
+  border-radius: 26px;
   box-shadow: var(--shadow);
 }
 
 .auth-frame {
-  min-height: min(92svh, 660px);
-  padding: 48px 32px 72px;
+  min-height: min(92svh, 860px);
+  padding: var(--frame-padding-block) var(--frame-padding-inline) clamp(32px, 4vw, 56px);
 }
 
 .auth-frame--compact,
 .dashboard-frame--compact {
-  width: min(100%, 640px);
+  width: min(100%, 720px);
 }
 
 .dashboard-frame {
-  padding: 40px 32px;
+  padding: var(--frame-padding-block) var(--frame-padding-inline);
 }
 
 .auth-header,
@@ -40,22 +42,22 @@
 
 .auth-subtitle {
   margin-bottom: 8px;
-  font-size: 13px;
+  font-size: clamp(11px, 0.25vw + 0.65rem, 13px);
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--text-soft);
 }
 
 .auth-form-shell {
-  width: min(100%, 800px);
-  margin: 56px auto 0;
+  width: min(100%, 1040px);
+  margin: clamp(24px, 4vh, 42px) auto 0;
   display: grid;
-  gap: 24px;
+  gap: var(--section-gap);
 }
 
 .auth-form {
   display: grid;
-  gap: 28px;
+  gap: var(--section-gap);
 }
 
 .dashboard-copy,
@@ -67,13 +69,13 @@
 
 .field {
   display: grid;
-  gap: 10px;
+  gap: var(--field-gap);
   text-align: left;
 }
 
 .field span {
-  font-size: 27px;
-  line-height: 1.1;
+  font-size: var(--field-label-size);
+  line-height: 1.2;
   color: var(--text-strong);
 }
 
@@ -86,7 +88,7 @@
   background: var(--surface-soft);
   color: var(--text-strong);
   font: inherit;
-  padding: 18px 20px;
+  padding: var(--input-padding-y) var(--input-padding-x);
   transition:
     border-color 0.2s ease,
     background 0.2s ease,
@@ -94,7 +96,7 @@
 }
 
 .field textarea {
-  min-height: 140px;
+  min-height: 130px;
   resize: vertical;
 }
 
@@ -118,7 +120,7 @@
 
 .field-hint {
   color: var(--text-soft);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .primary-action,
@@ -137,9 +139,9 @@
 
 .primary-action {
   background: var(--button-bg);
-  margin-top: 20px;
-  padding: 18px 20px;
-  font-size: 28px;
+  margin-top: 8px;
+  padding: 16px 18px;
+  font-size: var(--button-font-size);
 }
 
 .secondary-action {
@@ -147,7 +149,7 @@
   justify-content: center;
   align-items: center;
   background: transparent;
-  padding: 14px 18px;
+  padding: 12px 16px;
 }
 
 .primary-action:hover,
@@ -165,7 +167,7 @@
 
 .banner {
   margin: 0;
-  padding: 14px 16px;
+  padding: 13px 16px;
   border-radius: 12px;
   text-align: left;
 }
@@ -185,12 +187,12 @@
 .section-heading {
   display: grid;
   gap: 6px;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 .dashboard-section {
-  margin-top: 36px;
-  padding-top: 24px;
+  margin-top: clamp(24px, 3vw, 36px);
+  padding-top: clamp(18px, 2vw, 24px);
   border-top: 1px solid var(--border-muted);
 }
 
@@ -203,7 +205,7 @@
 
 .session-summary {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 28px 0 0;
+  margin: 24px 0 0;
 }
 
 .session-summary div,
@@ -211,7 +213,7 @@
 .backend-card {
   border: 1px solid var(--border-muted);
   background: var(--surface-soft);
-  padding: 18px;
+  padding: 18px 16px;
 }
 
 .session-summary dt,
@@ -238,31 +240,72 @@
 .permission-card h3,
 .backend-card h3 {
   margin: 0 0 10px;
-  font-size: 22px;
+  font-size: clamp(18px, 0.6vw + 0.9rem, 22px);
   color: var(--text-strong);
+}
+
+@media (min-width: 1800px) {
+  .auth-frame,
+  .dashboard-frame {
+    width: min(100%, 1260px);
+  }
+
+  .auth-form-shell {
+    width: min(100%, 1120px);
+  }
+}
+
+@media (max-width: 1100px) {
+  .auth-frame,
+  .dashboard-frame {
+    width: min(100%, 960px);
+  }
 }
 
 @media (max-width: 900px) {
   .auth-frame,
   .dashboard-frame {
-    padding: 32px 20px 40px;
+    border-radius: 22px;
   }
 
   .auth-form-shell {
-    margin-top: 40px;
-  }
-
-  .field span {
-    font-size: 24px;
-  }
-
-  .primary-action {
-    font-size: 24px;
+    width: 100%;
   }
 
   .session-summary,
   .permission-grid,
   .backend-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .auth-shell,
+  .dashboard-shell {
+    align-items: flex-start;
+  }
+
+  .auth-frame {
+    min-height: auto;
+  }
+
+  .auth-header,
+  .dashboard-header {
+    text-align: left;
+  }
+}
+
+@media (max-width: 640px) {
+  .auth-frame,
+  .dashboard-frame {
+    border-radius: 18px;
+  }
+
+  .auth-form-shell {
+    margin-top: 22px;
+  }
+
+  .secondary-action {
+    width: 100%;
   }
 }

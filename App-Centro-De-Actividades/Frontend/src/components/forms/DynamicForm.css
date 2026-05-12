@@ -1,12 +1,12 @@
 .dynamic-form {
   display: grid;
-  gap: 28px;
+  gap: var(--section-gap);
 }
 
 .dynamic-form__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px 20px;
+  gap: 20px 18px;
 }
 
 .dynamic-form__field--full {
@@ -18,7 +18,7 @@
   gap: 16px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .dynamic-form__grid {
     grid-template-columns: 1fr;
   }
