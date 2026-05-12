@@ -1,8 +1,11 @@
+import { useNavigate } from 'react-router-dom'
 import '../App.css'
 import './PerfilPage.css'
 import PerfilInfo from '../components/perfil/PerfilInfo'
 
 function PerfilPage() {
+  const navigate = useNavigate()
+
   return (
     <main className="dashboard-shell profile-shell">
       <section className="dashboard-frame profile-frame">
@@ -29,7 +32,13 @@ function PerfilPage() {
           <section className="profile-actions-card">
             <h2>Accesos rápidos</h2>
             <div className="profile-actions">
-              <button type="button" className="secondary-action">Mis pagos</button>
+              <button
+                type="button"
+                className="secondary-action"
+                onClick={() => navigate('/mispagos')}
+              >
+                Mis pagos
+              </button>
               <button type="button" className="secondary-action">Mis clases</button>
             </div>
           </section>

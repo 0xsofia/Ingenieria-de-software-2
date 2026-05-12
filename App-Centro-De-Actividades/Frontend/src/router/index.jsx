@@ -4,6 +4,7 @@ import AuthenticatedLayout from '../components/AuthenticatedLayout.jsx'
 import InicioPage from '../pages/InicioPage.jsx'
 import LoginPage from '../pages/LoginPage.jsx'
 import PerfilPage from '../pages/PerfilPage.jsx'
+import MisPagosPage from '../pages/MisPagosPage.jsx'
 
 
 const router = createBrowserRouter([
@@ -27,6 +28,10 @@ const router = createBrowserRouter([
   {
     path: '/verperfil',
     element: <PerfilPage />,
+  },
+  {
+    path: '/mispagos',
+    element: <MisPagosPage />,
   }
 ])
 
