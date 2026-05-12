@@ -1,78 +1,8 @@
-import { startTransition, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-
-import { obtenerSesionActual } from '../api/iniciar_sesion'
 import '../App.css'
+import { useAuth } from '../hooks/useAuth'
 
 function InicioPage() {
-  const navigate = useNavigate()
-  const [sessionData, setSessionData] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [errorMessage, setErrorMessage] = useState('')
-
-  useEffect(() => {
-    let ignore = false
-
-    async function cargarSesion() {
-      try {
-        const result = await obtenerSesionActual()
-        if (ignore) {
-          return
-        }
-
-        if (!result.authenticated) {
-          startTransition(() => {
-            navigate('/', { replace: true })
-          })
-          return
-        }
-
-        setSessionData(result.session)
-      } catch {
-        if (!ignore) {
-          setErrorMessage('No se pudo cargar la sesión actual.')
-        }
-      } finally {
-        if (!ignore) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    cargarSesion()
-
-    return () => {
-      ignore = true
-    }
-  }, [navigate])
-
-  if (isLoading) {
-    return (
-      <main className="dashboard-shell">
-        <section className="dashboard-frame dashboard-frame--compact">
-          <p className="auth-subtitle">Cargando sesión</p>
-          <h1>Preparando tu inicio</h1>
-          <p className="dashboard-copy">Estamos verificando tu sesión activa.</p>
-        </section>
-      </main>
-    )
-  }
-
-  if (errorMessage) {
-    return (
-      <main className="dashboard-shell">
-        <section className="dashboard-frame dashboard-frame--compact">
-          <p className="auth-subtitle">Error de sesión</p>
-          <h1>No pudimos abrir el inicio</h1>
-          <p className="banner banner--error">{errorMessage}</p>
-        </section>
-      </main>
-    )
-  }
-
-  if (!sessionData) {
-    return null
-  }
+  const { session } = useAuth()
 
   return (
     <section className="dashboard-shell">
@@ -88,15 +18,15 @@ function InicioPage() {
         <dl className="session-summary" aria-label="Resumen de sesión actual">
           <div>
             <dt>Nombre</dt>
-            <dd>{sessionData.display_name}</dd>
+            <dd>{session.display_name}</dd>
           </div>
           <div>
             <dt>Email</dt>
-            <dd>{sessionData.email}</dd>
+            <dd>{session.email}</dd>
           </div>
           <div>
             <dt>Rol activo</dt>
-            <dd>{sessionData.role_label}</dd>
+            <dd>{session.role_label}</dd>
           </div>
         </dl>
 

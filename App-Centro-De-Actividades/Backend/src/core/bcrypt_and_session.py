@@ -2,12 +2,12 @@ import base64
 import random
 import string
 from flask_bcrypt import Bcrypt
-from flask_session import Session
+from flask_login import LoginManager
 
 from cryptography.fernet import Fernet
 
-session = Session()
 bcrypt = Bcrypt()
+login_manager = LoginManager()
 
 class Cipher:
     def __init__(self,app = None):

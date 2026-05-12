@@ -9,7 +9,7 @@ from src.web.controllers.iniciar_sesion import login_bp
 
 from src.web.controllers.session_controller import session_bp
 
-from src.core.bcrypt_and_session import bcrypt, session, cipher
+from src.core.bcrypt_and_session import bcrypt, cipher, login_manager
 
 
 def create_app(env="development", static_folder="../../static"):
@@ -19,7 +19,7 @@ def create_app(env="development", static_folder="../../static"):
     database.init_app(app)
 
     bcrypt.init_app(app)
-    session.init_app(app)
+    login_manager.init_app(app)
     CORS(app, supports_credentials=True)
     cipher.init_app(app)
 

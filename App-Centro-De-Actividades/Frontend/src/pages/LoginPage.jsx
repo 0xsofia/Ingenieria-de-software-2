@@ -1,12 +1,9 @@
 import { startTransition, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import {
-  iniciarSesion,
-  obtenerSesionActual,
-  seleccionarRolDeSesion,
-} from '../api/iniciar_sesion'
+import { iniciarSesion, seleccionarRolDeSesion } from '../api/iniciar_sesion'
 import '../App.css'
+import { useAuth } from '../hooks/useAuth'
 
 const INITIAL_FORM = {
   email: '',
@@ -50,48 +47,25 @@ const TEST_CREDENTIALS = [
 
 function LoginPage() {
   const navigate = useNavigate()
+  const {
+    isAuthenticated,
+    isBootstrapping,
+    pendingIdentity,
+    pendingRoles,
+    setAuthenticatedSession,
+    setPendingRoleSelection,
+  } = useAuth()
   const [form, setForm] = useState(INITIAL_FORM)
   const [fieldErrors, setFieldErrors] = useState({})
   const [requestError, setRequestError] = useState('')
-  const [pendingRoles, setPendingRoles] = useState([])
-  const [pendingIdentity, setPendingIdentity] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSelectingRole, setIsSelectingRole] = useState(false)
 
   useEffect(() => {
-    let ignore = false
-
-    async function cargarSesion() {
-      try {
-        const result = await obtenerSesionActual()
-
-        if (ignore) {
-          return
-        }
-
-        if (result.authenticated) {
-          redirectToHome(navigate, result.redirect_to || '/inicio')
-          return
-        }
-
-        if (result.pending_role_selection) {
-          setPendingRoles(result.available_roles || [])
-          setPendingIdentity(result.identity || null)
-        }
-      } catch {
-        if (!ignore) {
-          setPendingRoles([])
-          setPendingIdentity(null)
-        }
-      }
+    if (isAuthenticated) {
+      redirectToHome(navigate, '/inicio')
     }
-
-    cargarSesion()
-
-    return () => {
-      ignore = true
-    }
-  }, [navigate])
+  }, [isAuthenticated, navigate])
 
   function handleChange(event) {
     const { name, value } = event.target
@@ -130,13 +104,13 @@ function LoginPage() {
       })
 
       if (result.status === 'role_selection_required') {
-        setPendingRoles(result.available_roles || [])
-        setPendingIdentity(result.identity || null)
+        setPendingRoleSelection(result)
         setForm((currentForm) => ({ ...currentForm, password: '' }))
         setFieldErrors({})
         return
       }
 
+      setAuthenticatedSession(result.session)
       redirectToHome(navigate, result.redirect_to)
     } catch (error) {
       applyApiError(error, setFieldErrors, setRequestError)
@@ -151,12 +125,27 @@ function LoginPage() {
 
     try {
       const result = await seleccionarRolDeSesion({ role })
+      setAuthenticatedSession(result.session)
       redirectToHome(navigate, result.redirect_to)
     } catch (error) {
       applyApiError(error, setFieldErrors, setRequestError)
     } finally {
       setIsSelectingRole(false)
     }
+  }
+
+  if (isBootstrapping) {
+    return (
+      <main className="auth-shell">
+        <section className="auth-frame auth-frame--compact">
+          <header className="auth-header">
+            <p className="auth-subtitle">Acceso al sistema</p>
+            <h1>Centro de actividades deportivas</h1>
+          </header>
+          <p className="dashboard-copy">Estamos verificando tu sesión activa.</p>
+        </section>
+      </main>
+    )
   }
 
   return (

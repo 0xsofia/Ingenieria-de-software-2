@@ -150,6 +150,29 @@ class IniciarSesionTestCase(unittest.TestCase):
         self.assertFalse(response.json["authenticated"])
         self.assertTrue(response.json["pending_role_selection"])
 
+    def test_obtener_estado_sesion_reconstruye_usuario_autenticado(self):
+        self._crear_persona(
+            email="empleado@example.com",
+            password="1234",
+            como_empleado=True,
+            roles={"empleado": ["usuarios:ver", "clases:ver"]},
+        )
+
+        self.client.post(
+            "/api/login",
+            json={"email": "empleado@example.com", "password": "1234"},
+        )
+
+        response = self.client.get("/api/login/session")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json["authenticated"])
+        self.assertEqual(response.json["session"]["role"], "empleado")
+        self.assertEqual(
+            response.json["session"]["permissions"],
+            ["clases:ver", "usuarios:ver"],
+        )
+
     def test_autorizacion_backend_confirma_permiso_del_rol_activo(self):
         self._crear_persona(
             email="admin@example.com",
