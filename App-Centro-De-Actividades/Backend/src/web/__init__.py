@@ -8,6 +8,7 @@ from src.core.seeds import run_seeds
 from src.web.controllers.iniciar_sesion import login_bp
 
 from src.web.controllers.session_controller import session_bp
+from src.web.controllers.clase_controller import clase_bp
 
 from src.core.bcrypt_and_session import bcrypt, cipher, login_manager
 
@@ -31,6 +32,7 @@ def create_app(env="development", static_folder="../../static"):
 
     app.register_blueprint(login_bp)
     app.register_blueprint(session_bp)
+    app.register_blueprint(clase_bp)
 
     @app.cli.command(name="reset_db")
     def reset_db():
