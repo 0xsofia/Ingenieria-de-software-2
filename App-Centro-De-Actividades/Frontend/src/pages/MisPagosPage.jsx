@@ -22,7 +22,7 @@ function MisPagosPage() {
     setHasFiltered(true)
 
     if (!dateFrom || !dateTo) {
-      setError('Debe ingresar ambas fechas.')
+      //setError('Debe ingresar ambas fechas.')
       return
     }
 
@@ -70,7 +70,6 @@ function MisPagosPage() {
         <section className="pagos-filter-card">
           <div className="section-heading">
             <h2>Filtrar pagos</h2>
-            <p>Selecciona un rango de fechas para buscar tus pagos.</p>
           </div>
 
           <form className="pagos-filter-form" onSubmit={handleFilter}>
@@ -120,8 +119,8 @@ function MisPagosPage() {
               {hasFiltered
                 ? filteredPagos.length === 0
                   ? 'No hay pagos en el rango de fechas seleccionado.'
-                  : `Se encontraron ${filteredPagos.length} pago${filteredPagos.length !== 1 ? 's' : ''}.`
-                : `Total: ${filteredPagos.length} pago${filteredPagos.length !== 1 ? 's' : ''}`}
+                  : ``
+                : ``}
             </p>
           </div>
 

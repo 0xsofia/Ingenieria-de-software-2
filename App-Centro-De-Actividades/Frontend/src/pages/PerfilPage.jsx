@@ -47,11 +47,10 @@ function PerfilPage() {
         <section className="profile-description-card">
           <div className="section-heading">
             <h2>Descripción</h2>
-            <p>Un texto de presentación que el cliente podrá editar más adelante.</p>
           </div>
           <p className="profile-description-text">
-            Me interesa mantenerme activo y aprovechar las actividades deportivas que ofrece el
-            centro. Esta descripción es un texto de ejemplo que se verá en la vista de perfil.
+            Lorem ipsum dolor sit, amet consectetur adipisicing elit. Minima, iste.
+            Lorem ipsum, dolor sit amet consectetur adipisicing elit. Esse, ullam?
           </p>
         </section>
       </section>

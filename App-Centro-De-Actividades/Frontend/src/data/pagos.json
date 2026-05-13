@@ -3,50 +3,50 @@
     {
       "id": 1,
       "fecha": "2026-02-02",
-      "monto": 150.00,
-      "descripcion": "Inscripción a clase de natación",
+      "monto": 15000,
+      "descripcion": "Una descripcion",
       "estado": "completado"
     },
     {
       "id": 2,
       "fecha": "2026-02-05",
-      "monto": 200.00,
-      "descripcion": "Membresía mensual febrero",
+      "monto": 20000,
+      "descripcion": "Una descripcion",
       "estado": "completado"
     },
     {
       "id": 3,
       "fecha": "2026-02-15",
-      "monto": 100.00,
-      "descripcion": "Clase privada de entrenamiento",
+      "monto": 15000,
+      "descripcion": "Una descripcion",
       "estado": "completado"
     },
     {
       "id": 4,
       "fecha": "2026-02-20",
-      "monto": 175.00,
-      "descripcion": "Inscripción a torneo",
+      "monto": 17500,
+      "descripcion": "Una descripcion",
       "estado": "completado"
     },
     {
       "id": 5,
       "fecha": "2026-02-28",
-      "monto": 200.00,
-      "descripcion": "Membresía mensual marzo",
-      "estado": "pendiente"
+      "monto": 20000,
+      "descripcion": "Una descripcion",
+      "estado": "completado"
     },
     {
       "id": 6,
       "fecha": "2026-03-01",
-      "monto": 50.00,
-      "descripcion": "Pase de día",
+      "monto": 15000,
+      "descripcion": "Una descripcion",
       "estado": "completado"
     },
     {
       "id": 7,
       "fecha": "2026-03-10",
-      "monto": 120.00,
-      "descripcion": "Clase de yoga",
+      "monto": 15000,
+      "descripcion": "Una descripcion",
       "estado": "completado"
     }
   ]
