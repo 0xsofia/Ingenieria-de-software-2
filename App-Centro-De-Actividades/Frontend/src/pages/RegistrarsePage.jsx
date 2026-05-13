@@ -192,12 +192,7 @@ function RegistrarsePage() {
         </div>
 
         <header className="auth-header">
-          <p className="auth-subtitle">Registro de socios</p>
-          <h1>Creá tu cuenta</h1>
-          <p className="register-copy">
-            Cargá tus datos personales para registrarte como socio y continuar luego desde el
-            inicio de sesión.
-          </p>
+         <h1>Creá tu cuenta</h1>
         </header>
 
         <div className="auth-form-shell">

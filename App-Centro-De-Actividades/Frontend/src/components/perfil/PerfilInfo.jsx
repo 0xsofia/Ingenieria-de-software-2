@@ -15,10 +15,10 @@ function PerfilInfo({ hideRole = false }) {
     <div className="info-container">
       <ul>
         <li>
-          <strong>Nombre del usuario:</strong> {session.display_name}
+          <strong>Nombre: </strong> {session.display_name}
         </li>
         <li>
-          <strong>Email del usuario:</strong> {session.email}
+          <strong>Email: </strong> {session.email}
         </li>
         {!hideRole ? (
           <li>

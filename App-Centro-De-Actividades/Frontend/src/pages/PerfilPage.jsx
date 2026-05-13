@@ -24,7 +24,7 @@ function PerfilPage() {
             </div>
 
             <div className="profile-details">
-              <h2>Datos del perfil</h2>
+              <h2>Datos personales</h2>
               <PerfilInfo hideRole />
             </div>
           </section>
