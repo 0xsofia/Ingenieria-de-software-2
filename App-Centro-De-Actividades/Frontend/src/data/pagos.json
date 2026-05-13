@@ -4,50 +4,71 @@
       "id": 1,
       "fecha": "2026-02-02",
       "monto": 15000,
-      "descripcion": "Una descripcion",
-      "estado": "completado"
+      "descripcion": "una descripcion del pago",
+      "estado": "completado",
+      "cliente_nombre": "Luka Modric",
+      "cliente_email": "modric@gmail.com",
+      "cliente_dni": "44111111"
     },
     {
       "id": 2,
       "fecha": "2026-02-05",
       "monto": 20000,
-      "descripcion": "Una descripcion",
-      "estado": "completado"
+      "descripcion": "una descripcion del pago",
+      "estado": "completado",
+      "cliente_nombre": "Luka Modric",
+      "cliente_email": "modric@gmail.com",
+      "cliente_dni": "44111111"
     },
     {
       "id": 3,
       "fecha": "2026-02-15",
       "monto": 15000,
-      "descripcion": "Una descripcion",
-      "estado": "completado"
+      "descripcion": "una descripcion del pago",
+      "estado": "completado",
+      "cliente_nombre": "Ana Pereira",
+      "cliente_email": "ana.pereira@gmail.com",
+      "cliente_dni": "33222233"
     },
     {
       "id": 4,
       "fecha": "2026-02-20",
       "monto": 17500,
-      "descripcion": "Una descripcion",
-      "estado": "completado"
+      "descripcion": "una descripcion del pago",
+      "estado": "completado",
+      "cliente_nombre": "Juan Pérez",
+      "cliente_email": "juan.perez@gmail.com",
+      "cliente_dni": "22111122"
     },
     {
       "id": 5,
       "fecha": "2026-02-28",
       "monto": 20000,
-      "descripcion": "Una descripcion",
-      "estado": "completado"
+      "descripcion": "una descripcion del pago",
+      "estado": "completado",
+      "cliente_nombre": "Lucía García",
+      "cliente_email": "lucia.garcia@gmail.com",
+      "cliente_dni": "55111155"
     },
     {
       "id": 6,
       "fecha": "2026-03-01",
       "monto": 15000,
-      "descripcion": "Una descripcion",
-      "estado": "completado"
+      "descripcion": "una descripcion del pago",
+      "estado": "completado",
+      "cliente_nombre": "Diego Fernández",
+      "cliente_email": "diego.fernandez@gmail.com",
+      "cliente_dni": "66111166"
     },
     {
       "id": 7,
       "fecha": "2026-03-10",
       "monto": 15000,
-      "descripcion": "Una descripcion",
-      "estado": "completado"
+      "descripcion": "una descripcion del pago",
+      "estado": "completado",
+      "cliente_nombre": "María López",
+      "cliente_email": "maria.lopez@gmail.com",
+      "cliente_dni": "77111177"
     }
   ]
 }

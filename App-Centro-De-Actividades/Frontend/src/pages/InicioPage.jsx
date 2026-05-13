@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import './InicioPage.css'
 
@@ -35,6 +36,10 @@ function InicioPage() {
             <h2>Home</h2>
             <p className="inicio-placeholder">Contenido pendiente de implementación.</p>
           </div>
+
+          <Link to="/pagosclientes" className="primary-action">
+            Ver pagos de clientes
+          </Link>
         </section>
       </section>
     </section>

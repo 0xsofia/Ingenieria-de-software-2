@@ -6,6 +6,7 @@ import LoginPage from '../pages/LoginPage.jsx'
 import RegistrarsePage from '../pages/RegistrarsePage.jsx'
 import PerfilPage from '../pages/PerfilPage.jsx'
 import MisPagosPage from '../pages/MisPagosPage.jsx'
+import PagosClientesPage from '../pages/PagosClientesPage.jsx'
 
 
 const router = createBrowserRouter([
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
   {
     path: '/mispagos',
     element: <MisPagosPage />,
+  },
+  {
+    path: '/pagosclientes',
+    element: <PagosClientesPage />,
   }
 ])
 
