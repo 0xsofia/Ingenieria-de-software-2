@@ -1,0 +1,9 @@
+.inicio-placeholder {
+  max-width: 42ch;
+}
+
+@media (max-width: 768px) {
+  .inicio-placeholder {
+    max-width: none;
+  }
+}

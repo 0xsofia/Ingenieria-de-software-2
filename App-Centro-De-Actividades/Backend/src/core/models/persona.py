@@ -5,10 +5,15 @@ class Persona(db.Model):
     __tablename__ = "persona"
 
     persona_id = db.Column(db.Integer, primary_key=True)
+    dni = db.Column(db.String(32), unique=True, nullable=False, index=True)
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
     nombre = db.Column(db.String(120), nullable=False)
     apellido = db.Column(db.String(120), nullable=False)
+    telefono = db.Column(db.String(32), nullable=False)
+    calle = db.Column(db.String(120), nullable=False)
+    numero_puerta = db.Column(db.String(20), nullable=False)
+    codigo_postal = db.Column(db.String(20), nullable=False)
     estado = db.Column(db.String(50), nullable=False, server_default="activo")
     creado_en = db.Column(db.DateTime(timezone=True), nullable=False, server_default=db.func.now())
 

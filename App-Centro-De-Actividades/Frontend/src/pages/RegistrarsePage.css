@@ -1,0 +1,27 @@
+.register-copy {
+  max-width: 46ch;
+  margin: 12px auto 0;
+  color: var(--text-soft);
+}
+
+.register-top-link {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 22px;
+}
+
+.register-top-link .secondary-action {
+  min-width: 220px;
+}
+
+@media (max-width: 768px) {
+  .register-copy {
+    margin-inline: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .register-top-link .secondary-action {
+    min-width: 0;
+  }
+}
