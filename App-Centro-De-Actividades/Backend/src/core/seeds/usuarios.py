@@ -10,7 +10,7 @@ from src.core.models.persona import (
     Socio,
 )
 
-DEFAULT_PASSWORD = "1234"
+DEFAULT_PASSWORD = "123456."
 
 # Agregar permisos por rol extendiendo las listas de cada entrada.
 ROLE_PERMISSIONS = {
@@ -40,7 +40,7 @@ USERS_TO_SEED = [
         "calle": "Calle 2",
         "numero_puerta": "200",
         "codigo_postal": "1900",
-        "roles": ["empleado"],
+        "roles": ["empleado", "socio"],
     },
     {
         "email": "socio@centro.test",

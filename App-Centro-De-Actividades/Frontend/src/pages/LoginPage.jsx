@@ -14,15 +14,15 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const ROLE_CONTENT = {
   administrador: {
-    title: 'Ingresar como administrador',
+    title: 'Entrar como administrador',
     description: 'Acceso exclusivo del dueño con permisos globales del sistema.',
   },
   empleado: {
-    title: 'Ingresar como empleado',
+    title: 'Entrar como empleado',
     description: 'Accedé con los permisos operativos y administrativos de atención.',
   },
   socio: {
-    title: 'Ingresar como socio',
+    title: 'Entrar como socio',
     description: 'Continuá con la experiencia orientada a reservas, pagos y clases.',
   },
 }
@@ -31,17 +31,17 @@ const TEST_CREDENTIALS = [
   {
     role: 'Administrador',
     email: 'admin@centro.test',
-    password: '1234',
+    password: '123456.',
   },
   {
     role: 'Empleado',
     email: 'empleado@centro.test',
-    password: '1234',
+    password: '123456.',
   },
   {
     role: 'Socio',
     email: 'socio@centro.test',
-    password: '1234',
+    password: '123456.',
   },
 ]
 
@@ -74,8 +74,6 @@ function LoginPage() {
     if (!flashMessage) {
       return
     }
-
-    setSuccessMessage(flashMessage)
 
     startTransition(() => {
       navigate(location.pathname, { replace: true, state: null })
@@ -202,7 +200,7 @@ function LoginPage() {
               <div className="role-grid">
                 {pendingRoles.map((role) => {
                   const roleContent = ROLE_CONTENT[role] || {
-                    title: `Ingresar como ${role}`,
+                    title: `Entrar como ${role}`,
                     description: 'Continuá con el rol seleccionado para esta cuenta.',
                   }
 

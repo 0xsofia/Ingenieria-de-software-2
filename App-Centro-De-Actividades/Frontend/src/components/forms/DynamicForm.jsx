@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import './DynamicForm.css'
 
@@ -14,17 +14,16 @@ function DynamicForm({
 }) {
   const [values, setValues] = useState(initialValues)
   const [clientErrors, setClientErrors] = useState({})
-  const [dismissedServerErrors, setDismissedServerErrors] = useState({})
-  const [dismissedGeneralError, setDismissedGeneralError] = useState(false)
+  const [dismissedErrorState, setDismissedErrorState] = useState({
+    signature: buildErrorSignature(serverErrors, generalError),
+    serverFields: {},
+    general: false,
+  })
 
-  useEffect(() => {
-    setValues(initialValues)
-  }, [initialValues])
-
-  useEffect(() => {
-    setDismissedServerErrors({})
-    setDismissedGeneralError(false)
-  }, [serverErrors, generalError])
+  const currentErrorSignature = buildErrorSignature(serverErrors, generalError)
+  const hasFreshErrors = dismissedErrorState.signature !== currentErrorSignature
+  const dismissedServerErrors = hasFreshErrors ? {} : dismissedErrorState.serverFields
+  const dismissedGeneralError = hasFreshErrors ? false : dismissedErrorState.general
 
   function handleChange(event) {
     const { name, value } = event.target
@@ -43,14 +42,22 @@ function DynamicForm({
     }
 
     if (serverErrors[name]) {
-      setDismissedServerErrors((currentState) => ({
+      setDismissedErrorState((currentState) => ({
         ...currentState,
-        [name]: true,
+        signature: currentErrorSignature,
+        serverFields: {
+          ...currentState.serverFields,
+          [name]: true,
+        },
       }))
     }
 
     if (generalError) {
-      setDismissedGeneralError(true)
+      setDismissedErrorState((currentState) => ({
+        ...currentState,
+        signature: currentErrorSignature,
+        general: true,
+      }))
     }
   }
 
@@ -142,6 +149,10 @@ function mapZodErrors(issues) {
   }
 
   return errors
+}
+
+function buildErrorSignature(serverErrors, generalError) {
+  return JSON.stringify({ serverErrors, generalError })
 }
 
 export default DynamicForm
