@@ -5,15 +5,11 @@ import { z } from 'zod'
 import { registrarse } from '../api/registrarse'
 import DynamicForm from '../components/forms/DynamicForm.jsx'
 import { useAuth } from '../hooks/useAuth'
+import { getPhoneValidationMessage } from '../utils/phoneValidation'
 import './RegistrarsePage.css'
 
 const PASSWORD_LENGTH_MESSAGE = 'La contraseña debe tener entre 6 a 12 caracteres.'
 const REPEAT_PASSWORD_MESSAGE = 'Repetir contraseña debe coincidir con la contraseña.'
-const PHONE_INVALID_CHARS_MESSAGE =
-  'Ingrese un telefono valido sin caracteres especiales, letras o espacios. Ejemplo 2214446633'
-const PHONE_AREA_CODE_MESSAGE = 'Debe ingresar un código de área válido en territorio argentino. Ejemplo: 221'
-const PHONE_TOTAL_DIGITS_MESSAGE =
-  'El "Teléfono" debe tener 10 dígitos totales incluyendo el código de área. Ejemplo: 2214446633'
 
 const REGISTER_FIELDS = [
   {
@@ -226,37 +222,6 @@ function RegistrarsePage() {
       </section>
     </main>
   )
-}
-
-function getPhoneValidationMessage(value) {
-  if (!/^\d+$/.test(value)) {
-    return PHONE_INVALID_CHARS_MESSAGE
-  }
-
-  if (value.length !== 10) {
-    return PHONE_TOTAL_DIGITS_MESSAGE
-  }
-
-  if (!hasValidAreaCode(value)) {
-    return PHONE_AREA_CODE_MESSAGE
-  }
-
-  return ''
-}
-
-function hasValidAreaCode(value) {
-  if (value.startsWith('0')) {
-    return false
-  }
-
-  if (value.startsWith('1') && !value.startsWith('11')) {
-    return false
-  }
-
-  return [2, 3, 4].some((areaLength) => {
-    const subscriberLength = value.length - areaLength
-    return subscriberLength >= 6 && subscriberLength <= 8
-  })
 }
 
 function redirectTo(navigate, path, state) {

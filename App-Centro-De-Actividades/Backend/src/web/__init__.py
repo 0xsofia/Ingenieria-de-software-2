@@ -7,6 +7,7 @@ from src.core.config import config
 from src.core.seeds import run_seeds
 from src.web.controllers.iniciar_sesion import login_bp
 from src.web.controllers.registrarse import registrarse_bp
+from src.web.controllers.usuarios import usuarios_bp
 
 from src.web.controllers.session_controller import session_bp
 
@@ -32,6 +33,7 @@ def create_app(env="development", static_folder="../../static"):
 
     app.register_blueprint(login_bp)
     app.register_blueprint(registrarse_bp)
+    app.register_blueprint(usuarios_bp)
     app.register_blueprint(session_bp)
 
     @app.cli.command(name="reset_db")

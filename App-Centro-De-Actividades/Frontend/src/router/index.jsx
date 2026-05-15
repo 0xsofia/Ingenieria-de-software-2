@@ -3,6 +3,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import AuthenticatedLayout from '../components/AuthenticatedLayout.jsx'
 import InicioPage from '../pages/InicioPage.jsx'
 import LoginPage from '../pages/LoginPage.jsx'
+import RegistrarEmpleadoPage from '../pages/RegistrarEmpleadoPage.jsx'
 import RegistrarsePage from '../pages/RegistrarsePage.jsx'
 
 const router = createBrowserRouter([
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
       {
         path: '/inicio',
         element: <InicioPage />,
+      },
+      {
+        path: '/registrar-empleado',
+        element: <RegistrarEmpleadoPage />,
       },
     ],
   },
