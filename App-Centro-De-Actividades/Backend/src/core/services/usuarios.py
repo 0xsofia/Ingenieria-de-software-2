@@ -1,0 +1,147 @@
+from sqlalchemy.exc import IntegrityError
+
+from src.core.database import db
+from src.core.models.persona import Persona
+from src.core.services.registrarse import (
+    normalizar_email,
+    validar_payload_registro_empleado,
+)
+
+USER_UPDATED_MESSAGE = "El usuario ha sido actualizado con éxito."
+
+
+def obtener_usuario_modificable(persona_id):
+    persona = _obtener_persona_modificable(persona_id)
+    if persona is None:
+        return _not_found_response()
+
+    return {"status": "ok", "user": _serializar_usuario(persona)}, 200
+
+
+def actualizar_usuario(persona_id, payload):
+    persona = _obtener_persona_modificable(persona_id)
+    if persona is None:
+        return _not_found_response()
+
+    normalized_payload, errors = _validar_payload_actualizacion(persona, payload)
+    if errors:
+        return {"status": "validation_error", "errors": errors}, 400
+
+    existing_email_owner = Persona.query.filter(
+        db.func.lower(Persona.email) == normalized_payload["email"],
+        Persona.persona_id != persona.persona_id,
+    ).first()
+    if existing_email_owner is not None:
+        return _validation_error(
+            "email",
+            "El email ya se encuentra registrado en el sistema.",
+        ), 400
+
+    persona.email = normalized_payload["email"]
+    persona.nombre = normalized_payload["nombre"]
+    persona.apellido = normalized_payload["apellido"]
+    persona.telefono = normalized_payload["telefono"]
+    persona.calle = normalized_payload["calle"]
+    persona.numero_puerta = normalized_payload["numero_puerta"]
+    persona.codigo_postal = normalized_payload["codigo_postal"]
+
+    try:
+        db.session.commit()
+    except IntegrityError as error:
+        db.session.rollback()
+        return _integrity_error_response(error)
+
+    return {
+        "status": "updated",
+        "message": USER_UPDATED_MESSAGE,
+        "redirect_to": "/inicio",
+        "user": _serializar_usuario(persona),
+    }, 200
+
+
+def _validar_payload_actualizacion(persona, payload):
+    payload_with_current_dni = {**(payload or {})}
+
+    if not str(payload_with_current_dni.get("dni") or "").strip():
+        payload_with_current_dni["dni"] = persona.dni
+
+    normalized_payload, errors = validar_payload_registro_empleado(payload_with_current_dni)
+
+    if normalized_payload["dni"] != persona.dni:
+        errors["dni"] = "El DNI no puede modificarse."
+
+    normalized_payload["dni"] = persona.dni
+    normalized_payload["email"] = normalizar_email(normalized_payload["email"])
+
+    return normalized_payload, errors
+
+
+def _obtener_persona_modificable(persona_id):
+    persona = db.session.get(Persona, persona_id)
+
+    if persona is None:
+        return None
+
+    if persona.empleado is None and persona.socio is None:
+        return None
+
+    return persona
+
+
+def _serializar_usuario(persona):
+    return {
+        "persona_id": persona.persona_id,
+        "dni": persona.dni,
+        "email": persona.email,
+        "nombre": persona.nombre,
+        "apellido": persona.apellido,
+        "telefono": persona.telefono,
+        "calle": persona.calle,
+        "numero_puerta": persona.numero_puerta,
+        "codigo_postal": persona.codigo_postal,
+        "roles": _roles_modificables(persona),
+    }
+
+
+def _roles_modificables(persona):
+    roles = []
+
+    if persona.empleado is not None:
+        roles.append("empleado")
+
+    if persona.socio is not None:
+        roles.append("socio")
+
+    return roles
+
+
+def _not_found_response():
+    return {
+        "status": "error",
+        "message": "No se encontró un socio o empleado disponible para modificar.",
+    }, 404
+
+
+def _validation_error(field, message):
+    return {"status": "validation_error", "errors": {field: message}}
+
+
+def _integrity_error_response(error):
+    detail = str(getattr(error, "orig", error)).lower()
+
+    if "dni" in detail:
+        return _validation_error(
+            "dni",
+            "El DNI ya se encuentra registrado en el sistema.",
+        ), 400
+
+    if "email" in detail:
+        return _validation_error(
+            "email",
+            "El email ya se encuentra registrado en el sistema.",
+        ), 400
+
+    return {
+        "status": "error",
+        "message": "No se pudo actualizar el usuario por un conflicto de datos.",
+    }, 409

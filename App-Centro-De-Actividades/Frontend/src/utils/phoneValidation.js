@@ -5,7 +5,7 @@ export const PHONE_AREA_CODE_MESSAGE =
   'Debe ingresar un código de área válido en territorio argentino. Ejemplo: 221'
 
 export const PHONE_TOTAL_DIGITS_MESSAGE =
-  'El "Teléfono" debe alcanzar los 10 dígitos totales incluyendo el código de área. Ejemplo: 2214446633'
+  'El teléfono debe alcanzar los 10 dígitos totales incluyendo el código de área. Ejemplo: 2214446633'
 
 export function getPhoneValidationMessage(value) {
   if (!/^\d+$/.test(value)) {
