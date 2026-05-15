@@ -54,6 +54,11 @@ class Empleado(db.Model):
     )
 
     persona = db.relationship("Persona", back_populates="empleado")
+    asistencias_registradas = db.relationship(
+        "Asistencia",
+        back_populates="empleado_registro",
+        cascade="all, delete-orphan",
+    )
 
 
 class Socio(db.Model):
@@ -66,6 +71,16 @@ class Socio(db.Model):
     )
 
     persona = db.relationship("Persona", back_populates="socio")
+    reservas = db.relationship(
+        "Reserva",
+        back_populates="socio",
+        cascade="all, delete-orphan",
+    )
+    listas_espera = db.relationship(
+        "ListaEspera",
+        back_populates="socio",
+        cascade="all, delete-orphan",
+    )
 
 
 class Rol(db.Model):

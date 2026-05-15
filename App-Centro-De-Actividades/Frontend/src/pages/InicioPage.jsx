@@ -37,6 +37,12 @@ function InicioPage() {
             <p className="inicio-placeholder">Contenido pendiente de implementación.</p>
           </div>
 
+          {session.role_label === 'Empleado' && (
+            <Link to="/registrar-asistencia" className="primary-action">
+              Registrar Asistencia
+            </Link>
+          )}
+
           <Link to="/pagosclientes" className="primary-action">
             Ver pagos de clientes
           </Link>

@@ -7,6 +7,7 @@ import RegistrarsePage from '../pages/RegistrarsePage.jsx'
 import PerfilPage from '../pages/PerfilPage.jsx'
 import MisPagosPage from '../pages/MisPagosPage.jsx'
 import PagosClientesPage from '../pages/PagosClientesPage.jsx'
+import RegistrarAsistenciaPage from '../pages/RegistrarAsistenciaPage.jsx'
 
 
 const router = createBrowserRouter([
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
       {
         path: '/inicio',
         element: <InicioPage />,
+      },
+      {
+        path: '/registrar-asistencia',
+        element: <RegistrarAsistenciaPage />,
       },
     ],
   },
