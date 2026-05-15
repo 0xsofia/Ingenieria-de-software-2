@@ -104,6 +104,7 @@ function RegistrarsePage() {
   const { isAuthenticated, isBootstrapping } = useAuth()
   const [serverErrors, setServerErrors] = useState({})
   const [generalError, setGeneralError] = useState('')
+  const [errorCycle, setErrorCycle] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const registerSchema = useMemo(
@@ -156,6 +157,7 @@ function RegistrarsePage() {
   }, [isAuthenticated, navigate])
 
   async function handleSubmit(values) {
+    setErrorCycle((currentCycle) => currentCycle + 1)
     setServerErrors({})
     setGeneralError('')
     setIsSubmitting(true)
@@ -218,6 +220,7 @@ function RegistrarsePage() {
             isSubmitting={isSubmitting}
             serverErrors={serverErrors}
             generalError={generalError}
+            errorCycle={errorCycle}
           />
         </div>
       </section>
