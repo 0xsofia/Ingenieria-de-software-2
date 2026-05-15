@@ -1,6 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
+from ...core.database import db
 
 class Reserva(db.Model):
     id = db.Column(db.Integer, primary_key=True)
