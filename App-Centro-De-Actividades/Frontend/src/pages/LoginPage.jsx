@@ -1,9 +1,9 @@
 import { startTransition, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { iniciarSesion, seleccionarRolDeSesion } from '../api/iniciar_sesion'
-import '../App.css'
 import { useAuth } from '../hooks/useAuth'
+import './LoginPage.css'
 
 const INITIAL_FORM = {
   email: '',
@@ -14,15 +14,15 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const ROLE_CONTENT = {
   administrador: {
-    title: 'Ingresar como administrador',
+    title: 'Entrar como administrador',
     description: 'Acceso exclusivo del dueño con permisos globales del sistema.',
   },
   empleado: {
-    title: 'Ingresar como empleado',
+    title: 'Entrar como empleado',
     description: 'Accedé con los permisos operativos y administrativos de atención.',
   },
   socio: {
-    title: 'Ingresar como socio',
+    title: 'Entrar como socio',
     description: 'Continuá con la experiencia orientada a reservas, pagos y clases.',
   },
 }
@@ -31,21 +31,22 @@ const TEST_CREDENTIALS = [
   {
     role: 'Administrador',
     email: 'admin@centro.test',
-    password: '1234',
+    password: '123456.',
   },
   {
     role: 'Empleado',
     email: 'empleado@centro.test',
-    password: '1234',
+    password: '123456.',
   },
   {
     role: 'Socio',
     email: 'socio@centro.test',
-    password: '1234',
+    password: '123456.',
   },
 ]
 
 function LoginPage() {
+  const location = useLocation()
   const navigate = useNavigate()
   const {
     isAuthenticated,
@@ -58,6 +59,7 @@ function LoginPage() {
   const [form, setForm] = useState(INITIAL_FORM)
   const [fieldErrors, setFieldErrors] = useState({})
   const [requestError, setRequestError] = useState('')
+  const [successMessage, setSuccessMessage] = useState(location.state?.flashMessage || '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSelectingRole, setIsSelectingRole] = useState(false)
 
@@ -67,6 +69,17 @@ function LoginPage() {
     }
   }, [isAuthenticated, navigate])
 
+  useEffect(() => {
+    const flashMessage = location.state?.flashMessage
+    if (!flashMessage) {
+      return
+    }
+
+    startTransition(() => {
+      navigate(location.pathname, { replace: true, state: null })
+    })
+  }, [location.pathname, location.state, navigate])
+
   function handleChange(event) {
     const { name, value } = event.target
 
@@ -74,6 +87,10 @@ function LoginPage() {
       ...currentForm,
       [name]: value,
     }))
+
+    if (successMessage) {
+      setSuccessMessage('')
+    }
 
     if (fieldErrors[name]) {
       setFieldErrors((currentErrors) => {
@@ -90,6 +107,7 @@ function LoginPage() {
     const clientErrors = validateForm(form)
     setFieldErrors(clientErrors)
     setRequestError('')
+    setSuccessMessage('')
 
     if (Object.keys(clientErrors).length > 0) {
       return
@@ -157,6 +175,12 @@ function LoginPage() {
         </header>
 
         <div className="auth-form-shell">
+          {successMessage ? (
+            <p className="banner banner--success" role="status">
+              {successMessage}
+            </p>
+          ) : null}
+
           {requestError ? (
             <p className="banner banner--error" role="alert">
               {requestError}
@@ -176,7 +200,7 @@ function LoginPage() {
               <div className="role-grid">
                 {pendingRoles.map((role) => {
                   const roleContent = ROLE_CONTENT[role] || {
-                    title: `Ingresar como ${role}`,
+                    title: `Entrar como ${role}`,
                     description: 'Continuá con el rol seleccionado para esta cuenta.',
                   }
 
@@ -229,6 +253,14 @@ function LoginPage() {
                 <button className="primary-action" type="submit" disabled={isSubmitting}>
                   {isSubmitting ? 'Validando credenciales...' : 'Iniciar sesión'}
                 </button>
+
+                <p className="login-register-copy">
+                  Si aún no estás registrado,{' '}
+                  <Link className="login-register-link" to="/registrarse">
+                    registrate como socio
+                  </Link>
+                  .
+                </p>
               </form>
 
               <section className="test-credentials-card" aria-labelledby="test-credentials-title">

@@ -11,8 +11,10 @@ from src.core.models.persona import (
     RolPermisoPuente,
     Socio,
 )
-from src.core.seeds.usuarios import USERS_TO_SEED, seed_usuarios
+from src.core.seeds.usuarios import DEFAULT_PASSWORD, seed_usuarios
 from src.web import create_app
+
+UNKNOWN_EMAIL = "example123@gmail.com"
 
 
 class IniciarSesionTestCase(unittest.TestCase):
@@ -28,47 +30,10 @@ class IniciarSesionTestCase(unittest.TestCase):
         db.drop_all()
         self.ctx.pop()
 
-    def test_login_como_empleado_autentica_y_crea_sesion(self):
+    def test_login_como_empleado_requiere_seleccion_y_autentica(self):
         self._crear_persona(
-            email="empleado@example.com",
-            password="1234",
-            como_empleado=True,
-            roles={"empleado": ["usuarios:ver", "clases:ver"]},
-        )
-
-        response = self.client.post(
-            "/api/login",
-            json={"email": "empleado@example.com", "password": "1234"},
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json["status"], "authenticated")
-        self.assertEqual(response.json["session"]["role"], "empleado")
-        self.assertEqual(
-            response.json["session"]["permissions"],
-            ["clases:ver", "usuarios:ver"],
-        )
-
-    def test_login_como_administrador_es_directo_y_exclusivo(self):
-        self._crear_persona(
-            email="admin@example.com",
-            password="1234",
-            roles={"administrador": ["usuarios:gestionar", "metricas:ver"]},
-        )
-
-        response = self.client.post(
-            "/api/login",
-            json={"email": "admin@example.com", "password": "1234"},
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json["status"], "authenticated")
-        self.assertEqual(response.json["session"]["role"], "administrador")
-
-    def test_login_con_dos_roles_pide_seleccion_y_luego_autentica(self):
-        self._crear_persona(
-            email="mixto@example.com",
-            password="1234",
+            email="empleado@centro.test",
+            password=DEFAULT_PASSWORD,
             como_empleado=True,
             como_socio=True,
             roles={
@@ -79,12 +44,47 @@ class IniciarSesionTestCase(unittest.TestCase):
 
         login_response = self.client.post(
             "/api/login",
-            json={"email": "mixto@example.com", "password": "1234"},
+            json={"email": "empleado@centro.test", "password": DEFAULT_PASSWORD},
         )
 
         self.assertEqual(login_response.status_code, 200)
         self.assertEqual(login_response.json["status"], "role_selection_required")
-        self.assertEqual(set(login_response.json["available_roles"]), {"empleado", "socio"})
+        self.assertEqual(
+            set(login_response.json["available_roles"]), {"empleado", "socio"}
+        )
+
+        select_response = self.client.post(
+            "/api/login/select-role",
+            json={"role": "empleado"},
+        )
+
+        self.assertEqual(select_response.status_code, 200)
+        self.assertEqual(select_response.json["status"], "authenticated")
+        self.assertEqual(select_response.json["session"]["role"], "empleado")
+        self.assertEqual(
+            select_response.json["session"]["permissions"],
+            ["clases:ver", "usuarios:ver"],
+        )
+
+    def test_login_como_socio_con_credenciales_de_empleado_autentica(self):
+        self._crear_persona(
+            email="empleado@centro.test",
+            password=DEFAULT_PASSWORD,
+            como_empleado=True,
+            como_socio=True,
+            roles={
+                "empleado": ["usuarios:ver", "clases:ver"],
+                "socio": ["reservas:crear", "pagos:ver_propios"],
+            },
+        )
+
+        login_response = self.client.post(
+            "/api/login",
+            json={"email": "empleado@centro.test", "password": DEFAULT_PASSWORD},
+        )
+
+        self.assertEqual(login_response.status_code, 200)
+        self.assertEqual(login_response.json["status"], "role_selection_required")
 
         select_response = self.client.post(
             "/api/login/select-role",
@@ -99,10 +99,27 @@ class IniciarSesionTestCase(unittest.TestCase):
             ["pagos:ver_propios", "reservas:crear"],
         )
 
+    def test_login_como_socio_sin_credenciales_de_empleado_autentica(self):
+        self._crear_persona(
+            email="socio@centro.test",
+            password=DEFAULT_PASSWORD,
+            como_socio=True,
+            roles={"socio": ["reservas:crear"]},
+        )
+
+        response = self.client.post(
+            "/api/login",
+            json={"email": "socio@centro.test", "password": DEFAULT_PASSWORD},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["status"], "authenticated")
+        self.assertEqual(response.json["session"]["role"], "socio")
+
     def test_login_falla_si_email_no_existe(self):
         response = self.client.post(
             "/api/login",
-            json={"email": "desconocido@example.com", "password": "1234"},
+            json={"email": UNKNOWN_EMAIL, "password": DEFAULT_PASSWORD},
         )
 
         self.assertEqual(response.status_code, 401)
@@ -113,24 +130,40 @@ class IniciarSesionTestCase(unittest.TestCase):
 
     def test_login_falla_si_password_es_incorrecta(self):
         self._crear_persona(
-            email="empleado@example.com",
-            password="1234",
+            email="socio@centro.test",
+            password=DEFAULT_PASSWORD,
             como_socio=True,
             roles={"socio": ["reservas:crear"]},
         )
 
         response = self.client.post(
             "/api/login",
-            json={"email": "empleado@example.com", "password": "9999"},
+            json={"email": "socio@centro.test", "password": "1234"},
         )
 
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json["message"], "La contraseña es incorrecta.")
 
+    def test_login_como_administrador_es_directo_y_exclusivo(self):
+        self._crear_persona(
+            email="admin@centro.test",
+            password=DEFAULT_PASSWORD,
+            roles={"administrador": ["usuarios:gestionar", "metricas:ver"]},
+        )
+
+        response = self.client.post(
+            "/api/login",
+            json={"email": "admin@centro.test", "password": DEFAULT_PASSWORD},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["status"], "authenticated")
+        self.assertEqual(response.json["session"]["role"], "administrador")
+
     def test_obtener_estado_sesion_devuelve_pendiente_de_seleccion(self):
         self._crear_persona(
-            email="mixto@example.com",
-            password="1234",
+            email="empleado@centro.test",
+            password=DEFAULT_PASSWORD,
             como_empleado=True,
             como_socio=True,
             roles={
@@ -141,7 +174,7 @@ class IniciarSesionTestCase(unittest.TestCase):
 
         self.client.post(
             "/api/login",
-            json={"email": "mixto@example.com", "password": "1234"},
+            json={"email": "empleado@centro.test", "password": DEFAULT_PASSWORD},
         )
 
         response = self.client.get("/api/login/session")
@@ -153,14 +186,14 @@ class IniciarSesionTestCase(unittest.TestCase):
     def test_obtener_estado_sesion_reconstruye_usuario_autenticado(self):
         self._crear_persona(
             email="empleado@example.com",
-            password="1234",
+            password=DEFAULT_PASSWORD,
             como_empleado=True,
             roles={"empleado": ["usuarios:ver", "clases:ver"]},
         )
 
         self.client.post(
             "/api/login",
-            json={"email": "empleado@example.com", "password": "1234"},
+            json={"email": "empleado@example.com", "password": DEFAULT_PASSWORD},
         )
 
         response = self.client.get("/api/login/session")
@@ -176,13 +209,13 @@ class IniciarSesionTestCase(unittest.TestCase):
     def test_autorizacion_backend_confirma_permiso_del_rol_activo(self):
         self._crear_persona(
             email="admin@example.com",
-            password="1234",
+            password=DEFAULT_PASSWORD,
             roles={"administrador": ["usuarios:gestionar", "metricas:ver"]},
         )
 
         self.client.post(
             "/api/login",
-            json={"email": "admin@example.com", "password": "1234"},
+            json={"email": "admin@example.com", "password": DEFAULT_PASSWORD},
         )
 
         allowed_response = self.client.post(
@@ -202,13 +235,13 @@ class IniciarSesionTestCase(unittest.TestCase):
     def test_logout_cierra_sesion_y_desautentica(self):
         self._crear_persona(
             email="admin@example.com",
-            password="1234",
+            password=DEFAULT_PASSWORD,
             roles={"administrador": []},
         )
 
         self.client.post(
             "/api/login",
-            json={"email": "admin@example.com", "password": "1234"},
+            json={"email": "admin@example.com", "password": DEFAULT_PASSWORD},
         )
 
         logout_response = self.client.post("/api/session/logout")
@@ -220,19 +253,47 @@ class IniciarSesionTestCase(unittest.TestCase):
         self.assertEqual(session_response.status_code, 200)
         self.assertFalse(session_response.json["authenticated"])
 
-    def test_seed_usuarios_crea_los_tres_accesos_basicos(self):
+    def test_seed_usuarios_cubre_los_tres_accesos_basicos_de_la_hu(self):
         seed_usuarios()
 
         self.assertEqual(Persona.query.count(), 3)
 
-        for user_data in USERS_TO_SEED:
-            response = self.client.post(
-                "/api/login",
-                json={"email": user_data["email"], "password": "1234"},
-            )
+        admin_response = self.client.post(
+            "/api/login",
+            json={"email": "admin@centro.test", "password": DEFAULT_PASSWORD},
+        )
+        self.assertEqual(admin_response.status_code, 200)
+        self.assertEqual(admin_response.json["session"]["role"], "administrador")
 
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.json["status"], "authenticated")
+        self.client.post("/api/session/logout")
+
+        empleado_response = self.client.post(
+            "/api/login",
+            json={"email": "empleado@centro.test", "password": DEFAULT_PASSWORD},
+        )
+        self.assertEqual(empleado_response.status_code, 200)
+        self.assertEqual(empleado_response.json["status"], "role_selection_required")
+        self.assertEqual(
+            set(empleado_response.json["available_roles"]), {"empleado", "socio"}
+        )
+
+        socio_desde_empleado_response = self.client.post(
+            "/api/login/select-role",
+            json={"role": "socio"},
+        )
+        self.assertEqual(socio_desde_empleado_response.status_code, 200)
+        self.assertEqual(
+            socio_desde_empleado_response.json["session"]["role"], "socio"
+        )
+
+        self.client.post("/api/session/logout")
+
+        socio_response = self.client.post(
+            "/api/login",
+            json={"email": "socio@centro.test", "password": DEFAULT_PASSWORD},
+        )
+        self.assertEqual(socio_response.status_code, 200)
+        self.assertEqual(socio_response.json["session"]["role"], "socio")
 
     def test_cli_seed_db_puebla_usuarios_si_schema_esta_preparado(self):
         runner = self.app.test_cli_runner()
@@ -244,7 +305,7 @@ class IniciarSesionTestCase(unittest.TestCase):
 
         response = self.client.post(
             "/api/login",
-            json={"email": "admin@centro.test", "password": "1234"},
+            json={"email": "admin@centro.test", "password": DEFAULT_PASSWORD},
         )
 
         self.assertEqual(response.status_code, 200)
@@ -268,10 +329,15 @@ class IniciarSesionTestCase(unittest.TestCase):
         roles=None,
     ):
         persona = Persona(
+            dni=f"3000000{Persona.query.count() + 1}",
             email=email,
             password_hash=bcrypt.generate_password_hash(password).decode("utf-8"),
             nombre="Ada",
             apellido="Lovelace",
+            telefono=f"01115{Persona.query.count() + 1:08d}",
+            calle="Calle Falsa",
+            numero_puerta="123",
+            codigo_postal="1900",
             estado="activo",
         )
         db.session.add(persona)

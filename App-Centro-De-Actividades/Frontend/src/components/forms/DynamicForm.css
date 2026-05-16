@@ -1,0 +1,29 @@
+.dynamic-form {
+  display: grid;
+  gap: var(--section-gap);
+}
+
+.dynamic-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 18px;
+}
+
+.dynamic-form__field--full {
+  grid-column: 1 / -1;
+}
+
+.dynamic-form__actions {
+  display: grid;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .dynamic-form__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dynamic-form__field--full {
+    grid-column: auto;
+  }
+}
