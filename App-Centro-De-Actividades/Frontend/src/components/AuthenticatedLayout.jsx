@@ -2,7 +2,6 @@ import { startTransition, useState } from 'react'
 import { Navigate, Outlet, useNavigate } from 'react-router-dom'
 
 import { cerrarSesion } from '../api/iniciar_sesion'
-import '../App.css'
 import { useAuth } from '../hooks/useAuth'
 import Hero from './Hero.jsx'
 

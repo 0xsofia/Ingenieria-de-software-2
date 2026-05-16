@@ -1,5 +1,5 @@
-import '../App.css'
 import { useAuth } from '../hooks/useAuth'
+import './InicioPage.css'
 
 function InicioPage() {
   const { session } = useAuth()
@@ -33,7 +33,7 @@ function InicioPage() {
         <section className="dashboard-section">
           <div className="section-heading">
             <h2>Home</h2>
-            <p>Contenido pendiente de implementación.</p>
+            <p className="inicio-placeholder">Contenido pendiente de implementación.</p>
           </div>
         </section>
       </section>

@@ -6,8 +6,11 @@ from src.core import database
 from src.core.config import config
 from src.core.seeds import run_seeds
 from src.web.controllers.iniciar_sesion import login_bp
+from src.web.controllers.registrarse import registrarse_bp
 
 from src.web.controllers.session_controller import session_bp
+from src.web.controllers.clase_controller import clase_bp
+from src.web.controllers.profesor_controller import profesor_bp
 
 from src.core.bcrypt_and_session import bcrypt, cipher, login_manager
 
@@ -30,7 +33,10 @@ def create_app(env="development", static_folder="../../static"):
     app.register_error_handler(404, error.not_found_error)
 
     app.register_blueprint(login_bp)
+    app.register_blueprint(registrarse_bp)
     app.register_blueprint(session_bp)
+    app.register_blueprint(clase_bp)
+    app.register_blueprint(profesor_bp)
 
     @app.cli.command(name="reset_db")
     def reset_db():

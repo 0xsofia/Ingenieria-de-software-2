@@ -3,6 +3,8 @@ import { createBrowserRouter } from 'react-router-dom'
 import AuthenticatedLayout from '../components/AuthenticatedLayout.jsx'
 import InicioPage from '../pages/InicioPage.jsx'
 import LoginPage from '../pages/LoginPage.jsx'
+import CrearClasePage from '../pages/CrearClasePage.jsx'
+import RegistrarsePage from '../pages/RegistrarsePage.jsx'
 import PerfilPage from '../pages/PerfilPage.jsx'
 
 
@@ -16,6 +18,10 @@ const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
+    path: '/registrarse',
+    element: <RegistrarsePage />,
+  },
+  {
     element: <AuthenticatedLayout />,
     children: [
       {
@@ -23,6 +29,10 @@ const router = createBrowserRouter([
         element: <InicioPage />,
       },
     ],
+  },
+  {
+    path:'/crearclase',
+    element:<CrearClasePage />,
   },
   {
     path: '/verperfil',

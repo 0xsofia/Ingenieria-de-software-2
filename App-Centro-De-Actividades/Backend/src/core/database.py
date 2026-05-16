@@ -54,6 +54,8 @@ def ensure_seed_prerequisites():
         "permiso",
         "persona_rol_puente",
         "rol_permiso_puente",
+        "profesor",
+        
     }
     existing_tables = set(inspect(db.engine).get_table_names())
 

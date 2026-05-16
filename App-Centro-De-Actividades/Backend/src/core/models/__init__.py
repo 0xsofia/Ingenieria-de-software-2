@@ -1,5 +1,6 @@
 # Import model modules here so Alembic autogenerate can see them.
-
+from src.core.models.clase import (Clase,TipoClaseEnum)
+from src.core.models.profesor import Profesor
 from src.core.models.persona import (
     Empleado,
     Permiso,
@@ -18,4 +19,7 @@ __all__ = [
     "Permiso",
     "PersonaRolPuente",
     "RolPermisoPuente",
+    
+    "Clase",
+    "Profesor"
 ]

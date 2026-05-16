@@ -1,0 +1,1512 @@
+{
+  "source": "ENACOM",
+  "generated_from": "cod_area_arg.xls",
+  "total_codigos": 300,
+  "codigos_area": [
+    {
+      "codigo_area": "11",
+      "area_local": "AMBA",
+      "provincia": "AMBA"
+    },
+    {
+      "codigo_area": "011",
+      "area_local": "AMBA",
+      "provincia": "AMBA"
+    },
+    {
+      "codigo_area": "220",
+      "area_local": "MERLO (PROV.  BUENOS AIRES)",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "221",
+      "area_local": "LA PLATA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "223",
+      "area_local": "MAR DEL PLATA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "230",
+      "area_local": "PILAR (PROV.  BUENOS AIRES)",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "236",
+      "area_local": "JUNIN (PROV.  BUENOS AIRES)",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "237",
+      "area_local": "MORENO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "249",
+      "area_local": "TANDIL",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "260",
+      "area_local": "SAN RAFAEL (PROV. MENDOZA)",
+      "provincia": "MENDOZA"
+    },
+    {
+      "codigo_area": "261",
+      "area_local": "MENDOZA",
+      "provincia": "MENDOZA"
+    },
+    {
+      "codigo_area": "263",
+      "area_local": "SAN MARTIN (PROV.  MENDOZA)",
+      "provincia": "MENDOZA"
+    },
+    {
+      "codigo_area": "264",
+      "area_local": "SAN JUAN",
+      "provincia": "SAN JUAN"
+    },
+    {
+      "codigo_area": "266",
+      "area_local": "SAN LUIS (PROV. SAN LUIS)",
+      "provincia": "SAN LUIS"
+    },
+    {
+      "codigo_area": "280",
+      "area_local": "TRELEW",
+      "provincia": "CHUBUT"
+    },
+    {
+      "codigo_area": "291",
+      "area_local": "BAHIA BLANCA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "294",
+      "area_local": "SAN CARLOS DE BARILOCHE",
+      "provincia": "RIO NEGRO"
+    },
+    {
+      "codigo_area": "297",
+      "area_local": "COMODORO RIVADAVIA",
+      "provincia": "CHUBUT"
+    },
+    {
+      "codigo_area": "298",
+      "area_local": "GENERAL ROCA (PROV.  RIO NEGRO)",
+      "provincia": "RIO NEGRO"
+    },
+    {
+      "codigo_area": "299",
+      "area_local": "NEUQUEN",
+      "provincia": "NEUQUEN"
+    },
+    {
+      "codigo_area": "336",
+      "area_local": "SAN NICOLAS",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "341",
+      "area_local": "ROSARIO",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "342",
+      "area_local": "SANTA FE",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "343",
+      "area_local": "PARANA",
+      "provincia": "ENTRE RIOS"
+    },
+    {
+      "codigo_area": "345",
+      "area_local": "CONCORDIA",
+      "provincia": "ENTRE RIOS"
+    },
+    {
+      "codigo_area": "348",
+      "area_local": "ESCOBAR",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "351",
+      "area_local": "CORDOBA",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "353",
+      "area_local": "VILLA MARIA",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "358",
+      "area_local": "RIO CUARTO",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "362",
+      "area_local": "RESISTENCIA",
+      "provincia": "CHACO"
+    },
+    {
+      "codigo_area": "364",
+      "area_local": "PRESIDENCIA ROQUE SAENZ PEÑA",
+      "provincia": "CHACO"
+    },
+    {
+      "codigo_area": "370",
+      "area_local": "FORMOSA",
+      "provincia": "FORMOSA"
+    },
+    {
+      "codigo_area": "376",
+      "area_local": "POSADAS",
+      "provincia": "MISIONES"
+    },
+    {
+      "codigo_area": "379",
+      "area_local": "CORRIENTES",
+      "provincia": "CORRIENTES"
+    },
+    {
+      "codigo_area": "380",
+      "area_local": "LA RIOJA",
+      "provincia": "LA RIOJA"
+    },
+    {
+      "codigo_area": "381",
+      "area_local": "SAN MIGUEL DE TUCUMAN",
+      "provincia": "TUCUMAN"
+    },
+    {
+      "codigo_area": "383",
+      "area_local": "CATAMARCA",
+      "provincia": "CATAMARCA"
+    },
+    {
+      "codigo_area": "385",
+      "area_local": "SANTIAGO DEL ESTERO",
+      "provincia": "SANTIAGO DEL ESTERO"
+    },
+    {
+      "codigo_area": "387",
+      "area_local": "SALTA",
+      "provincia": "SALTA"
+    },
+    {
+      "codigo_area": "388",
+      "area_local": "SAN SALVADOR DE JUJUY",
+      "provincia": "JUJUY"
+    },
+    {
+      "codigo_area": "2202",
+      "area_local": "GONZALEZ CATAN",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2221",
+      "area_local": "MAGDALENA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2223",
+      "area_local": "CORONEL BRANDSEN",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2224",
+      "area_local": "GLEW",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2225",
+      "area_local": "ALEJANDRO KORN",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2226",
+      "area_local": "CAÑUELAS",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2227",
+      "area_local": "LOBOS",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2229",
+      "area_local": "JUAN MARIA GUTIERREZ",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2241",
+      "area_local": "CHASCOMUS",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2242",
+      "area_local": "LEZAMA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2243",
+      "area_local": "GENERAL BELGRANO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2244",
+      "area_local": "LAS FLORES (PROV.  BUENOS AIRES)",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2245",
+      "area_local": "DOLORES (PROV.  BUENOS AIRES)",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2246",
+      "area_local": "SANTA TERESITA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2252",
+      "area_local": "SAN CLEMENTE DEL TUYU",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2254",
+      "area_local": "PINAMAR",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2255",
+      "area_local": "VILLA GESELL",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2257",
+      "area_local": "MAR DE AJO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2261",
+      "area_local": "LOBERIA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2262",
+      "area_local": "NECOCHEA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2264",
+      "area_local": "LA DULCE",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2265",
+      "area_local": "CORONEL VIDAL",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2266",
+      "area_local": "BALCARCE",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2267",
+      "area_local": "GENERAL MADARIAGA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2268",
+      "area_local": "MAIPU (PROV.  BUENOS AIRES)",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2271",
+      "area_local": "MONTE",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2272",
+      "area_local": "NAVARRO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2273",
+      "area_local": "CARMEN DE ARECO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2274",
+      "area_local": "CARLOS SPEGAZZINI",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2281",
+      "area_local": "AZUL",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2283",
+      "area_local": "TAPALQUE",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2284",
+      "area_local": "OLAVARRIA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2285",
+      "area_local": "LAPRIDA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2286",
+      "area_local": "GENERAL LAMADRID",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2291",
+      "area_local": "MIRAMAR (PROV.  BUENOS AIRES)",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2292",
+      "area_local": "BENITO JUAREZ",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2296",
+      "area_local": "AYACUCHO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2297",
+      "area_local": "RAUCH",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2302",
+      "area_local": "GENERAL PICO",
+      "provincia": "LA PAMPA"
+    },
+    {
+      "codigo_area": "2314",
+      "area_local": "BOLIVAR",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2316",
+      "area_local": "DAIREAUX",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2317",
+      "area_local": "9 DE JULIO (PROV.  BUENOS AIRES)",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2320",
+      "area_local": "JOSE C. PAZ",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2323",
+      "area_local": "LUJAN (PROV.  BUENOS AIRES)",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2324",
+      "area_local": "MERCEDES (PROV.  BUENOS AIRES)",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2325",
+      "area_local": "SAN ANDRES DE GILES",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2326",
+      "area_local": "SAN ANTONIO DE ARECO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2331",
+      "area_local": "REALICO",
+      "provincia": "LA PAMPA"
+    },
+    {
+      "codigo_area": "2333",
+      "area_local": "QUEMU QUEMU",
+      "provincia": "LA PAMPA"
+    },
+    {
+      "codigo_area": "2334",
+      "area_local": "EDUARDO CASTEX",
+      "provincia": "LA PAMPA"
+    },
+    {
+      "codigo_area": "2335",
+      "area_local": "CALEUFU",
+      "provincia": "LA PAMPA"
+    },
+    {
+      "codigo_area": "2336",
+      "area_local": "HUINCA RENANCO",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "2337",
+      "area_local": "AMERICA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2338",
+      "area_local": "VICTORICA",
+      "provincia": "LA PAMPA"
+    },
+    {
+      "codigo_area": "2342",
+      "area_local": "BRAGADO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2343",
+      "area_local": "NORBERTO DE LA RIESTRA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2344",
+      "area_local": "SALADILLO (PROV.  BUENOS AIRES)",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2345",
+      "area_local": "25 DE MAYO (PROV.  BUENOS AIRES)",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2346",
+      "area_local": "CHIVILCOY",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2352",
+      "area_local": "CHACABUCO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2353",
+      "area_local": "GENERAL ARENALES",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2354",
+      "area_local": "VEDIA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2355",
+      "area_local": "LINCOLN",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2356",
+      "area_local": "GENERAL PINTO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2357",
+      "area_local": "CARLOS TEJEDOR",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2358",
+      "area_local": "LOS TOLDOS (PROV.  BUENOS AIRES)",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2392",
+      "area_local": "TRENQUE LAUQUEN",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2393",
+      "area_local": "SALAZAR",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2394",
+      "area_local": "TRES LOMAS",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2395",
+      "area_local": "CARLOS CASARES",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2396",
+      "area_local": "PEHUAJO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2473",
+      "area_local": "COLON (PROV.  BUENOS AIRES)",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2474",
+      "area_local": "SALTO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2475",
+      "area_local": "ROJAS",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2477",
+      "area_local": "PERGAMINO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2478",
+      "area_local": "ARRECIFES",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2622",
+      "area_local": "TUNUYAN",
+      "provincia": "MENDOZA"
+    },
+    {
+      "codigo_area": "2624",
+      "area_local": "USPALLATA",
+      "provincia": "MENDOZA"
+    },
+    {
+      "codigo_area": "2625",
+      "area_local": "GENERAL ALVEAR (PROV.  MENDOZA)",
+      "provincia": "MENDOZA"
+    },
+    {
+      "codigo_area": "2626",
+      "area_local": "LA PAZ (PROV.  MENDOZA)",
+      "provincia": "MENDOZA"
+    },
+    {
+      "codigo_area": "2646",
+      "area_local": "SAN AGUSTIN DEL VALLE FERTIL",
+      "provincia": "SAN JUAN"
+    },
+    {
+      "codigo_area": "2647",
+      "area_local": "JACHAL",
+      "provincia": "SAN JUAN"
+    },
+    {
+      "codigo_area": "2648",
+      "area_local": "CALINGASTA",
+      "provincia": "SAN JUAN"
+    },
+    {
+      "codigo_area": "2651",
+      "area_local": "SAN FRANCISCO DEL MONTE DE ORO",
+      "provincia": "SAN LUIS"
+    },
+    {
+      "codigo_area": "2655",
+      "area_local": "LA TOMA",
+      "provincia": "SAN LUIS"
+    },
+    {
+      "codigo_area": "2656",
+      "area_local": "TILISARAO",
+      "provincia": "SAN LUIS"
+    },
+    {
+      "codigo_area": "2657",
+      "area_local": "MERCEDES (PROV.  SAN LUIS)",
+      "provincia": "SAN LUIS"
+    },
+    {
+      "codigo_area": "2658",
+      "area_local": "BUENA ESPERANZA",
+      "provincia": "SAN LUIS"
+    },
+    {
+      "codigo_area": "2901",
+      "area_local": "USHUAIA",
+      "provincia": "TIERRA DEL FUEGO"
+    },
+    {
+      "codigo_area": "2902",
+      "area_local": "RIO TURBIO",
+      "provincia": "SANTA CRUZ"
+    },
+    {
+      "codigo_area": "2903",
+      "area_local": "RIO MAYO",
+      "provincia": "CHUBUT"
+    },
+    {
+      "codigo_area": "2920",
+      "area_local": "VIEDMA",
+      "provincia": "RIO NEGRO"
+    },
+    {
+      "codigo_area": "2921",
+      "area_local": "CORONEL DORREGO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2922",
+      "area_local": "CORONEL PRINGLES",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2923",
+      "area_local": "PIGÜE",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2924",
+      "area_local": "DARREGUEIRA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2925",
+      "area_local": "VILLA IRIS",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2926",
+      "area_local": "CORONEL SUAREZ",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2927",
+      "area_local": "MEDANOS (PROV.  BUENOS AIRES)",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2928",
+      "area_local": "PEDRO LURO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2929",
+      "area_local": "GUAMINI",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2931",
+      "area_local": "RIO COLORADO (PROV. RIO NEGRO)",
+      "provincia": "RIO NEGRO"
+    },
+    {
+      "codigo_area": "2932",
+      "area_local": "PUNTA ALTA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2933",
+      "area_local": "HUANGUELEN SUR",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2934",
+      "area_local": "SAN ANTONIO OESTE",
+      "provincia": "RIO NEGRO"
+    },
+    {
+      "codigo_area": "2935",
+      "area_local": "RIVERA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2936",
+      "area_local": "CARHUE",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2940",
+      "area_local": "INGENIERO JACOBACCI",
+      "provincia": "RIO NEGRO"
+    },
+    {
+      "codigo_area": "2942",
+      "area_local": "ZAPALA",
+      "provincia": "NEUQUEN"
+    },
+    {
+      "codigo_area": "2945",
+      "area_local": "ESQUEL",
+      "provincia": "CHUBUT"
+    },
+    {
+      "codigo_area": "2946",
+      "area_local": "CHOELE CHOEL",
+      "provincia": "RIO NEGRO"
+    },
+    {
+      "codigo_area": "2948",
+      "area_local": "CHOS MALAL",
+      "provincia": "NEUQUEN"
+    },
+    {
+      "codigo_area": "2952",
+      "area_local": "GENERAL ACHA",
+      "provincia": "LA PAMPA"
+    },
+    {
+      "codigo_area": "2953",
+      "area_local": "MACACHIN",
+      "provincia": "LA PAMPA"
+    },
+    {
+      "codigo_area": "2954",
+      "area_local": "SANTA ROSA (PROV.  LA PAMPA)",
+      "provincia": "LA PAMPA"
+    },
+    {
+      "codigo_area": "2962",
+      "area_local": "SAN JULIAN",
+      "provincia": "SANTA CRUZ"
+    },
+    {
+      "codigo_area": "2963",
+      "area_local": "PERITO MORENO",
+      "provincia": "SANTA CRUZ"
+    },
+    {
+      "codigo_area": "2964",
+      "area_local": "RIO GRANDE (PROV.  TIERRA DEL FUEGO)",
+      "provincia": "TIERRA DEL FUEGO"
+    },
+    {
+      "codigo_area": "2966",
+      "area_local": "RIO GALLEGOS",
+      "provincia": "SANTA CRUZ"
+    },
+    {
+      "codigo_area": "2972",
+      "area_local": "SAN MARTIN DE LOS ANDES",
+      "provincia": "NEUQUEN"
+    },
+    {
+      "codigo_area": "2982",
+      "area_local": "ORENSE",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "2983",
+      "area_local": "TRES ARROYOS",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "3327",
+      "area_local": "LOPEZ CAMELO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "3329",
+      "area_local": "SAN PEDRO (PROV. BUENOS AIRES)",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "3382",
+      "area_local": "RUFINO",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3385",
+      "area_local": "LABOULAYE",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3387",
+      "area_local": "BOUCHARD",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3388",
+      "area_local": "GENERAL VILLEGAS",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "3400",
+      "area_local": "VILLA CONSTITUCION",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3401",
+      "area_local": "EL TREBOL",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3402",
+      "area_local": "ARROYO SECO",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3404",
+      "area_local": "SAN CARLOS CENTRO",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3405",
+      "area_local": "SAN JAVIER (PROV.  SANTA FE)",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3406",
+      "area_local": "SAN JORGE (PROV.  SANTA FE)",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3407",
+      "area_local": "RAMALLO",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "3408",
+      "area_local": "SAN CRISTOBAL",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3409",
+      "area_local": "MOISES VILLE",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3435",
+      "area_local": "NOGOYA",
+      "provincia": "ENTRE RIOS"
+    },
+    {
+      "codigo_area": "3436",
+      "area_local": "VICTORIA",
+      "provincia": "ENTRE RIOS"
+    },
+    {
+      "codigo_area": "3437",
+      "area_local": "LA PAZ (PROV.  ENTRE RIOS)",
+      "provincia": "ENTRE RIOS"
+    },
+    {
+      "codigo_area": "3438",
+      "area_local": "BOVRIL",
+      "provincia": "ENTRE RIOS"
+    },
+    {
+      "codigo_area": "3442",
+      "area_local": "CONCEPCION DEL URUGUAY",
+      "provincia": "ENTRE RIOS"
+    },
+    {
+      "codigo_area": "3444",
+      "area_local": "GUALEGUAY",
+      "provincia": "ENTRE RIOS"
+    },
+    {
+      "codigo_area": "3445",
+      "area_local": "ROSARIO DEL TALA",
+      "provincia": "ENTRE RIOS"
+    },
+    {
+      "codigo_area": "3446",
+      "area_local": "GUALEGUAYCHU",
+      "provincia": "ENTRE RIOS"
+    },
+    {
+      "codigo_area": "3447",
+      "area_local": "COLON (PROV.  ENTRE RIOS)",
+      "provincia": "ENTRE RIOS"
+    },
+    {
+      "codigo_area": "3454",
+      "area_local": "FEDERAL",
+      "provincia": "ENTRE RIOS"
+    },
+    {
+      "codigo_area": "3455",
+      "area_local": "VILLAGUAY",
+      "provincia": "ENTRE RIOS"
+    },
+    {
+      "codigo_area": "3456",
+      "area_local": "CHAJARI",
+      "provincia": "ENTRE RIOS"
+    },
+    {
+      "codigo_area": "3458",
+      "area_local": "SAN JOSE DE FELICIANO",
+      "provincia": "ENTRE RIOS"
+    },
+    {
+      "codigo_area": "3460",
+      "area_local": "SANTA TERESA (PROV.  SANTA FE)",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3462",
+      "area_local": "VENADO TUERTO",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3463",
+      "area_local": "CANALS",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3464",
+      "area_local": "CASILDA",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3465",
+      "area_local": "FIRMAT",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3466",
+      "area_local": "BARRANCAS (PROV.  SANTA FE)",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3467",
+      "area_local": "CRUZ ALTA",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3468",
+      "area_local": "CORRAL DE BUSTOS",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3469",
+      "area_local": "ACEBAL",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3471",
+      "area_local": "CAÑADA DE GOMEZ",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3472",
+      "area_local": "MARCOS JUAREZ",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3476",
+      "area_local": "SAN LORENZO (PROV.  SANTA FE)",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3482",
+      "area_local": "RECONQUISTA",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3483",
+      "area_local": "VERA",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3487",
+      "area_local": "ZARATE",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "3489",
+      "area_local": "CAMPANA",
+      "provincia": "BUENOS AIRES"
+    },
+    {
+      "codigo_area": "3491",
+      "area_local": "CERES",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3492",
+      "area_local": "RAFAELA",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3493",
+      "area_local": "SUNCHALES",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3496",
+      "area_local": "ESPERANZA (PROV.  SANTA FE)",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3497",
+      "area_local": "LLAMBI CAMPBELL",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3498",
+      "area_local": "SAN JUSTO (PROV.  SANTA FE)",
+      "provincia": "SANTA FE"
+    },
+    {
+      "codigo_area": "3521",
+      "area_local": "DEAN FUNES",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3522",
+      "area_local": "VILLA DE MARIA DE RIO SECO",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3524",
+      "area_local": "VILLA DEL TOTORAL",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3525",
+      "area_local": "JESUS MARIA",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3532",
+      "area_local": "OLIVA",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3533",
+      "area_local": "LAS VARILLAS",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3537",
+      "area_local": "BELL VILLE",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3541",
+      "area_local": "VILLA CARLOS PAZ",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3542",
+      "area_local": "SALSACATE",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3543",
+      "area_local": "ARGÜELLO",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3544",
+      "area_local": "VILLA DOLORES",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3546",
+      "area_local": "SANTA ROSA DE CALAMUCHITA",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3547",
+      "area_local": "ALTA GRACIA",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3548",
+      "area_local": "LA FALDA",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3549",
+      "area_local": "CRUZ DEL EJE",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3562",
+      "area_local": "MORTEROS",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3563",
+      "area_local": "BALNEARIA",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3564",
+      "area_local": "SAN FRANCISCO (PROV. CORDOBA)",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3571",
+      "area_local": "RIO TERCERO",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3572",
+      "area_local": "RIO SEGUNDO",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3573",
+      "area_local": "VILLA DEL ROSARIO (PROV.  CORDOBA)",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3574",
+      "area_local": "RIO PRIMERO",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3575",
+      "area_local": "LA PUERTA (PROV.  CORDOBA)",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3576",
+      "area_local": "ARROYITO (PROV.  CORDOBA)",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3582",
+      "area_local": "SAMPACHO",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3583",
+      "area_local": "VICUÑA MACKENNA",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3584",
+      "area_local": "LA CARLOTA",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3585",
+      "area_local": "ADELIA MARIA",
+      "provincia": "CORDOBA"
+    },
+    {
+      "codigo_area": "3711",
+      "area_local": "INGENIERO GUILLERMO N. JUAREZ",
+      "provincia": "FORMOSA"
+    },
+    {
+      "codigo_area": "3715",
+      "area_local": "LAS LOMITAS",
+      "provincia": "FORMOSA"
+    },
+    {
+      "codigo_area": "3716",
+      "area_local": "IBARRETA",
+      "provincia": "FORMOSA"
+    },
+    {
+      "codigo_area": "3718",
+      "area_local": "CLORINDA",
+      "provincia": "FORMOSA"
+    },
+    {
+      "codigo_area": "3721",
+      "area_local": "CHARADAI",
+      "provincia": "CHACO"
+    },
+    {
+      "codigo_area": "3725",
+      "area_local": "GENERAL JOSE DE SAN MARTIN",
+      "provincia": "CHACO"
+    },
+    {
+      "codigo_area": "3731",
+      "area_local": "CHARATA",
+      "provincia": "CHACO"
+    },
+    {
+      "codigo_area": "3734",
+      "area_local": "PRESIDENCIA DE LA PLAZA",
+      "provincia": "CHACO"
+    },
+    {
+      "codigo_area": "3735",
+      "area_local": "VILLA ANGELA",
+      "provincia": "CHACO"
+    },
+    {
+      "codigo_area": "3741",
+      "area_local": "BERNARDO DE IRIGOYEN",
+      "provincia": "MISIONES"
+    },
+    {
+      "codigo_area": "3743",
+      "area_local": "PUERTO RICO",
+      "provincia": "MISIONES"
+    },
+    {
+      "codigo_area": "3751",
+      "area_local": "ELDORADO",
+      "provincia": "MISIONES"
+    },
+    {
+      "codigo_area": "3754",
+      "area_local": "LEANDRO N. ALEM (PROV.  MISIONES)",
+      "provincia": "MISIONES"
+    },
+    {
+      "codigo_area": "3755",
+      "area_local": "OBERA",
+      "provincia": "MISIONES"
+    },
+    {
+      "codigo_area": "3756",
+      "area_local": "SANTO TOME",
+      "provincia": "CORRIENTES"
+    },
+    {
+      "codigo_area": "3757",
+      "area_local": "PUERTO IGUAZU",
+      "provincia": "MISIONES"
+    },
+    {
+      "codigo_area": "3758",
+      "area_local": "APOSTOLES",
+      "provincia": "MISIONES"
+    },
+    {
+      "codigo_area": "3772",
+      "area_local": "PASO DE LOS LIBRES",
+      "provincia": "CORRIENTES"
+    },
+    {
+      "codigo_area": "3773",
+      "area_local": "MERCEDES (PROV.  CORRIENTES)",
+      "provincia": "CORRIENTES"
+    },
+    {
+      "codigo_area": "3774",
+      "area_local": "CURUZU CUATIA",
+      "provincia": "CORRIENTES"
+    },
+    {
+      "codigo_area": "3775",
+      "area_local": "MONTE CASEROS",
+      "provincia": "CORRIENTES"
+    },
+    {
+      "codigo_area": "3777",
+      "area_local": "GOYA",
+      "provincia": "CORRIENTES"
+    },
+    {
+      "codigo_area": "3781",
+      "area_local": "CAA CATI",
+      "provincia": "CORRIENTES"
+    },
+    {
+      "codigo_area": "3782",
+      "area_local": "SALADAS",
+      "provincia": "CORRIENTES"
+    },
+    {
+      "codigo_area": "3786",
+      "area_local": "ITUZAINGO",
+      "provincia": "CORRIENTES"
+    },
+    {
+      "codigo_area": "3821",
+      "area_local": "CHEPES",
+      "provincia": "LA RIOJA"
+    },
+    {
+      "codigo_area": "3825",
+      "area_local": "CHILECITO",
+      "provincia": "LA RIOJA"
+    },
+    {
+      "codigo_area": "3826",
+      "area_local": "CHAMICAL",
+      "provincia": "LA RIOJA"
+    },
+    {
+      "codigo_area": "3827",
+      "area_local": "AIMOGASTA",
+      "provincia": "LA RIOJA"
+    },
+    {
+      "codigo_area": "3832",
+      "area_local": "RECREO (PROV.  CATAMARCA)",
+      "provincia": "CATAMARCA"
+    },
+    {
+      "codigo_area": "3835",
+      "area_local": "ANDALGALA",
+      "provincia": "CATAMARCA"
+    },
+    {
+      "codigo_area": "3837",
+      "area_local": "TINOGASTA",
+      "provincia": "CATAMARCA"
+    },
+    {
+      "codigo_area": "3838",
+      "area_local": "SANTA MARIA (PROV.  CATAMARCA)",
+      "provincia": "CATAMARCA"
+    },
+    {
+      "codigo_area": "3841",
+      "area_local": "MONTE QUEMADO",
+      "provincia": "SANTIAGO DEL ESTERO"
+    },
+    {
+      "codigo_area": "3843",
+      "area_local": "QUIMILI",
+      "provincia": "SANTIAGO DEL ESTERO"
+    },
+    {
+      "codigo_area": "3844",
+      "area_local": "AÑATUYA",
+      "provincia": "SANTIAGO DEL ESTERO"
+    },
+    {
+      "codigo_area": "3845",
+      "area_local": "LORETO",
+      "provincia": "SANTIAGO DEL ESTERO"
+    },
+    {
+      "codigo_area": "3846",
+      "area_local": "TINTINA",
+      "provincia": "SANTIAGO DEL ESTERO"
+    },
+    {
+      "codigo_area": "3854",
+      "area_local": "FRIAS",
+      "provincia": "SANTIAGO DEL ESTERO"
+    },
+    {
+      "codigo_area": "3855",
+      "area_local": "SUNCHO CORRAL",
+      "provincia": "SANTIAGO DEL ESTERO"
+    },
+    {
+      "codigo_area": "3856",
+      "area_local": "OJO DE AGUA (PROV. SANTIAGO DEL ESTERO)",
+      "provincia": "SANTIAGO DEL ESTERO"
+    },
+    {
+      "codigo_area": "3857",
+      "area_local": "BANDERA",
+      "provincia": "SANTIAGO DEL ESTERO"
+    },
+    {
+      "codigo_area": "3858",
+      "area_local": "TERMAS DE RIO HONDO",
+      "provincia": "SANTIAGO DEL ESTERO"
+    },
+    {
+      "codigo_area": "3861",
+      "area_local": "NUEVA ESPERANZA",
+      "provincia": "SANTIAGO DEL ESTERO"
+    },
+    {
+      "codigo_area": "3862",
+      "area_local": "TRANCAS",
+      "provincia": "TUCUMAN"
+    },
+    {
+      "codigo_area": "3863",
+      "area_local": "MONTEROS",
+      "provincia": "TUCUMAN"
+    },
+    {
+      "codigo_area": "3865",
+      "area_local": "CONCEPCION (PROV. TUCUMAN)",
+      "provincia": "TUCUMAN"
+    },
+    {
+      "codigo_area": "3867",
+      "area_local": "TAFI DEL VALLE",
+      "provincia": "TUCUMAN"
+    },
+    {
+      "codigo_area": "3868",
+      "area_local": "CAFAYATE",
+      "provincia": "SALTA"
+    },
+    {
+      "codigo_area": "3869",
+      "area_local": "RANCHILLOS",
+      "provincia": "TUCUMAN"
+    },
+    {
+      "codigo_area": "3873",
+      "area_local": "TARTAGAL (PROV.  SALTA)",
+      "provincia": "SALTA"
+    },
+    {
+      "codigo_area": "3876",
+      "area_local": "METAN",
+      "provincia": "SALTA"
+    },
+    {
+      "codigo_area": "3877",
+      "area_local": "JOAQUIN V. GONZALEZ",
+      "provincia": "SALTA"
+    },
+    {
+      "codigo_area": "3878",
+      "area_local": "ORAN",
+      "provincia": "SALTA"
+    },
+    {
+      "codigo_area": "3885",
+      "area_local": "LA QUIACA",
+      "provincia": "JUJUY"
+    },
+    {
+      "codigo_area": "3886",
+      "area_local": "LIBERTADOR GENERAL SAN MARTIN",
+      "provincia": "JUJUY"
+    },
+    {
+      "codigo_area": "3887",
+      "area_local": "HUMAHUACA",
+      "provincia": "JUJUY"
+    },
+    {
+      "codigo_area": "3888",
+      "area_local": "SAN PEDRO (PROV.  JUJUY)",
+      "provincia": "JUJUY"
+    },
+    {
+      "codigo_area": "3891",
+      "area_local": "LA MADRID",
+      "provincia": "TUCUMAN"
+    },
+    {
+      "codigo_area": "3892",
+      "area_local": "AMAICHA DEL VALLE",
+      "provincia": "TUCUMAN"
+    },
+    {
+      "codigo_area": "3894",
+      "area_local": "BURRUYACU",
+      "provincia": "TUCUMAN"
+    }
+  ]
+}
