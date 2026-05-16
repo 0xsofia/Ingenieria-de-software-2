@@ -30,13 +30,30 @@ class RegistrarseTestCase(unittest.TestCase):
         persona = Persona.query.filter_by(email="tomas.f@example.com").first()
         self.assertIsNotNone(persona)
         self.assertEqual(persona.dni, "11111111")
-        self.assertEqual(persona.telefono, "+5422112345678")
+        self.assertEqual(persona.telefono, "2214446633")
         self.assertIsNotNone(db.session.get(Socio, persona.persona_id))
         self.assertIsNotNone(
             PersonaRolPuente.query.filter_by(
                 persona_id=persona.persona_id, rol_id=socio_role.rol_id
             ).first()
         )
+
+    def test_registro_exitoso_con_codigo_de_area_enacom_de_cuatro_digitos(self):
+        self._crear_rol("socio")
+
+        response = self.client.post(
+            "/api/registrarse",
+            json=self._payload(
+                dni="12345678", email="codigo4@example.com", telefono="2221446633"
+            ),
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json["status"], "registered")
+
+        persona = Persona.query.filter_by(email="codigo4@example.com").first()
+        self.assertIsNotNone(persona)
+        self.assertEqual(persona.telefono, "2221446633")
 
     def test_registro_falla_si_dni_ya_existe(self):
         self._crear_rol("socio")
@@ -85,19 +102,64 @@ class RegistrarseTestCase(unittest.TestCase):
             "Repetir contraseña debe coincidir con la contraseña.",
         )
 
-    def test_registro_falla_si_telefono_no_tiene_formato_argentino(self):
+    def test_registro_falla_si_password_no_tiene_longitud_valida(self):
         self._crear_rol("socio")
 
         response = self.client.post(
             "/api/registrarse",
-            json=self._payload(telefono="221555333"),
+            json=self._payload(password="12345", repeat_password="12345"),
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json["status"], "validation_error")
+        self.assertEqual(
+            response.json["errors"]["password"],
+            "La contraseña debe tener entre 6 a 12 caracteres.",
+        )
+
+    def test_registro_falla_si_telefono_contiene_letras_espacios_o_simbolos(self):
+        self._crear_rol("socio")
+
+        response = self.client.post(
+            "/api/registrarse",
+            json=self._payload(telefono="221 444-663A"),
         )
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json["status"], "validation_error")
         self.assertEqual(
             response.json["errors"]["telefono"],
-            "Ingresá un celular válido sin 0 ni 15. Ejemplo: 22112345678.",
+            "Ingrese un telefono valido sin caracteres especiales, letras o espacios. Ejemplo 2214446633",
+        )
+
+    def test_registro_falla_si_codigo_de_area_no_es_valido(self):
+        self._crear_rol("socio")
+
+        response = self.client.post(
+            "/api/registrarse",
+            json=self._payload(telefono="1221446633"),
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json["status"], "validation_error")
+        self.assertEqual(
+            response.json["errors"]["telefono"],
+            "Debe ingresar un código de área válido en territorio argentino. Ejemplo: 221",
+        )
+
+    def test_registro_falla_si_telefono_no_alcanza_los_diez_digitos(self):
+        self._crear_rol("socio")
+
+        response = self.client.post(
+            "/api/registrarse",
+            json=self._payload(telefono="221444663"),
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json["status"], "validation_error")
+        self.assertEqual(
+            response.json["errors"]["telefono"],
+            'El "Teléfono" debe alcanzar los 10 dígitos totales incluyendo el código de área. Ejemplo: 2214446633',
         )
 
     def test_registro_falla_si_falta_rol_socio(self):
@@ -113,12 +175,12 @@ class RegistrarseTestCase(unittest.TestCase):
             "email": "tomas.f@example.com",
             "nombre": "Tomas",
             "apellido": "Fernandez",
-            "telefono": "22112345678",
+            "telefono": "2214446633",
             "calle": "23",
             "numero_puerta": "717",
             "codigo_postal": "1900",
-            "password": "1234",
-            "repeat_password": "1234",
+            "password": "123456",
+            "repeat_password": "123456",
         }
         payload.update(overrides)
         return payload

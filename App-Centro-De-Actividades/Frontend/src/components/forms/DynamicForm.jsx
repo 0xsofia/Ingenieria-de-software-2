@@ -11,17 +11,17 @@ function DynamicForm({
   isSubmitting = false,
   serverErrors = {},
   generalError = '',
+  errorCycle = 0,
 }) {
   const [values, setValues] = useState(initialValues)
   const [clientErrors, setClientErrors] = useState({})
   const [dismissedErrorState, setDismissedErrorState] = useState({
-    signature: buildErrorSignature(serverErrors, generalError),
+    cycle: errorCycle,
     serverFields: {},
     general: false,
   })
 
-  const currentErrorSignature = buildErrorSignature(serverErrors, generalError)
-  const hasFreshErrors = dismissedErrorState.signature !== currentErrorSignature
+  const hasFreshErrors = dismissedErrorState.cycle !== errorCycle
   const dismissedServerErrors = hasFreshErrors ? {} : dismissedErrorState.serverFields
   const dismissedGeneralError = hasFreshErrors ? false : dismissedErrorState.general
 
@@ -44,7 +44,7 @@ function DynamicForm({
     if (serverErrors[name]) {
       setDismissedErrorState((currentState) => ({
         ...currentState,
-        signature: currentErrorSignature,
+        cycle: errorCycle,
         serverFields: {
           ...currentState.serverFields,
           [name]: true,
@@ -55,7 +55,7 @@ function DynamicForm({
     if (generalError) {
       setDismissedErrorState((currentState) => ({
         ...currentState,
-        signature: currentErrorSignature,
+        cycle: errorCycle,
         general: true,
       }))
     }
@@ -149,10 +149,6 @@ function mapZodErrors(issues) {
   }
 
   return errors
-}
-
-function buildErrorSignature(serverErrors, generalError) {
-  return JSON.stringify({ serverErrors, generalError })
 }
 
 export default DynamicForm

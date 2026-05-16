@@ -7,6 +7,14 @@ import DynamicForm from '../components/forms/DynamicForm.jsx'
 import { useAuth } from '../hooks/useAuth'
 import './RegistrarsePage.css'
 
+const PASSWORD_LENGTH_MESSAGE = 'La contraseña debe tener entre 6 a 12 caracteres.'
+const REPEAT_PASSWORD_MESSAGE = 'Repetir contraseña debe coincidir con la contraseña.'
+const PHONE_INVALID_CHARS_MESSAGE =
+  'Ingrese un telefono valido sin caracteres especiales, letras o espacios. Ejemplo 2214446633'
+const PHONE_AREA_CODE_MESSAGE = 'Debe ingresar un código de área válido en territorio argentino. Ejemplo: 221'
+const PHONE_TOTAL_DIGITS_MESSAGE =
+  'El "Teléfono" debe tener 10 dígitos totales incluyendo el código de área. Ejemplo: 2214446633'
+
 const REGISTER_FIELDS = [
   {
     name: 'dni',
@@ -43,8 +51,8 @@ const REGISTER_FIELDS = [
     type: 'text',
     autoComplete: 'tel',
     inputMode: 'tel',
-    placeholder: '22112345678',
-    hint: 'Ingresá tu celular sin 0 ni 15. Ejemplo: 22112345678.',
+    placeholder: '2214446633',
+    hint: 'Ingresá un teléfono de 10 dígitos. Ejemplo: 2214446633.',
     fullWidth: true,
   },
   {
@@ -73,7 +81,7 @@ const REGISTER_FIELDS = [
     label: 'Contraseña',
     type: 'password',
     autoComplete: 'new-password',
-    placeholder: 'Mínimo 4 caracteres',
+    placeholder: 'Entre 6 y 12 caracteres',
   },
   {
     name: 'repeat_password',
@@ -96,6 +104,7 @@ function RegistrarsePage() {
   const { isAuthenticated, isBootstrapping } = useAuth()
   const [serverErrors, setServerErrors] = useState({})
   const [generalError, setGeneralError] = useState('')
+  const [errorCycle, setErrorCycle] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const registerSchema = useMemo(
@@ -119,23 +128,23 @@ function RegistrarsePage() {
             .string()
             .trim()
             .min(1, 'El teléfono es obligatorio.')
-            .refine(
-              (value) => normalizeArgentinaPhone(value) !== null,
-              'Ingresá un celular válido sin 0 ni 15. Ejemplo: 22112345678.'
-            )
-            .transform((value) => normalizeArgentinaPhone(value)),
+            .superRefine((value, ctx) => {
+              const validationMessage = getPhoneValidationMessage(value)
+              if (validationMessage) {
+                ctx.addIssue({ code: 'custom', message: validationMessage })
+              }
+            }),
           calle: z.string().trim().min(1, 'La calle es obligatoria.'),
           numero_puerta: z.string().trim().min(1, 'El número de puerta es obligatorio.'),
           codigo_postal: z.string().trim().min(1, 'El código postal es obligatorio.'),
           password: z
             .string()
             .min(1, 'La contraseña es obligatoria.')
-            .min(4, 'La contraseña debe tener al menos 4 caracteres.')
-            .max(128, 'La contraseña debe tener como máximo 128 caracteres.'),
+            .refine((value) => value.length >= 6 && value.length <= 12, PASSWORD_LENGTH_MESSAGE),
           repeat_password: z.string().min(1, 'Repetir contraseña es obligatorio.'),
         })
         .refine((data) => data.password === data.repeat_password, {
-          message: 'Repetir contraseña debe coincidir con la contraseña.',
+          message: REPEAT_PASSWORD_MESSAGE,
           path: ['repeat_password'],
         }),
     []
@@ -148,6 +157,7 @@ function RegistrarsePage() {
   }, [isAuthenticated, navigate])
 
   async function handleSubmit(values) {
+    setErrorCycle((currentCycle) => currentCycle + 1)
     setServerErrors({})
     setGeneralError('')
     setIsSubmitting(true)
@@ -210,6 +220,7 @@ function RegistrarsePage() {
             isSubmitting={isSubmitting}
             serverErrors={serverErrors}
             generalError={generalError}
+            errorCycle={errorCycle}
           />
         </div>
       </section>
@@ -217,64 +228,35 @@ function RegistrarsePage() {
   )
 }
 
-function normalizeArgentinaPhone(value) {
-  let digits = value.replace(/\D/g, '')
-
-  if (digits.startsWith('54')) {
-    digits = digits.slice(2)
+function getPhoneValidationMessage(value) {
+  if (!/^\d+$/.test(value)) {
+    return PHONE_INVALID_CHARS_MESSAGE
   }
 
-  if (digits.startsWith('0')) {
-    digits = digits.slice(1)
+  if (value.length !== 10) {
+    return PHONE_TOTAL_DIGITS_MESSAGE
   }
 
-  const normalizedLocalPhone = normalizeLocalMobileDigits(digits)
-  if (normalizedLocalPhone === null) {
-    return null
+  if (!hasValidAreaCode(value)) {
+    return PHONE_AREA_CODE_MESSAGE
   }
 
-  return `+54${normalizedLocalPhone}`
+  return ''
 }
 
-function normalizeLocalMobileDigits(digits) {
-  for (let areaLength = 2; areaLength <= 4; areaLength += 1) {
-    const localWithoutMobilePrefix = validateLocalPhoneDigits(digits, areaLength)
-    if (localWithoutMobilePrefix !== null) {
-      return localWithoutMobilePrefix
-    }
-
-    const localWithLegacyMobilePrefix = validateLegacyMobileDigits(digits, areaLength)
-    if (localWithLegacyMobilePrefix !== null) {
-      return localWithLegacyMobilePrefix
-    }
+function hasValidAreaCode(value) {
+  if (value.startsWith('0')) {
+    return false
   }
 
-  return null
-}
-
-function validateLocalPhoneDigits(digits, areaLength) {
-  const subscriber = digits.slice(areaLength)
-  if (subscriber.length < 6 || subscriber.length > 8) {
-    return null
+  if (value.startsWith('1') && !value.startsWith('11')) {
+    return false
   }
 
-  return areaLength + subscriber.length >= 10 && areaLength + subscriber.length <= 11
-    ? digits
-    : null
-}
-
-function validateLegacyMobileDigits(digits, areaLength) {
-  if (digits.slice(areaLength, areaLength + 2) !== '15') {
-    return null
-  }
-
-  const subscriber = digits.slice(areaLength + 2)
-  if (subscriber.length < 6 || subscriber.length > 8) {
-    return null
-  }
-
-  const localDigits = `${digits.slice(0, areaLength)}${subscriber}`
-  return localDigits.length >= 10 && localDigits.length <= 11 ? localDigits : null
+  return [2, 3, 4].some((areaLength) => {
+    const subscriberLength = value.length - areaLength
+    return subscriberLength >= 6 && subscriberLength <= 8
+  })
 }
 
 function redirectTo(navigate, path, state) {
