@@ -1,5 +1,6 @@
 from src.core.database import db
-from src.core.models import Clase, TipoClaseEnum
+from src.core.models import Clase
+from src.core.enums.clase_enum import TipoClaseEnum, NivelEnum, ActividadEnum
 from datetime import timedelta, datetime
 
 class ClaseService:
@@ -11,31 +12,30 @@ class ClaseService:
             profesor_id=data["profesor_id"],
             fecha=data["fecha"],
             horario_inicio=data["horario_inicio"],
-            actividad=data["actividad"]
+            actividad=ActividadEnum(data["actividad"])
         ).first()
 
         if clase_existente:
             raise Exception("El profesor ya tiene una clase registrada en ese horario")
 
-        horario_inicio = datetime.combine(
-            data["fecha"],
-            data["horario_inicio"]
-        )
-
+        horario_inicio = datetime.combine(datetime.strptime(data["fecha"], "%Y-%m-%d").date(), 
+                                          datetime.strptime(data["horario_inicio"], "%H:%M").time())
+           
+    
         horario_fin = (
             horario_inicio + timedelta(hours=1)
         ).time()
 
-        tipo_clase = TipoClaseEnum.PARTICULAR if data["cupo"] == 1 else TipoClaseEnum.GRUPAL
+        tipo_clase = TipoClaseEnum.PARTICULAR if data["cupos"] == 1 else TipoClaseEnum.GRUPAL
 
         nueva_clase = Clase(
             profesor_id=data["profesor_id"],
             fecha=data["fecha"],
             horario_inicio=data["horario_inicio"],
             horario_fin=horario_fin,
-            actividad=data["actividad"],
+            actividad=ActividadEnum(data["actividad"]),
             cancha=data["cancha"],
-            nivel=data["nivel"],
+            nivel= NivelEnum(data["nivel"]),
             cupos=data["cupos"],
             tipo_clase=tipo_clase
         )

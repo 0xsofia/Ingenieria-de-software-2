@@ -19,8 +19,8 @@ class Clase(db.Model):
 
     profesor_id = db.Column(
         db.Integer,
-        db.ForeignKey("profesores.id"),
+        db.ForeignKey("profesor.profesor_id"),
         nullable=False
     )
 
-    profesor = db.relationship("Profesor", back_populates="clases")#despues revisar como se puso la relacion 
+    profesor = db.relationship("Profesor", back_populates="clases")

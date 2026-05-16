@@ -1,15 +1,11 @@
-import { useMemo, useState } from "react"
-import { crearClase } from "../api/clase"
-
-const profesores = [
-  { id: 1, nombre: "Carlos" },
-  { id: 2, nombre: "Juan" }
-]
+import { useMemo, useState, useEffect } from "react"
+import { crearClase, obtenerProfesores } from "../api/clase"
 
 const actividades = [
   "Voley",
   "Futbol",
-  "Tenis"
+  "Padel",
+  "Basquet"
 ]
 
 const niveles = [
@@ -17,7 +13,6 @@ const niveles = [
   "Intermedio",
   "Experto"
 ]
-
 
 export default function CrearClasePage() {
   const today = new Date()
@@ -49,9 +44,26 @@ export default function CrearClasePage() {
     cupos: 1
   })
 
+  const [profesores, setProfesores] = useState([])
   const [mensaje, setMensaje] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const cargarProfesores = async () => {
+      try {
+        const data = await obtenerProfesores()
+        console.log(data);
+        
+        setProfesores(data)
+      } catch (err) {
+        console.error("Error al cargar profesores:", err)
+        setError("No se pudieron cargar los profesores")
+      }
+    }
+
+    cargarProfesores()
+  }, [])
 
   const tipoClase = useMemo(() => {
 
@@ -109,7 +121,7 @@ export default function CrearClasePage() {
 
     } catch (err) {
 
-      setError(err.message)
+      setError(JSON.stringify(err))
 
     } finally {
 
