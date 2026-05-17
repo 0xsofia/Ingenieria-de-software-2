@@ -159,7 +159,7 @@ class RegistrarseTestCase(unittest.TestCase):
         self.assertEqual(response.json["status"], "validation_error")
         self.assertEqual(
             response.json["errors"]["telefono"],
-            'El "Teléfono" debe alcanzar los 10 dígitos totales incluyendo el código de área. Ejemplo: 2214446633',
+            "El teléfono debe alcanzar los 10 dígitos totales incluyendo el código de área. Ejemplo: 2214446633",
         )
 
     def test_registro_falla_si_falta_rol_socio(self):

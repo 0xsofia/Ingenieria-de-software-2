@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import './DynamicForm.css'
 
-function DynamicForm({
+function DynamicForm2({
   fields,
   initialValues,
   schema,
@@ -20,16 +20,6 @@ function DynamicForm({
     serverFields: {},
     general: false,
   })
-
-  useEffect(() => {
-    setValues(initialValues)
-    setClientErrors({})
-    setDismissedErrorState({
-      cycle: errorCycle,
-      serverFields: {},
-      general: false,
-    })
-  }, [initialValues])
 
   const hasFreshErrors = dismissedErrorState.cycle !== errorCycle
   const dismissedServerErrors = hasFreshErrors ? {} : dismissedErrorState.serverFields
@@ -112,10 +102,22 @@ function DynamicForm({
                   autoComplete={field.autoComplete}
                   placeholder={field.placeholder}
                   rows={field.rows || 4}
-                  disabled={field.disabled}
-                  readOnly={field.readOnly}
                   aria-invalid={fieldError ? 'true' : 'false'}
                 />
+              ) : field.type === 'select' ? (
+                <select
+                  name={field.name}
+                  value={values[field.name] || ''}
+                  onChange={handleChange}
+                  aria-invalid={fieldError ? 'true' : 'false'}
+                >
+                  <option value="">Seleccionar {field.label.toLowerCase()}</option>
+                  {field.options?.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               ) : (
                 <input
                   name={field.name}
@@ -128,8 +130,6 @@ function DynamicForm({
                   min={field.min}
                   max={field.max}
                   step={field.step}
-                  disabled={field.disabled}
-                  readOnly={field.readOnly}
                   aria-invalid={fieldError ? 'true' : 'false'}
                 />
               )}
@@ -165,4 +165,4 @@ function mapZodErrors(issues) {
   return errors
 }
 
-export default DynamicForm
+export default DynamicForm2

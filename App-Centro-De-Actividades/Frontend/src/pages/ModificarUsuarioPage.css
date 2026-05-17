@@ -1,0 +1,19 @@
+.modify-user-frame {
+  gap: 24px;
+}
+
+.modify-user-header {
+  margin-bottom: 0;
+}
+
+.modify-user-copy {
+  max-width: 54ch;
+  margin: 12px 0 0;
+  color: var(--text-soft);
+}
+
+@media (max-width: 768px) {
+  .modify-user-copy {
+    max-width: none;
+  }
+}

@@ -1,26 +1,17 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify, request
 
-from src.core.services.clase_service import ClaseService
+from src.core.services.clase_service import validar_payload_clase, crear_clase_completa
 
-clase_bp = Blueprint("clase_bp", __name__, url_prefix="/api/clase")
+clase_bp = Blueprint("clase", __name__, url_prefix="/api/clase")
 
 
-@clase_bp.route("/crear", methods=["POST"])
+@clase_bp.post("/crear")
 def crear_clase():
+    payload = request.get_json(silent=True) or {}
+    normalized_payload, errors = validar_payload_clase(payload)
 
-    data = request.get_json()
-    print("Datos recibidos para crear clase:", data)  # Debug: Verificar datos recibidos
-    try:
+    if errors:
+        return jsonify({"status": "validation_error", "errors": errors}), 400
 
-        clase = ClaseService.crear_clase(data)
-
-        return jsonify({
-            "message": "La clase fue registrada correctamente",
-            "id": clase.clase_id
-        }), 201
-
-    except Exception as e:
-        print("Error al crear clase:", str(e))  # Debug: Verificar error específico
-        return jsonify({
-            "error": str(e)
-        }), 400
+    body, status_code = crear_clase_completa(normalized_payload)
+    return jsonify(body), status_code

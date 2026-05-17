@@ -1,14 +1,22 @@
-import { startTransition, useState } from 'react'
-import { Navigate, Outlet, useNavigate } from 'react-router-dom'
+import { startTransition, useEffect, useState } from 'react'
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { cerrarSesion } from '../api/iniciar_sesion'
 import { useAuth } from '../hooks/useAuth'
+import { consumeFlashMessage } from '../utils/navigationFlash'
 import Hero from './Hero.jsx'
 
 function AuthenticatedLayout() {
+  const location = useLocation()
   const navigate = useNavigate()
   const { clearAuth, isAuthenticated, isBootstrapping } = useAuth()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [flashMessage, setFlashMessage] = useState('')
+
+  useEffect(() => {
+    const nextFlashMessage = location.state?.flashMessage || consumeFlashMessage()
+    setFlashMessage(nextFlashMessage || '')
+  }, [location.key, location.state])
 
   async function handleLogout() {
     setIsLoggingOut(true)
@@ -48,6 +56,15 @@ function AuthenticatedLayout() {
   return (
     <div className="app-shell">
       <Hero onLogout={handleLogout} isLoggingOut={isLoggingOut} />
+      {flashMessage ? (
+        <section className="dashboard-shell">
+          <section className="dashboard-frame dashboard-frame--compact">
+            <p className="banner banner--success" role="status">
+              {flashMessage}
+            </p>
+          </section>
+        </section>
+      ) : null}
       <Outlet />
     </div>
   )
