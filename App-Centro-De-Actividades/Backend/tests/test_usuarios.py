@@ -1,0 +1,226 @@
+import unittest
+from unittest.mock import patch
+
+from src.core.bcrypt_and_session import bcrypt
+from src.core.database import db
+from src.core.models.persona import Empleado, Persona, PersonaRolPuente, Rol, Socio
+from src.core.services.mailjet_email import EmailDeliveryError
+from src.web import create_app
+
+
+class UsuariosTestCase(unittest.TestCase):
+    def setUp(self):
+        self.app = create_app("testing")
+        self.ctx = self.app.app_context()
+        self.ctx.push()
+        db.create_all()
+        self.client = self.app.test_client()
+
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+        self.ctx.pop()
+
+    @patch("src.core.services.registrarse.send_employee_access_email")
+    @patch("src.core.services.registrarse.generate_temporary_password")
+    def test_admin_puede_registrar_empleado_con_envio_de_password_temporal(
+        self, mock_generate_temporary_password, mock_send_employee_access_email
+    ):
+        mock_generate_temporary_password.return_value = "Temp42#Pwd"
+        empleado_role = self._crear_rol("empleado")
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        self._login_admin()
+
+        response = self.client.post("/api/usuarios/empleados", json=self._payload_empleado())
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json["status"], "registered")
+        self.assertEqual(response.json["redirect_to"], "/inicio")
+        self.assertIn("email", response.json["message"])
+
+        persona = Persona.query.filter_by(email="jorge.petri@example.com").first()
+        self.assertIsNotNone(persona)
+        self.assertIsNotNone(db.session.get(Empleado, persona.persona_id))
+        self.assertTrue(
+            bcrypt.check_password_hash(persona.password_hash, "Temp42#Pwd")
+        )
+        self.assertIsNotNone(
+            PersonaRolPuente.query.filter_by(
+                persona_id=persona.persona_id, rol_id=empleado_role.rol_id
+            ).first()
+        )
+        mock_send_employee_access_email.assert_called_once_with(
+            recipient_email="jorge.petri@example.com",
+            recipient_name="Jorge",
+            temporary_password="Temp42#Pwd",
+        )
+
+    @patch("src.core.services.registrarse.send_employee_access_email")
+    @patch("src.core.services.registrarse.generate_temporary_password")
+    def test_registro_de_empleado_falla_si_no_se_puede_enviar_el_email(
+        self, mock_generate_temporary_password, mock_send_employee_access_email
+    ):
+        mock_generate_temporary_password.return_value = "Temp42#Pwd"
+        mock_send_employee_access_email.side_effect = EmailDeliveryError(
+            "No se pudo enviar el email con la contraseña temporal del empleado."
+        )
+        self._crear_rol("empleado")
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        self._login_admin()
+
+        response = self.client.post("/api/usuarios/empleados", json=self._payload_empleado())
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json["status"], "error")
+        self.assertEqual(
+            response.json["message"],
+            "No se pudo enviar el email con la contraseña temporal del empleado.",
+        )
+        self.assertIsNone(Persona.query.filter_by(email="jorge.petri@example.com").first())
+
+    def test_registro_de_empleado_falla_si_no_hay_sesion_admin(self):
+        self._crear_rol("empleado")
+
+        response = self.client.post("/api/usuarios/empleados", json=self._payload_empleado())
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json["status"], "error")
+
+    def test_registro_de_empleado_falla_si_el_usuario_no_es_admin(self):
+        self._crear_rol("empleado")
+        self._crear_usuario_con_roles(
+            email="socio@centro.test",
+            dni="30000003",
+            password="123456",
+            roles=["socio"],
+        )
+        self.client.post(
+            "/api/login",
+            json={"email": "socio@centro.test", "password": "123456"},
+        )
+
+        response = self.client.post("/api/usuarios/empleados", json=self._payload_empleado())
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json["status"], "error")
+
+    def test_registro_de_empleado_reutiliza_validacion_de_dni_y_telefono(self):
+        self._crear_rol("empleado")
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        self._crear_persona(dni="33333333", email="existente@centro.test")
+        self._login_admin()
+
+        duplicate_response = self.client.post(
+            "/api/usuarios/empleados",
+            json=self._payload_empleado(dni="33333333"),
+        )
+        phone_response = self.client.post(
+            "/api/usuarios/empleados",
+            json=self._payload_empleado(dni="44444444", telefono="221 444-663A"),
+        )
+
+        self.assertEqual(duplicate_response.status_code, 400)
+        self.assertEqual(
+            duplicate_response.json["errors"]["dni"],
+            "El DNI ya se encuentra registrado en el sistema.",
+        )
+        self.assertEqual(phone_response.status_code, 400)
+        self.assertEqual(
+            phone_response.json["errors"]["telefono"],
+            "Ingrese un telefono valido sin caracteres especiales, letras o espacios. Ejemplo 2214446633",
+        )
+
+    def _payload_empleado(self, **overrides):
+        payload = {
+            "dni": "33333333",
+            "email": "jorge.petri@example.com",
+            "nombre": "Jorge",
+            "apellido": "Petri",
+            "telefono": "2215003000",
+            "calle": "59",
+            "numero_puerta": "326",
+            "codigo_postal": "1900",
+        }
+        payload.update(overrides)
+        return payload
+
+    def _login_admin(self):
+        response = self.client.post(
+            "/api/login",
+            json={"email": "admin@centro.test", "password": "123456"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["status"], "authenticated")
+
+    def _crear_persona(self, dni, email):
+        persona = Persona(
+            dni=dni,
+            email=email,
+            password_hash="hash",
+            nombre="Ada",
+            apellido="Lovelace",
+            telefono="2214446633",
+            calle="Calle Falsa",
+            numero_puerta="123",
+            codigo_postal="1900",
+            estado="activo",
+        )
+        db.session.add(persona)
+        db.session.commit()
+        return persona
+
+    def _crear_usuario_con_roles(self, *, email, dni, password, roles):
+        persona = Persona(
+            dni=dni,
+            email=email,
+            password_hash=bcrypt.generate_password_hash(password).decode("utf-8"),
+            nombre="Usuario",
+            apellido="Prueba",
+            telefono="2214446633",
+            calle="23",
+            numero_puerta="717",
+            codigo_postal="1900",
+            estado="activo",
+        )
+        db.session.add(persona)
+        db.session.flush()
+
+        for role_name in roles:
+            role = Rol.query.filter_by(nombre=role_name).first()
+            if role is None:
+                role = self._crear_rol(role_name, commit=False)
+
+            db.session.add(
+                PersonaRolPuente(persona_id=persona.persona_id, rol_id=role.rol_id)
+            )
+
+            if role_name == "empleado":
+                db.session.add(Empleado(persona_id=persona.persona_id))
+            if role_name == "socio":
+                db.session.add(Socio(persona_id=persona.persona_id))
+
+        db.session.commit()
+        return persona
+
+    def _crear_rol(self, nombre, commit=True):
+        role = Rol(nombre=nombre, descripcion=f"Rol {nombre}")
+        db.session.add(role)
+        db.session.flush()
+        if commit:
+            db.session.commit()
+        return role

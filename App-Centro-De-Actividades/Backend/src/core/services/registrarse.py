@@ -6,7 +6,12 @@ from sqlalchemy.exc import IntegrityError
 
 from src.core.bcrypt_and_session import bcrypt
 from src.core.database import db
-from src.core.models.persona import Persona, PersonaRolPuente, Rol, Socio
+from src.core.models.persona import Empleado, Persona, PersonaRolPuente, Rol, Socio
+from src.core.services.mailjet_email import (
+    EmailDeliveryError,
+    generate_temporary_password,
+    send_employee_access_email,
+)
 
 EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 PASSWORD_LENGTH_MESSAGE = "La contraseña debe tener entre 6 a 12 caracteres."
@@ -41,6 +46,14 @@ VALID_AREA_CODES = _load_valid_area_codes()
 
 
 def validar_payload_registro(payload):
+    return _validar_payload_persona(payload, require_password_fields=True)
+
+
+def validar_payload_registro_empleado(payload):
+    return _validar_payload_persona(payload, require_password_fields=False)
+
+
+def _validar_payload_persona(payload, require_password_fields):
     normalized_payload = {
         "dni": (payload.get("dni") or "").strip(),
         "email": normalizar_email(payload.get("email") or ""),
@@ -50,10 +63,12 @@ def validar_payload_registro(payload):
         "calle": (payload.get("calle") or "").strip(),
         "numero_puerta": (payload.get("numero_puerta") or "").strip(),
         "codigo_postal": (payload.get("codigo_postal") or "").strip(),
-        "password": payload.get("password") or "",
-        "repeat_password": payload.get("repeat_password") or "",
     }
     errors = {}
+
+    if require_password_fields:
+        normalized_payload["password"] = payload.get("password") or ""
+        normalized_payload["repeat_password"] = payload.get("repeat_password") or ""
 
     if not normalized_payload["dni"]:
         errors["dni"] = "El DNI es obligatorio."
@@ -91,20 +106,84 @@ def validar_payload_registro(payload):
     if not normalized_payload["codigo_postal"]:
         errors["codigo_postal"] = "El código postal es obligatorio."
 
-    if not normalized_payload["password"]:
-        errors["password"] = "La contraseña es obligatoria."
-    elif not 6 <= len(normalized_payload["password"]) <= 12:
-        errors["password"] = PASSWORD_LENGTH_MESSAGE
+    if require_password_fields:
+        if not normalized_payload["password"]:
+            errors["password"] = "La contraseña es obligatoria."
+        elif not 6 <= len(normalized_payload["password"]) <= 12:
+            errors["password"] = PASSWORD_LENGTH_MESSAGE
 
-    if not normalized_payload["repeat_password"]:
-        errors["repeat_password"] = "Repetir contraseña es obligatorio."
-    elif normalized_payload["repeat_password"] != normalized_payload["password"]:
-        errors["repeat_password"] = REPEAT_PASSWORD_MESSAGE
+        if not normalized_payload["repeat_password"]:
+            errors["repeat_password"] = "Repetir contraseña es obligatorio."
+        elif normalized_payload["repeat_password"] != normalized_payload["password"]:
+            errors["repeat_password"] = REPEAT_PASSWORD_MESSAGE
 
     return normalized_payload, errors
 
 
 def registrar_socio(payload):
+    return _registrar_persona_con_rol(
+        payload=payload,
+        role_name="socio",
+        entity_factory=Socio,
+        password=payload["password"],
+        missing_role_message=(
+            "El registro no está disponible porque falta la configuración del rol socio."
+        ),
+        success_message="La cuenta ha sido creada con éxito.",
+        redirect_to="/login",
+    )
+
+
+def registrar_empleado(payload):
+    credenciales = provisionar_acceso_empleado(payload)
+
+    return _registrar_persona_con_rol(
+        payload=payload,
+        role_name="empleado",
+        entity_factory=Empleado,
+        password=credenciales["temporary_password"],
+        missing_role_message=(
+            "El registro no está disponible porque falta la configuración del rol empleado."
+        ),
+        success_message="El empleado fue registrado correctamente y se envió por email la contraseña temporal.",
+        redirect_to="/inicio",
+        post_flush_action=lambda persona: _entregar_acceso_empleado(
+            payload=payload,
+            persona=persona,
+            credenciales=credenciales,
+        ),
+    )
+
+
+def provisionar_acceso_empleado(payload):
+    temporary_password = generate_temporary_password()
+    return {
+        "temporary_password": temporary_password,
+        "delivery_channel": "email",
+        "delivery_status": "pending",
+        "recipient": payload["email"],
+    }
+
+
+def _entregar_acceso_empleado(*, payload, persona, credenciales):
+    send_employee_access_email(
+        recipient_email=credenciales["recipient"],
+        recipient_name=persona.nombre or payload["nombre"],
+        temporary_password=credenciales["temporary_password"],
+    )
+
+
+def _registrar_persona_con_rol(
+    *,
+    payload,
+    role_name,
+    entity_factory,
+    password,
+    missing_role_message,
+    success_message,
+    redirect_to,
+    post_flush_action=None,
+):
     if Persona.query.filter_by(dni=payload["dni"]).first() is not None:
         return (
             _validation_error(
@@ -121,19 +200,14 @@ def registrar_socio(payload):
             400,
         )
 
-    role = Rol.query.filter(db.func.lower(Rol.nombre) == "socio").first()
+    role = Rol.query.filter(db.func.lower(Rol.nombre) == role_name).first()
     if role is None:
-        return {
-            "status": "error",
-            "message": "El registro no está disponible porque falta la configuración del rol socio.",
-        }, 503
+        return {"status": "error", "message": missing_role_message}, 503
 
     persona = Persona(
         dni=payload["dni"],
         email=payload["email"],
-        password_hash=bcrypt.generate_password_hash(payload["password"]).decode(
-            "utf-8"
-        ),
+        password_hash=bcrypt.generate_password_hash(password).decode("utf-8"),
         nombre=payload["nombre"],
         apellido=payload["apellido"],
         telefono=payload["telefono"],
@@ -146,19 +220,24 @@ def registrar_socio(payload):
     try:
         db.session.add(persona)
         db.session.flush()
-        db.session.add(Socio(persona_id=persona.persona_id))
+        db.session.add(entity_factory(persona_id=persona.persona_id))
         db.session.add(
             PersonaRolPuente(persona_id=persona.persona_id, rol_id=role.rol_id)
         )
+        if post_flush_action is not None:
+            post_flush_action(persona)
         db.session.commit()
     except IntegrityError as error:
         db.session.rollback()
         return _integrity_error_response(error)
+    except EmailDeliveryError as error:
+        db.session.rollback()
+        return {"status": "error", "message": str(error)}, 503
 
     return {
         "status": "registered",
-        "message": "La cuenta ha sido creada con éxito.",
-        "redirect_to": "/login",
+        "message": success_message,
+        "redirect_to": redirect_to,
     }, 201
 
 
