@@ -5,8 +5,8 @@ import { crearClase, obtenerProfesores } from '../api/clase'
 import { useAuth } from '../hooks/useAuth'
 import { redirectTo } from '../services/redirectTo'
 import { useNavigate } from 'react-router-dom'
+import { ACTIVIDADES } from '../constants/actividades'
 
-const ACTIVIDADES = ['Voley', 'Futbol', 'Padel', 'Basquet']
 const NIVELES = ['Principiante', 'Intermedio', 'Avanzado']
 
 const hoy = new Date().toISOString().split('T')[0]

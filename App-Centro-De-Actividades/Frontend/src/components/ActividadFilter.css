@@ -1,0 +1,30 @@
+.actividad-filter {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid var(--border-strong);
+  border-radius: 18px;
+  background: var(--surface-soft);
+}
+
+.actividad-filter__title {
+  display: grid;
+  gap: 8px;
+}
+
+.actividad-filter__select {
+  width: 100%;
+  min-height: 56px;
+  padding: 14px 16px;
+  border: 2px solid var(--border-strong);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text-strong);
+  font: inherit;
+}
+
+.actividad-filter__select:focus {
+  outline: none;
+  border-color: var(--text-strong);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
