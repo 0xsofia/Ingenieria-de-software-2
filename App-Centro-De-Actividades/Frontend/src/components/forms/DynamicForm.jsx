@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import './DynamicForm.css'
 
@@ -20,6 +20,16 @@ function DynamicForm({
     serverFields: {},
     general: false,
   })
+
+  useEffect(() => {
+    setValues(initialValues)
+    setClientErrors({})
+    setDismissedErrorState({
+      cycle: errorCycle,
+      serverFields: {},
+      general: false,
+    })
+  }, [initialValues])
 
   const hasFreshErrors = dismissedErrorState.cycle !== errorCycle
   const dismissedServerErrors = hasFreshErrors ? {} : dismissedErrorState.serverFields
@@ -102,6 +112,8 @@ function DynamicForm({
                   autoComplete={field.autoComplete}
                   placeholder={field.placeholder}
                   rows={field.rows || 4}
+                  disabled={field.disabled}
+                  readOnly={field.readOnly}
                   aria-invalid={fieldError ? 'true' : 'false'}
                 />
               ) : (
@@ -116,6 +128,8 @@ function DynamicForm({
                   min={field.min}
                   max={field.max}
                   step={field.step}
+                  disabled={field.disabled}
+                  readOnly={field.readOnly}
                   aria-invalid={fieldError ? 'true' : 'false'}
                 />
               )}

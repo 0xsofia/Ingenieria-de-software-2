@@ -5,6 +5,10 @@ from src.core.services.registrarse import (
     registrar_empleado,
     validar_payload_registro_empleado,
 )
+from src.core.services.usuarios import (
+    actualizar_usuario,
+    obtener_usuario_modificable,
+)
 
 usuarios_bp = Blueprint("usuarios", __name__, url_prefix="/api/usuarios")
 
@@ -22,6 +26,27 @@ def registrar_empleado_controller():
         return jsonify({"status": "validation_error", "errors": errors}), 400
 
     body, status_code = registrar_empleado(normalized_payload)
+    return jsonify(body), status_code
+
+
+@usuarios_bp.get("/<int:persona_id>")
+def obtener_usuario_controller(persona_id):
+    admin_error = _require_admin()
+    if admin_error is not None:
+        return admin_error
+
+    body, status_code = obtener_usuario_modificable(persona_id)
+    return jsonify(body), status_code
+
+
+@usuarios_bp.put("/<int:persona_id>")
+def actualizar_usuario_controller(persona_id):
+    admin_error = _require_admin()
+    if admin_error is not None:
+        return admin_error
+
+    payload = request.get_json(silent=True) or {}
+    body, status_code = actualizar_usuario(persona_id, payload)
     return jsonify(body), status_code
 
 

@@ -145,6 +145,217 @@ class UsuariosTestCase(unittest.TestCase):
             "Ingrese un telefono valido sin caracteres especiales, letras o espacios. Ejemplo 2214446633",
         )
 
+    def test_admin_puede_obtener_usuario_modificable(self):
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        persona = self._crear_usuario_con_roles(
+            email="jorge.petri@example.com",
+            dni="33333333",
+            password="123456",
+            roles=["empleado"],
+        )
+        self._login_admin()
+
+        response = self.client.get(f"/api/usuarios/{persona.persona_id}")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["status"], "ok")
+        self.assertEqual(response.json["user"]["dni"], "33333333")
+        self.assertEqual(response.json["user"]["roles"], ["empleado"])
+
+    def test_admin_puede_modificar_usuario_sin_cambiar_email(self):
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        persona = self._crear_usuario_con_roles(
+            email="jorge.petri@example.com",
+            dni="33333333",
+            password="123456",
+            roles=["empleado"],
+        )
+        self._login_admin()
+
+        response = self.client.put(
+            f"/api/usuarios/{persona.persona_id}",
+            json=self._payload_empleado(nombre="Luis", apellido="Sosa"),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["status"], "updated")
+        self.assertEqual(response.json["message"], "El usuario ha sido actualizado con éxito.")
+
+        updated_persona = db.session.get(Persona, persona.persona_id)
+        self.assertEqual(updated_persona.nombre, "Luis")
+        self.assertEqual(updated_persona.apellido, "Sosa")
+        self.assertEqual(updated_persona.email, "jorge.petri@example.com")
+
+    def test_admin_puede_modificar_usuario_cambiando_email(self):
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        persona = self._crear_usuario_con_roles(
+            email="jorge.petri@example.com",
+            dni="33333333",
+            password="123456",
+            roles=["socio"],
+        )
+        self._login_admin()
+
+        response = self.client.put(
+            f"/api/usuarios/{persona.persona_id}",
+            json=self._payload_empleado(email="jorge.petri+ok@example.com"),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["status"], "updated")
+        self.assertEqual(
+            db.session.get(Persona, persona.persona_id).email,
+            "jorge.petri+ok@example.com",
+        )
+
+    def test_modificacion_de_usuario_falla_si_email_ya_existe(self):
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        persona = self._crear_usuario_con_roles(
+            email="jorge.petri@example.com",
+            dni="33333333",
+            password="123456",
+            roles=["empleado"],
+        )
+        self._crear_persona(dni="44444444", email="existente@centro.test")
+        self._login_admin()
+
+        response = self.client.put(
+            f"/api/usuarios/{persona.persona_id}",
+            json=self._payload_empleado(email="existente@centro.test"),
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json["status"], "validation_error")
+        self.assertEqual(
+            response.json["errors"]["email"],
+            "El email ya se encuentra registrado en el sistema.",
+        )
+
+    def test_modificacion_de_usuario_falla_si_intentan_cambiar_dni(self):
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        persona = self._crear_usuario_con_roles(
+            email="jorge.petri@example.com",
+            dni="33333333",
+            password="123456",
+            roles=["empleado"],
+        )
+        self._login_admin()
+
+        response = self.client.put(
+            f"/api/usuarios/{persona.persona_id}",
+            json=self._payload_empleado(dni="99999999"),
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json["status"], "validation_error")
+        self.assertEqual(response.json["errors"]["dni"], "El DNI no puede modificarse.")
+
+    def test_modificacion_de_usuario_falla_si_telefono_tiene_letras_espacios_o_simbolos(self):
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        persona = self._crear_usuario_con_roles(
+            email="jorge.petri@example.com",
+            dni="33333333",
+            password="123456",
+            roles=["empleado"],
+        )
+        self._login_admin()
+
+        response = self.client.put(
+            f"/api/usuarios/{persona.persona_id}",
+            json=self._payload_empleado(telefono="221 444-663A"),
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json["status"], "validation_error")
+        self.assertEqual(
+            response.json["errors"]["telefono"],
+            "Ingrese un telefono valido sin caracteres especiales, letras o espacios. Ejemplo 2214446633",
+        )
+
+    def test_modificacion_de_usuario_falla_si_codigo_de_area_no_es_valido(self):
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        persona = self._crear_usuario_con_roles(
+            email="jorge.petri@example.com",
+            dni="33333333",
+            password="123456",
+            roles=["socio"],
+        )
+        self._login_admin()
+
+        response = self.client.put(
+            f"/api/usuarios/{persona.persona_id}",
+            json=self._payload_empleado(telefono="1221446633"),
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json["status"], "validation_error")
+        self.assertEqual(
+            response.json["errors"]["telefono"],
+            "Debe ingresar un código de área válido en territorio argentino. Ejemplo: 221",
+        )
+
+    def test_modificacion_de_usuario_falla_si_telefono_no_alcanza_diez_digitos(self):
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        persona = self._crear_usuario_con_roles(
+            email="jorge.petri@example.com",
+            dni="33333333",
+            password="123456",
+            roles=["socio"],
+        )
+        self._login_admin()
+
+        response = self.client.put(
+            f"/api/usuarios/{persona.persona_id}",
+            json=self._payload_empleado(telefono="221444663"),
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json["status"], "validation_error")
+        self.assertEqual(
+            response.json["errors"]["telefono"],
+            "El teléfono debe alcanzar los 10 dígitos totales incluyendo el código de área. Ejemplo: 2214446633",
+        )
+
     def _payload_empleado(self, **overrides):
         payload = {
             "dni": "33333333",
