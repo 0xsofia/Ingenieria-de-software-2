@@ -6,7 +6,9 @@ export const endpoints = {
   selectLoginRole: '/api/login/select-role',
   currentSession: '/api/login/session',
   logout: '/api/session/logout',
+  profileMe: '/api/perfil/me',
   crearClase: '/api/clase/crear',
   listarClases: '/api/clase/lista',
-  obtenerProfesores: '/api/profesor/lista'
+  obtenerProfesores: '/api/profesor/lista',
+  actividades: '/api/actividades',
 }

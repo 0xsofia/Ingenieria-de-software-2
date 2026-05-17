@@ -1,0 +1,162 @@
+.info-container {
+  display: grid;
+  gap: 14px;
+}
+
+.info-container ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+
+.info-container li {
+  border: 1px solid var(--border-muted);
+  border-radius: 14px;
+  padding: 16px;
+  background: var(--surface);
+  color: var(--text-strong);
+}
+
+.profile-shell .dashboard-frame {
+  width: min(100%, 1240px);
+  max-width: 100%;
+}
+
+.profile-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) minmax(380px, 420px);
+  margin-top: 28px;
+}
+
+@media (max-width: 960px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.profile-summary-card,
+.profile-actions-card,
+.profile-description-card,
+.profile-update-card {
+  border: 1px solid var(--border-muted);
+  border-radius: 20px;
+  background: var(--surface-soft);
+  padding: 28px;
+  display: grid;
+  gap: 24px;
+}
+
+.profile-picture-card {
+  display: grid;
+  gap: 24px;
+  justify-items: center;
+  text-align: center;
+}
+
+.profile-picture-placeholder {
+  width: 160px;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--surface), var(--surface-soft));
+  border: 1px solid var(--border-muted);
+  display: grid;
+  place-items: center;
+  color: var(--text-soft);
+  font-size: 14px;
+  min-height: 160px;
+}
+
+.profile-update-button {
+  width: 100%;
+  padding: 16px 18px;
+}
+
+.profile-details h2,
+.profile-actions-card h2,
+.profile-description-card h2 {
+  margin: 0;
+}
+
+.profile-actions {
+  display: grid;
+  gap: 16px;
+}
+
+.secondary-action {
+  border: 2px solid var(--border-strong);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--text-strong);
+  font: inherit;
+  cursor: pointer;
+  padding: 16px 18px;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.secondary-action:hover {
+  background: var(--surface);
+  transform: translateY(-1px);
+}
+
+.profile-description-text {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.8;
+}
+
+.profile-update-card {
+  border: 1px solid var(--border-muted);
+  border-radius: 20px;
+  background: var(--surface-soft);
+  padding: 28px;
+}
+
+.profile-update-form {
+  display: grid;
+  gap: 20px;
+}
+
+.profile-update-form__form {
+  display: grid;
+  gap: 18px;
+}
+
+.profile-update-field {
+  display: grid;
+  gap: 10px;
+}
+
+.profile-update-field label {
+  font-weight: 600;
+}
+
+.profile-update-field input,
+.profile-update-field textarea {
+  width: 100%;
+  border: 1px solid var(--border-muted);
+  border-radius: 14px;
+  padding: 14px 8px;
+  background: var(--surface);
+  color: var(--text-strong);
+  font: inherit;
+}
+
+.profile-update-field textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-error {
+  color: var(--danger);
+  font-size: 0.95rem;
+}
+
+.form-message {
+  color: var(--text-strong);
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+}
