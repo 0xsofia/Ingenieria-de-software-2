@@ -138,7 +138,7 @@ function RegistrarEmpleadoPage() {
           state: {
             flashMessage:
               result.message ||
-              'El empleado fue registrado correctamente con la contraseña temporal de esta fase.',
+              'El empleado fue registrado correctamente y se envió por email la contraseña temporal.',
           },
         })
       })

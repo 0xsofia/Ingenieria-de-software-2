@@ -1,8 +1,10 @@
 import unittest
+from unittest.mock import patch
 
 from src.core.bcrypt_and_session import bcrypt
 from src.core.database import db
 from src.core.models.persona import Empleado, Persona, PersonaRolPuente, Rol, Socio
+from src.core.services.mailjet_email import EmailDeliveryError
 from src.web import create_app
 
 
@@ -19,7 +21,12 @@ class UsuariosTestCase(unittest.TestCase):
         db.drop_all()
         self.ctx.pop()
 
-    def test_admin_puede_registrar_empleado_con_password_temporal_generica(self):
+    @patch("src.core.services.registrarse.send_employee_access_email")
+    @patch("src.core.services.registrarse.generate_temporary_password")
+    def test_admin_puede_registrar_empleado_con_envio_de_password_temporal(
+        self, mock_generate_temporary_password, mock_send_employee_access_email
+    ):
+        mock_generate_temporary_password.return_value = "Temp42#Pwd"
         empleado_role = self._crear_rol("empleado")
         self._crear_usuario_con_roles(
             email="admin@centro.test",
@@ -34,17 +41,52 @@ class UsuariosTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json["status"], "registered")
         self.assertEqual(response.json["redirect_to"], "/inicio")
-        self.assertIn("123456", response.json["message"])
+        self.assertIn("email", response.json["message"])
 
         persona = Persona.query.filter_by(email="jorge.petri@example.com").first()
         self.assertIsNotNone(persona)
         self.assertIsNotNone(db.session.get(Empleado, persona.persona_id))
-        self.assertTrue(bcrypt.check_password_hash(persona.password_hash, "123456"))
+        self.assertTrue(
+            bcrypt.check_password_hash(persona.password_hash, "Temp42#Pwd")
+        )
         self.assertIsNotNone(
             PersonaRolPuente.query.filter_by(
                 persona_id=persona.persona_id, rol_id=empleado_role.rol_id
             ).first()
         )
+        mock_send_employee_access_email.assert_called_once_with(
+            recipient_email="jorge.petri@example.com",
+            recipient_name="Jorge",
+            temporary_password="Temp42#Pwd",
+        )
+
+    @patch("src.core.services.registrarse.send_employee_access_email")
+    @patch("src.core.services.registrarse.generate_temporary_password")
+    def test_registro_de_empleado_falla_si_no_se_puede_enviar_el_email(
+        self, mock_generate_temporary_password, mock_send_employee_access_email
+    ):
+        mock_generate_temporary_password.return_value = "Temp42#Pwd"
+        mock_send_employee_access_email.side_effect = EmailDeliveryError(
+            "No se pudo enviar el email con la contraseña temporal del empleado."
+        )
+        self._crear_rol("empleado")
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        self._login_admin()
+
+        response = self.client.post("/api/usuarios/empleados", json=self._payload_empleado())
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json["status"], "error")
+        self.assertEqual(
+            response.json["message"],
+            "No se pudo enviar el email con la contraseña temporal del empleado.",
+        )
+        self.assertIsNone(Persona.query.filter_by(email="jorge.petri@example.com").first())
 
     def test_registro_de_empleado_falla_si_no_hay_sesion_admin(self):
         self._crear_rol("empleado")

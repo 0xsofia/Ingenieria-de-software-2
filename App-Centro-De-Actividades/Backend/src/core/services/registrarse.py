@@ -7,6 +7,11 @@ from sqlalchemy.exc import IntegrityError
 from src.core.bcrypt_and_session import bcrypt
 from src.core.database import db
 from src.core.models.persona import Empleado, Persona, PersonaRolPuente, Rol, Socio
+from src.core.services.mailjet_email import (
+    EmailDeliveryError,
+    generate_temporary_password,
+    send_employee_access_email,
+)
 
 EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 PASSWORD_LENGTH_MESSAGE = "La contraseña debe tener entre 6 a 12 caracteres."
@@ -38,7 +43,6 @@ def _load_valid_area_codes():
 
 
 VALID_AREA_CODES = _load_valid_area_codes()
-DEFAULT_EMPLOYEE_TEMPORARY_PASSWORD = "123456"
 
 
 def validar_payload_registro(payload):
@@ -141,23 +145,32 @@ def registrar_empleado(payload):
         missing_role_message=(
             "El registro no está disponible porque falta la configuración del rol empleado."
         ),
-        success_message=(
-            "El empleado fue registrado correctamente. "
-            f"La contraseña temporal configurada para esta fase es {credenciales['temporary_password']}."
-        ),
+        success_message="El empleado fue registrado correctamente y se envió por email la contraseña temporal.",
         redirect_to="/inicio",
+        post_flush_action=lambda persona: _entregar_acceso_empleado(
+            payload=payload,
+            persona=persona,
+            credenciales=credenciales,
+        ),
     )
 
 
 def provisionar_acceso_empleado(payload):
-    # Punto de extension para reemplazar la clave fija por: generar password,
-    # conectar SMTP y enviar el acceso temporal al email del empleado.
+    temporary_password = generate_temporary_password()
     return {
-        "temporary_password": DEFAULT_EMPLOYEE_TEMPORARY_PASSWORD,
+        "temporary_password": temporary_password,
         "delivery_channel": "email",
-        "delivery_status": "pending_email_implementation",
+        "delivery_status": "pending",
         "recipient": payload["email"],
     }
+
+
+def _entregar_acceso_empleado(*, payload, persona, credenciales):
+    send_employee_access_email(
+        recipient_email=credenciales["recipient"],
+        recipient_name=persona.nombre or payload["nombre"],
+        temporary_password=credenciales["temporary_password"],
+    )
 
 
 def _registrar_persona_con_rol(
@@ -169,6 +182,7 @@ def _registrar_persona_con_rol(
     missing_role_message,
     success_message,
     redirect_to,
+    post_flush_action=None,
 ):
     if Persona.query.filter_by(dni=payload["dni"]).first() is not None:
         return (
@@ -210,10 +224,15 @@ def _registrar_persona_con_rol(
         db.session.add(
             PersonaRolPuente(persona_id=persona.persona_id, rol_id=role.rol_id)
         )
+        if post_flush_action is not None:
+            post_flush_action(persona)
         db.session.commit()
     except IntegrityError as error:
         db.session.rollback()
         return _integrity_error_response(error)
+    except EmailDeliveryError as error:
+        db.session.rollback()
+        return {"status": "error", "message": str(error)}, 503
 
     return {
         "status": "registered",
