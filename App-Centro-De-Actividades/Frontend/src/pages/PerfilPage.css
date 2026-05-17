@@ -19,16 +19,28 @@
   color: var(--text-strong);
 }
 
+.profile-shell .dashboard-frame {
+  width: min(100%, 1240px);
+  max-width: 100%;
+}
+
 .profile-grid {
   display: grid;
   gap: 24px;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) minmax(380px, 420px);
   margin-top: 28px;
+}
+
+@media (max-width: 960px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .profile-summary-card,
 .profile-actions-card,
-.profile-description-card {
+.profile-description-card,
+.profile-update-card {
   border: 1px solid var(--border-muted);
   border-radius: 20px;
   background: var(--surface-soft);
@@ -93,4 +105,58 @@
   margin: 0;
   color: var(--text-soft);
   line-height: 1.8;
+}
+
+.profile-update-card {
+  border: 1px solid var(--border-muted);
+  border-radius: 20px;
+  background: var(--surface-soft);
+  padding: 28px;
+}
+
+.profile-update-form {
+  display: grid;
+  gap: 20px;
+}
+
+.profile-update-form__form {
+  display: grid;
+  gap: 18px;
+}
+
+.profile-update-field {
+  display: grid;
+  gap: 10px;
+}
+
+.profile-update-field label {
+  font-weight: 600;
+}
+
+.profile-update-field input,
+.profile-update-field textarea {
+  width: 100%;
+  border: 1px solid var(--border-muted);
+  border-radius: 14px;
+  padding: 14px 8px;
+  background: var(--surface);
+  color: var(--text-strong);
+  font: inherit;
+}
+
+.profile-update-field textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-error {
+  color: var(--danger);
+  font-size: 0.95rem;
+}
+
+.form-message {
+  color: var(--text-strong);
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface);
 }

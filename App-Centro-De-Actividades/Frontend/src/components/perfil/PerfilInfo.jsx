@@ -15,17 +15,27 @@ function PerfilInfo({ hideRole = false }) {
     <div className="info-container">
       <ul>
         <li>
-          <strong>Nombre del usuario:</strong> {session.display_name}
+          <strong>Nombre:</strong> {session.nombre}
         </li>
         <li>
-          <strong>Email del usuario:</strong> {session.email}
+          <strong>Apellido:</strong> {session.apellido}
         </li>
-        {!hideRole ? (
-          <li>
-            <strong>Rol de usuario:</strong> {session.role_label}
-          </li>
-        ) : null}
+        <li>
+          <strong>DNI:</strong> {session.dni}
+        </li>
+        <li>
+          <strong>Email:</strong> {session.email}
+        </li>
+       
       </ul>
+      <div>
+        <h2>Mis intereses</h2>
+        <ul>
+          <li>
+            {session.intereses || 'No definidos'}
+          </li>
+        </ul>
+      </div>
     </div>
   )
 }
