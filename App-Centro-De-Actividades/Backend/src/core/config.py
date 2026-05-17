@@ -1,9 +1,12 @@
 from os import environ
+from pathlib import Path
+
 from dotenv import load_dotenv
 from datetime import timedelta
 from cryptography.fernet import Fernet
 
-load_dotenv(dotenv_path='.env')
+_BACKEND_ROOT = Path(__file__).resolve().parents[2]
+load_dotenv(dotenv_path=_BACKEND_ROOT / '.env')
 
 class Config(object):
     TESTING = False
@@ -20,6 +23,8 @@ class ProductionConfig(Config):
 
 class DevelopmentConfig(Config):
     ...
+    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_SAMESITE = "Lax"
     DB_USER = environ.get('DB_USER')
     DB_PASSWORD = environ.get('DB_PASSWORD')
     DB_HOST = environ.get('DB_HOST')

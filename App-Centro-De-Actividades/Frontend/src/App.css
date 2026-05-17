@@ -287,6 +287,125 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.calendar-wrapper {
+  margin-top: 12px;
+  border: 1px solid var(--border-muted);
+  background: var(--surface-soft);
+  overflow-x: auto;
+}
+
+.calendar-nav {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.calendar-nav__label {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 14px;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: 84px repeat(7, minmax(180px, 1fr));
+  border-bottom: 1px solid var(--border-muted);
+  background: var(--surface);
+  min-width: 1344px;
+}
+
+.calendar-header__time {
+  border-right: 1px solid var(--border-muted);
+}
+
+.calendar-header__day {
+  padding: 12px 12px 10px;
+  border-right: 1px solid var(--border-muted);
+}
+
+.calendar-header__date {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.calendar-body {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  min-width: 1344px;
+}
+
+.calendar-time-column {
+  border-right: 1px solid var(--border-muted);
+  background: var(--surface);
+}
+
+.calendar-time-slot {
+  height: 64px;
+  padding: 10px 10px 0;
+  box-sizing: border-box;
+  color: var(--text-soft);
+  font-size: 12px;
+  border-bottom: 1px solid var(--border-muted);
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(180px, 1fr));
+  background: var(--surface);
+}
+
+.calendar-day-column {
+  border-right: 1px solid var(--border-muted);
+}
+
+.calendar-day-grid {
+  position: relative;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 63px,
+    var(--border-muted) 63px,
+    var(--border-muted) 64px
+  );
+}
+
+.calendar-event {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--text-strong);
+  font: inherit;
+  padding: 10px 12px;
+  display: grid;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.calendar-event:hover {
+  background: var(--surface);
+}
+
+.calendar-event:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
+.calendar-event__title {
+  font-size: 14px;
+}
+
+.calendar-event__meta {
+  font-size: 12px;
+  color: var(--text-soft);
+}
+
 .permission-card h3,
 .backend-card h3 {
   margin: 0 0 10px;
