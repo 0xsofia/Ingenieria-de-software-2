@@ -6,6 +6,7 @@ import LoginPage from '../pages/LoginPage.jsx'
 import ModificarUsuarioPage from '../pages/ModificarUsuarioPage.jsx'
 import RegistrarEmpleadoPage from '../pages/RegistrarEmpleadoPage.jsx'
 import CrearClasePage from '../pages/CrearClasePage.jsx'
+import ListadoClasesPage from '../pages/ListadoClasesPage.jsx'
 import RegistrarsePage from '../pages/RegistrarsePage.jsx'
 
 const router = createBrowserRouter([
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
         element: <ModificarUsuarioPage />,
       },
     ],
+  },
+  {
+    path: '/clases',
+    element: <ListadoClasesPage />,    
   },
   {
     path:'/crearclase',

@@ -7,5 +7,6 @@ export const endpoints = {
   currentSession: '/api/login/session',
   logout: '/api/session/logout',
   crearClase: '/api/clase/crear',
+  listarClases: '/api/clase/lista',
   obtenerProfesores: '/api/profesor/lista'
 }
