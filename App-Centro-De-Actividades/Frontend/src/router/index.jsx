@@ -6,6 +6,9 @@ import LoginPage from '../pages/LoginPage.jsx'
 import CrearClasePage from '../pages/CrearClasePage.jsx'
 import RegistrarsePage from '../pages/RegistrarsePage.jsx'
 import PerfilPage from '../pages/PerfilPage.jsx'
+import ActividadesPage from '../pages/ActividadesPage.jsx'
+import ActividadPage from '../pages/ActividadPage.jsx'
+import ErrorPage from '../pages/ErrorPage.jsx'
 
 
 const router = createBrowserRouter([
@@ -37,7 +40,19 @@ const router = createBrowserRouter([
   {
     path: '/verperfil',
     element: <PerfilPage />,
-  }
+  },
+  {
+    path: '/actividades',
+    element: <ActividadesPage />,
+  },
+  {
+    path: '/actividad/:actividadName',
+    element: <ActividadPage />,
+  },
+  {
+    path: '*',
+    element: <ErrorPage />,
+  },
 ])
 
 export default router

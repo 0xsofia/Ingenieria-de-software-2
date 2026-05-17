@@ -6,5 +6,6 @@ export const endpoints = {
   logout: '/api/session/logout',
   profileMe: '/api/perfil/me',
   crearClase: '/api/clase/crear',
-  obtenerProfesores: '/api/profesor/lista'
+  obtenerProfesores: '/api/profesor/lista',
+  actividades: '/api/actividades',
 }
