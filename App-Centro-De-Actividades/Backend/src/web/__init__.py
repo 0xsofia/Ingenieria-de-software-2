@@ -9,6 +9,7 @@ from src.web.controllers.iniciar_sesion import login_bp
 from src.web.controllers.registrarse import registrarse_bp
 
 from src.web.controllers.session_controller import session_bp
+from src.web.controllers.perfil_controller import perfil_bp
 from src.web.controllers.clase_controller import clase_bp
 from src.web.controllers.profesor_controller import profesor_bp
 
@@ -35,6 +36,7 @@ def create_app(env="development", static_folder="../../static"):
     app.register_blueprint(login_bp)
     app.register_blueprint(registrarse_bp)
     app.register_blueprint(session_bp)
+    app.register_blueprint(perfil_bp)
     app.register_blueprint(clase_bp)
     app.register_blueprint(profesor_bp)
 
