@@ -22,6 +22,20 @@
   align-items: end;
 }
 
+.payments-filter-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.payments-filter-card .primary-action,
+.payments-filter-card .secondary-action,
+.payments-filter-actions .primary-action,
+.payments-filter-actions .secondary-action {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 .payments-filter-field {
   display: grid;
   gap: 10px;

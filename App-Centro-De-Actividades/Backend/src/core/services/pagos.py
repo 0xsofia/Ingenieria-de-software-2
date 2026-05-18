@@ -48,11 +48,17 @@ def _parse_filters(filters):
     start_date = _parse_date(filters.get("start_date"))
     end_date = _parse_date(filters.get("end_date"), end_of_day=True)
 
+    today = datetime.utcnow().date()
+
     if filters.get("start_date") and start_date is None:
         errors["start_date"] = "Fecha de inicio inválida. Usa el formato YYYY-MM-DD."
+    elif start_date is not None and start_date.date() > today:
+        errors["start_date"] = "La fecha desde no puede ser mayor a hoy."
 
     if filters.get("end_date") and end_date is None:
         errors["end_date"] = "Fecha de fin inválida. Usa el formato YYYY-MM-DD."
+    elif end_date is not None and end_date.date() > today:
+        errors["end_date"] = "La fecha hasta no puede ser mayor a hoy."
 
     return start_date, end_date, errors
 

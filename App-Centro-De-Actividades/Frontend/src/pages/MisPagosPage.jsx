@@ -37,6 +37,16 @@ function MisPagosPage() {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+
+    const today = new Date()
+    const startDate = filters.start_date ? new Date(filters.start_date) : null
+    const endDate = filters.end_date ? new Date(filters.end_date) : null
+
+    if ((startDate && startDate > today) || (endDate && endDate > today)) {
+      setError('Las fechas no pueden ser mayores a hoy.')
+      return
+    }
+
     await fetchPayments(filters)
   }
 
@@ -68,6 +78,7 @@ function MisPagosPage() {
                 id="start_date"
                 name="start_date"
                 type="date"
+                max={new Date().toISOString().split('T')[0]}
                 value={filters.start_date}
                 onChange={handleChange}
               />
@@ -79,14 +90,27 @@ function MisPagosPage() {
                 id="end_date"
                 name="end_date"
                 type="date"
+                max={new Date().toISOString().split('T')[0]}
                 value={filters.end_date}
                 onChange={handleChange}
               />
             </div>
 
-            <button type="submit" className="primary-action">
-              Aplicar filtro
-            </button>
+            <div className="payments-filter-actions">
+              <button type="submit" className="primary-action">
+                Filtrar
+              </button>
+              <button
+                type="button"
+                className="secondary-action"
+                onClick={() => {
+                  setFilters({ start_date: '', end_date: '' })
+                  fetchPayments()
+                }}
+              >
+                Limpiar
+              </button>
+            </div>
           </form>
         </section>
 
@@ -98,7 +122,11 @@ function MisPagosPage() {
           {isLoading ? (
             <p className="dashboard-copy">Cargando pagos...</p>
           ) : payments.length === 0 ? (
-            <p className="dashboard-copy">No se encontraron pagos para este periodo.</p>
+            <p className="dashboard-copy">
+              {filters.start_date || filters.end_date
+                ? 'No hay pagos en el rango de fechas seleccionado.'
+                : 'Aún no tienes pagos registrados.'}
+            </p>
           ) : (
             <div className="payments-table-wrapper">
               <table className="payments-table">
