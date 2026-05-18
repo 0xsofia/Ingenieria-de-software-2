@@ -21,6 +21,10 @@ class AuthenticatedUser(UserMixin):
 
         self.persona_id = persona.persona_id
         self.email = persona.email
+        self.nombre = persona.nombre
+        self.apellido = persona.apellido
+        self.dni = persona.dni
+        self.intereses = getattr(persona, "intereses", "")
         self.display_name = persona.nombre_completo
         self.role_id = role.rol_id
         self.role = normalized_role
@@ -259,6 +263,10 @@ def _build_auth_payload(authenticated_user):
     return {
         "persona_id": authenticated_user.persona_id,
         "email": authenticated_user.email,
+        "nombre": authenticated_user.nombre,
+        "apellido": authenticated_user.apellido,
+        "dni": authenticated_user.dni,
+        "intereses": authenticated_user.intereses,
         "display_name": authenticated_user.display_name,
         "role_id": authenticated_user.role_id,
         "role": authenticated_user.role,

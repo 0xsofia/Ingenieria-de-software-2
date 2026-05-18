@@ -6,6 +6,12 @@ export const endpoints = {
   selectLoginRole: '/api/login/select-role',
   currentSession: '/api/login/session',
   logout: '/api/session/logout',
+  profileMe: '/api/perfil/me',
   crearClase: '/api/clase/crear',
-  obtenerProfesores: '/api/profesor/lista'
+  listarClases: '/api/clase/lista',
+  obtenerProfesores: '/api/profesor/lista',
+  actividades: '/api/actividades',
+  reservaEspontanea: '/api/reservas/espontanea',
+  reservaEspontaneaListaEspera: '/api/reservas/espontanea/lista-espera',
+  reservaEspontaneaPagoRetorno: '/api/reservas/espontanea/pago-retorno',
 }

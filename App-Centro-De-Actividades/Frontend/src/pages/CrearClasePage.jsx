@@ -5,8 +5,8 @@ import { crearClase, obtenerProfesores } from '../api/clase'
 import { useAuth } from '../hooks/useAuth'
 import { redirectTo } from '../services/redirectTo'
 import { useNavigate } from 'react-router-dom'
+import { ACTIVIDADES } from '../constants/actividades'
 
-const ACTIVIDADES = ['Voley', 'Futbol', 'Padel', 'Basquet']
 const NIVELES = ['Principiante', 'Intermedio', 'Avanzado']
 
 const hoy = new Date().toISOString().split('T')[0]
@@ -191,7 +191,7 @@ export default function ClasePage() {
         profesor_id: Number(values.profesor_id),
       })
 
-      redirectTo(navigate, '/inicio', {
+      redirectTo(navigate, result.redirect_to || '/clases', {
         flashMessage: result.message || 'La clase fue creada correctamente.',
       })
     } catch (error) {

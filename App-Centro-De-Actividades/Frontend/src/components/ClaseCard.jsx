@@ -1,0 +1,46 @@
+import './ClaseCard.css'
+
+export default function ClaseCard({ clase, onView, onReserve }) {
+  return (
+    <article className="clase-card">
+      <div className="clase-card__header">
+        <div>
+          <h2 className="clase-card__title">{clase.actividad}</h2>
+          <p className="clase-card__subtitle">{clase.tipo_clase} · {clase.nivel}</p>
+        </div>
+        <span className="clase-card__badge">{clase.cupos} cupos</span>
+      </div>
+
+      <div className="clase-card__meta-grid">
+        <div className="clase-card__meta-item">
+          <span className="clase-card__label">Fecha</span>
+          <span className="clase-card__value">{clase.fecha}</span>
+        </div>
+        <div className="clase-card__meta-item">
+          <span className="clase-card__label">Horario</span>
+          <span className="clase-card__value">{clase.horario_inicio} - {clase.horario_fin}</span>
+        </div>
+        <div className="clase-card__meta-item">
+          <span className="clase-card__label">Cancha</span>
+          <span className="clase-card__value">{clase.cancha}</span>
+        </div>
+        <div className="clase-card__meta-item">
+          <span className="clase-card__label">Profesor</span>
+          <span className="clase-card__value">{clase.profesor_nombre || clase.profesor_id}</span>
+        </div>
+      </div>
+
+      <div className="clase-card__footer">
+        <div className="clase-card__note">ID: {clase.clase_id}</div>
+        <div className="clase-card__actions">
+          <button type="button" className="secondary-action" onClick={() => onView(clase)}>
+            Ver
+          </button>
+          <button type="button" className="primary-action" onClick={() => onReserve(clase)}>
+            Inscribirme
+          </button>
+        </div>
+      </div>
+    </article>
+  )
+}

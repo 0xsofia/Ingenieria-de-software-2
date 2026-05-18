@@ -152,9 +152,23 @@ def crear_clase_completa(payload):
     return {
         "status": "created",
         "message": "La clase ha sido creada con éxito.",
-        "redirect_to": "/clase2",
+        "redirect_to": "/clases",
         "clase_id": nueva_clase.clase_id
     }, 201
+
+
+def obtener_clases(actividad=None):
+    """Obtiene las clases con un filtro opcional por actividad."""
+    query = Clase.query
+
+    if actividad:
+        try:
+            actividad_enum = ActividadEnum(actividad)
+            query = query.filter(Clase.actividad == actividad_enum)
+        except ValueError:
+            return []
+
+    return query.order_by(Clase.fecha, Clase.horario_inicio).all()
 
 
 def _validation_error(field, message):
