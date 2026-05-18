@@ -1,0 +1,27 @@
+# Ngrok configuration file
+#
+# Usage example:
+#   ngrok config check -c .\ngrok\ngrok.yml
+#   ngrok start --all -c .\ngrok\ngrok.yml
+#
+# IMPORTANT:
+# - Put your real authtoken below OR set NGROK_AUTHTOKEN env var.
+# - When you get the https URL for the frontend tunnel, set it in:
+#     App-Centro-De-Actividades/Backend/.env -> FRONTEND_BASE_URL="https://..."
+#   and restart the backend.
+
+version: "2"
+
+authtoken: "2dWjG9e9Vf8wlq6hcl4vxA9MQQ3_jwWMe7u8qmH84DguxsnH"
+
+tunnels:
+  frontend:
+    proto: http
+    addr: 5173
+    # host_header can help some local dev servers
+    host_header: "localhost:5173"
+
+  backend:
+    proto: http
+    addr: 5000
+    host_header: "localhost:5000"
