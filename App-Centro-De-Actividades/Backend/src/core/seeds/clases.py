@@ -14,6 +14,7 @@ CLASES_TO_SEED = [
         "nivel": "Principiante",
         "cupos": 8,
         "profesor_dni": "12345678",
+        "precio": 500
     },
     {
         "actividad": "Futbol",
@@ -23,6 +24,7 @@ CLASES_TO_SEED = [
         "nivel": "Intermedio",
         "cupos": 10,
         "profesor_dni": "87654321",
+        "precio": 500
     },
     {
         "actividad": "Padel",
@@ -32,6 +34,7 @@ CLASES_TO_SEED = [
         "nivel": "Avanzado",
         "cupos": 4,
         "profesor_dni": "11223344",
+        "precio": 500
     },
     {
         "actividad": "Basquet",
@@ -41,6 +44,7 @@ CLASES_TO_SEED = [
         "nivel": "Intermedio",
         "cupos": 12,
         "profesor_dni": "44332211",
+        "precio": 500
     },
 ]
 
@@ -82,6 +86,7 @@ def _get_or_create_clase(clase_data):
             cancha=clase_data["cancha"],
             nivel=NivelEnum(clase_data["nivel"]),
             cupos=clase_data["cupos"],
+            precio=clase_data.get("precio"),
             tipo_clase=tipo_clase,
             profesor_id=profesor.profesor_id,
         )
@@ -92,6 +97,7 @@ def _get_or_create_clase(clase_data):
     clase.cancha = clase_data["cancha"]
     clase.nivel = NivelEnum(clase_data["nivel"])
     clase.cupos = clase_data["cupos"]
+    clase.precio = clase_data.get("precio")
     clase.tipo_clase = tipo_clase
     clase.horario_fin = (
         datetime.combine(fecha_obj, horario_inicio_obj) + timedelta(hours=1)

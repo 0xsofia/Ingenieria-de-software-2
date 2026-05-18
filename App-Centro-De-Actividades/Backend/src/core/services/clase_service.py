@@ -24,6 +24,7 @@ def validar_payload_clase(payload):
         "cancha": (payload.get("cancha") or "").strip(),
         "nivel": (payload.get("nivel") or "").strip(),
         "cupos": payload.get("cupos"),
+        "precio": payload.get("precio"),
         "profesor_id": payload.get("profesor_id"),
     }
     errors = {}
@@ -76,6 +77,20 @@ def validar_payload_clase(payload):
                 errors["cupos"] = "Los cupos deben ser al menos 1."
         except (ValueError, TypeError):
             errors["cupos"] = "Los cupos deben ser un número válido."
+
+    # Validar precio (opcional)
+    precio_raw = normalized_payload.get("precio")
+    if precio_raw is None or str(precio_raw).strip() == "":
+        normalized_payload["precio"] = None
+    else:
+        try:
+            precio_value = float(precio_raw)
+            if precio_value < 0:
+                errors["precio"] = "El precio no puede ser negativo."
+            else:
+                normalized_payload["precio"] = precio_value
+        except (ValueError, TypeError):
+            errors["precio"] = "El precio debe ser un número válido."
 
     # Validar profesor_id
     if not normalized_payload["profesor_id"]:
@@ -138,6 +153,7 @@ def crear_clase_completa(payload):
             cancha=payload["cancha"],
             nivel=NivelEnum(payload["nivel"]),
             cupos=cupos_int,
+            precio=payload.get("precio"),
             tipo_clase=tipo_clase,
             profesor_id=int(payload["profesor_id"])
         )
