@@ -1,7 +1,9 @@
 from flask import Blueprint, jsonify, request
 from flask_login import current_user
-from src.core.services import usuarios 
-
+from src.core.services.usuarios import (
+    listar_usuarios,
+    filtrar_usuarios
+) 
 
 from src.core.services.registrarse import (
     registrar_empleado,
@@ -78,19 +80,18 @@ def _require_admin():
     return None
 
 @usuarios_bp.route("/lista", methods=["GET"])
-def obtener_usuarios():
+def obtener_todos_los_usuarios():
     admin_error = _require_admin()
     if admin_error is not None:
         return admin_error
-    try:
-        usuarios.listar_usuarios()
-
-    except Exception as e:
-            return jsonify({"error": str(e)}), 400
+        
+    lista_usuarios, status_code = listar_usuarios()
+    
+    return jsonify(lista_usuarios), status_code
     
 
 @usuarios_bp.route('/api/usuarios', methods=['GET'])
-def listar_usuarios():
+def filtrar_usuarios():
     admin_error = _require_admin()
     if admin_error is not None:
         return admin_error
@@ -99,6 +100,6 @@ def listar_usuarios():
     dni_query = request.args.get('dni', type=str)
     mail_query = request.args.get('mail', type=str)
 
-    lista_usuarios, status_code = usuarios.filtrar_usuarios(nombre_query, dni_query, mail_query)
+    lista_usuarios, status_code = filtrar_usuarios(nombre_query, dni_query, mail_query)
 
     return jsonify(lista_usuarios), status_code

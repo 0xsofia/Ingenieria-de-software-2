@@ -10,6 +10,7 @@ import RegistrarsePage from '../pages/RegistrarsePage.jsx'
 import ActividadesPage from '../pages/ActividadesPage.jsx'
 import ActividadPage from '../pages/ActividadPage.jsx'
 import ErrorPage from '../pages/ErrorPage.jsx'
+import ListadoUsuariosPage from '../pages/ListadoUsuariosPage.jsx'
 
 
 const router = createBrowserRouter([
@@ -39,6 +40,10 @@ const router = createBrowserRouter([
       {
         path: '/pago/retorno',
         element: <PagoRetornoPage />,
+      },
+      {
+        path: '/usuarios',
+        element: <ListadoUsuariosPage />,
       },
     ],
   },

@@ -1,0 +1,81 @@
+.usuario-card {
+  display: grid;
+  gap: 13px;
+  padding: 15px;
+  border: 1px solid var(--border-strong);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.usuario-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.usuario-card__title {
+  margin: 0;
+  font-size: 1.35rem;
+  color: var(--text-strong);
+}
+
+.usuario-card__subtitle {
+  margin: 8px 0 0;
+  color: var(--text-soft);
+  font-size: 0.95rem;
+}
+
+.usuario-card__badge {
+  align-self: flex-start;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--text-strong);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: capitalize; 
+}
+
+.usuario-card__meta-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.usuario-card__meta-item {
+  display: grid;
+  gap: 6px;
+}
+
+.usuario-card__label {
+  color: var(--text-soft);
+  font-size: 0.88rem;
+}
+
+.usuario-card__value {
+  color: var(--text-strong);
+  font-size: 1rem;
+  font-weight: 600;
+  word-break: break-all; 
+}
+
+.usuario-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.usuario-card__note {
+  color: var(--text-soft);
+  font-size: 0.92rem;
+}
+
+.usuario-card__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}

@@ -1,0 +1,85 @@
+
+.listado-usuarios__header-row {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 1rem;
+}
+
+/* Contenedor de la barra de controles e inputs */
+.listado-usuarios__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+/* Fila dinámica para albergar los 3 filtros de texto (Nombre, DNI, Email) */
+.listado-usuarios__filters-row {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap; /* Para que en pantallas chicas se acomoden solos */
+  background-color: #f8fafc;
+  padding: 1.25rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Contenedor individual de cada Input + Label */
+.listado-usuarios__filter-group {
+  flex: 1;
+  min-width: 200px; /* Evita que se aplasten en pantallas medianas */
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.listado-usuarios__filter-group label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* Input estilizado moderno */
+.listado-usuarios__input {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.95rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #1e293b;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.listado-usuarios__input:focus {
+  outline: none;
+  border-color: #3b82f6; /* Azul deportivo/institucional estándar */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Fila de estado (ej: "12 usuarios encontrados") */
+.listado-usuarios__status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0;
+}
+
+/* Contenedor vacío (Estado sin resultados) */
+.listado-usuarios__empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  background-color: #f1f5f9;
+  border-radius: 8px;
+  color: #64748b;
+  font-size: 1rem;
+  border: 2px dashed #cbd5e1;
+}
+
+/* Grilla de Tarjetas (Copia idéntica del comportamiento de ClaseCard) */
+.listado-usuarios__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
