@@ -46,6 +46,16 @@ CLASES_TO_SEED = [
         "profesor_dni": "44332211",
         "precio": 500
     },
+    {
+        "actividad": "Basquet",
+        "fecha": "2026-06-02",
+        "horario_inicio": "17:00",
+        "cancha": "Cancha D",
+        "nivel": "Intermedio",
+        "cupos": 0,
+        "profesor_dni": "44332211",
+        "precio": 500
+    },
 ]
 
 
