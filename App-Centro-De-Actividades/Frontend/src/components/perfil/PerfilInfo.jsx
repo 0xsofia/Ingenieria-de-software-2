@@ -1,6 +1,6 @@
 import { useAuth } from '../../hooks/useAuth'
 
-function PerfilInfo({ hideRole = false }) {
+function PerfilInfo() {
   const { session, isBootstrapping } = useAuth()
 
   if (isBootstrapping) {
@@ -40,4 +40,4 @@ function PerfilInfo({ hideRole = false }) {
   )
 }
 
-export default PerfilInfo; 
+export default PerfilInfo

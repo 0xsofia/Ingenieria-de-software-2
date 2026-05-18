@@ -7,6 +7,7 @@ from src.core.services.registrarse import (
 )
 from src.core.services.usuarios import (
     actualizar_usuario,
+    listar_usuarios,
     obtener_usuario_modificable,
 )
 
@@ -26,6 +27,22 @@ def registrar_empleado_controller():
         return jsonify({"status": "validation_error", "errors": errors}), 400
 
     body, status_code = registrar_empleado(normalized_payload)
+    return jsonify(body), status_code
+
+
+@usuarios_bp.get("")
+def listar_usuarios_controller():
+    access_error = _require_user_listing_access()
+    if access_error is not None:
+        return access_error
+
+    body, status_code = listar_usuarios(
+        {
+            "dni": request.args.get("dni"),
+            "email": request.args.get("email"),
+            "nombre": request.args.get("nombre"),
+        }
+    )
     return jsonify(body), status_code
 
 
@@ -68,6 +85,32 @@ def _require_admin():
                 {
                     "status": "error",
                     "message": "Solo un administrador puede acceder a esta funcionalidad.",
+                }
+            ),
+            403,
+        )
+
+    return None
+
+
+def _require_user_listing_access():
+    if not current_user.is_authenticated:
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": "Debes iniciar sesión como administrador o empleado para acceder a esta funcionalidad.",
+                }
+            ),
+            401,
+        )
+
+    if getattr(current_user, "role", "") not in {"administrador", "empleado"}:
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": "Solo un administrador o empleado puede acceder a esta funcionalidad.",
                 }
             ),
             403,

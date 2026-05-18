@@ -1,11 +1,11 @@
 .clase-card {
   display: grid;
-  gap: 13px;
-  padding: 15px;
-  border: 1px solid var(--border-strong);
-  border-radius: 22px;
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(242, 247, 252, 0.92));
+  box-shadow: var(--shadow-soft);
 }
 
 .clase-card__header {
@@ -17,40 +17,47 @@
 
 .clase-card__title {
   margin: 0;
-  font-size: 1.35rem;
   color: var(--text-strong);
 }
 
 .clase-card__subtitle {
   margin: 8px 0 0;
   color: var(--text-soft);
-  font-size: 0.95rem;
+  font-size: 0.92rem;
 }
 
 .clase-card__badge {
   align-self: flex-start;
-  padding: 10px 16px;
-  border-radius: 999px;
-  background: var(--surface-soft);
+  padding: 10px 14px;
+  border: 1px solid rgba(21, 58, 96, 0.18);
+  border-radius: var(--radius-control);
+  background: rgba(21, 58, 96, 0.08);
   color: var(--text-strong);
-  font-size: 0.95rem;
+  font-size: 0.82rem;
   font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .clase-card__meta-grid {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
 .clase-card__meta-item {
   display: grid;
   gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .clase-card__label {
   color: var(--text-soft);
-  font-size: 0.88rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .clase-card__value {
@@ -65,15 +72,40 @@
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .clase-card__note {
   color: var(--text-soft);
-  font-size: 0.92rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .clase-card__actions {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.clase-card__actions .primary-action,
+.clase-card__actions .secondary-action {
+  margin-top: 0;
+}
+
+@media (max-width: 640px) {
+  .clase-card {
+    padding: 16px;
+  }
+
+  .clase-card__header {
+    flex-direction: column;
+  }
+
+  .clase-card__badge,
+  .clase-card__actions,
+  .clase-card__actions > * {
+    width: 100%;
+  }
 }

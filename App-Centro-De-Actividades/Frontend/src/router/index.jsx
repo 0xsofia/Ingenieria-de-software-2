@@ -9,7 +9,12 @@ import PerfilPage from '../pages/PerfilPage.jsx'
 import RegistrarsePage from '../pages/RegistrarsePage.jsx'
 import ActividadesPage from '../pages/ActividadesPage.jsx'
 import ActividadPage from '../pages/ActividadPage.jsx'
+import CrearClasePage from '../pages/CrearClasePage.jsx'
 import ErrorPage from '../pages/ErrorPage.jsx'
+import ListadoUsuariosPage from '../pages/ListadoUsuariosPage.jsx'
+import ModificarClasePage from '../pages/ModificarClasePage.jsx'
+import ModificarUsuarioPage from '../pages/ModificarUsuarioPage.jsx'
+import RegistrarEmpleadoPage from '../pages/RegistrarEmpleadoPage.jsx'
 
 
 const router = createBrowserRouter([
@@ -37,22 +42,42 @@ const router = createBrowserRouter([
         element: <ListadoClasesPage />,
       },
       {
+        path: '/clases/crear',
+        element: <CrearClasePage />,
+      },
+      {
+        path: '/clases/:claseId/modificar',
+        element: <ModificarClasePage />,
+      },
+      {
         path: '/pago/retorno',
         element: <PagoRetornoPage />,
       },
+      {
+        path: '/usuarios',
+        element: <ListadoUsuariosPage />,
+      },
+      {
+        path: '/usuarios/registrar-empleado',
+        element: <RegistrarEmpleadoPage />,
+      },
+      {
+        path: '/usuarios/:id/modificar',
+        element: <ModificarUsuarioPage />,
+      },
+      {
+        path: '/verperfil',
+        element: <PerfilPage />,
+      },
+      {
+        path: '/actividades',
+        element: <ActividadesPage />,
+      },
+      {
+        path: '/actividad/:actividadName',
+        element: <ActividadPage />,
+      },
     ],
-  },
-  {
-    path: '/verperfil',
-    element: <PerfilPage />,
-  },
-  {
-    path: '/actividades',
-    element: <ActividadesPage />,
-  },
-  {
-    path: '/actividad/:actividadName',
-    element: <ActividadPage />,
   },
   {
     path: '*',

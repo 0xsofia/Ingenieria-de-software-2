@@ -15,28 +15,31 @@
 
 .role-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
 
 .role-card {
-  border: 2px solid var(--border-strong);
-  border-radius: 14px;
-  background: var(--button-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(237, 243, 250, 0.94));
   color: var(--text-strong);
   font: inherit;
   cursor: pointer;
-  padding: 18px;
+  padding: 20px;
   text-align: left;
   display: grid;
   gap: 10px;
+  box-shadow: var(--shadow-soft);
   transition:
     background 0.2s ease,
-    transform 0.2s ease;
+    transform 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .role-card:hover {
-  background: var(--button-hover);
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(21, 58, 96, 0.28);
   transform: translateY(-1px);
 }
 
@@ -47,16 +50,21 @@
 }
 
 .role-card__label {
-  font-size: clamp(18px, 0.7vw + 0.9rem, 24px);
-  line-height: 1.2;
+  font-size: clamp(1.3rem, 0.8vw + 1rem, 1.72rem);
+  line-height: 1;
+}
+
+.role-card__description {
+  color: var(--text-soft);
 }
 
 .test-credentials-card {
-  border: 1px solid var(--border-muted);
-  background: var(--surface-soft);
-  padding: 18px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(238, 243, 248, 0.92));
+  padding: 20px;
   display: grid;
-  gap: 16px;
+  gap: 18px;
 }
 
 .test-credentials-grid {
@@ -66,21 +74,21 @@
 }
 
 .test-credential-item {
-  border: 1px solid var(--border-muted);
-  background: var(--surface);
-  padding: 14px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 16px;
   display: grid;
-  gap: 6px;
+  gap: 8px;
 }
 
 .test-credential-item h3 {
   margin: 0;
-  font-size: 20px;
 }
 
 .test-credential-item strong {
   display: block;
   width: 100%;
+  margin-bottom: 2px;
 }
 
 .login-register-copy {
@@ -94,19 +102,19 @@
 .login-register-link {
   color: var(--text-strong);
   font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
 }
 
 @media (max-width: 1100px) {
+  .role-grid,
   .test-credentials-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 900px) {
-  .role-grid {
-    grid-template-columns: 1fr;
-  }
-
+  .role-grid,
   .test-credentials-grid {
     grid-template-columns: 1fr;
   }

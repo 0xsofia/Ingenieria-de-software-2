@@ -1,0 +1,24 @@
+.actividades-page {
+  display: grid;
+  gap: 24px;
+}
+
+.actividades-page__header h1,
+.actividades-page__status-row p {
+  margin: 0;
+}
+
+.actividades-page__content {
+  display: grid;
+  gap: 22px;
+}
+
+.actividades-page__status-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.actividades-page .primary-action {
+  margin-top: 0;
+}

@@ -1,22 +1,14 @@
-import { useEffect, useState } from 'react'
-import { useAuth } from '../../hooks/useAuth'
+import { useState } from 'react'
+
 import { actualizarPerfil } from '../../api/perfil'
+import { useAuth } from '../../hooks/useAuth'
 
 function PerfilUpdateForm() {
   const { session, setAuthenticatedSession, isBootstrapping } = useAuth()
-  const [formValues, setFormValues] = useState({ email: '', intereses: '' })
+  const [formValues, setFormValues] = useState({})
   const [errors, setErrors] = useState({})
   const [message, setMessage] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
-
-  useEffect(() => {
-    if (!isBootstrapping && session) {
-      setFormValues({
-        email: session.email || '',
-        intereses: session.intereses || '',
-      })
-    }
-  }, [isBootstrapping, session])
 
   if (isBootstrapping) {
     return <div>Cargando perfil...</div>
@@ -25,6 +17,9 @@ function PerfilUpdateForm() {
   if (!session) {
     return <div>No hay sesión activa.</div>
   }
+
+  const emailValue = formValues.email ?? session.email ?? ''
+  const interesesValue = formValues.intereses ?? session.intereses ?? ''
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -38,7 +33,10 @@ function PerfilUpdateForm() {
     setErrors({})
 
     try {
-      const data = await actualizarPerfil(formValues)
+      const data = await actualizarPerfil({
+        email: emailValue,
+        intereses: interesesValue,
+      })
       const updatedProfile = data.profile
       setAuthenticatedSession({ ...session, ...updatedProfile })
     } catch (error) {
@@ -47,8 +45,7 @@ function PerfilUpdateForm() {
         setErrors(responseErrors)
       } else {
         setMessage(
-          error.data?.message ||
-            'No fue posible actualizar el perfil. Intentalo nuevamente.',
+          error.data?.message || 'No fue posible actualizar el perfil. Intentalo nuevamente.',
         )
       }
     } finally {
@@ -84,13 +81,11 @@ function PerfilUpdateForm() {
             id="email"
             name="email"
             type="email"
-            value={formValues.email}
+            value={emailValue}
             onChange={handleChange}
             placeholder="Ingrese un email"
           />
-          {errors.email ? (
-            <span className="form-error">{errors.email}</span>
-          ) : null}
+          {errors.email ? <span className="form-error">{errors.email}</span> : null}
         </div>
 
         <div className="profile-update-field">
@@ -98,7 +93,7 @@ function PerfilUpdateForm() {
           <textarea
             id="intereses"
             name="intereses"
-            value={formValues.intereses}
+            value={interesesValue}
             onChange={handleChange}
             placeholder="Ej: Me gusta jugar al padel"
             rows={4}
