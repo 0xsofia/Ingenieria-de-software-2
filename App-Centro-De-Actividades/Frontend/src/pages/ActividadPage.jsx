@@ -1,12 +1,101 @@
+import { useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 
+import { entrarListaEspera, reservarEspontanea } from '../api/reservas'
 import './ActividadPage.css'
 
 export default function ActividadPage() {
   const { actividadName } = useParams()
   const location = useLocation()
   const clase = location.state?.clase
+  const claseId = clase ? Number(clase.clase_id) : null
   const actividadTitle = formatActividadTitle(actividadName)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [requestError, setRequestError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+  const [pendingWaitlistClaseId, setPendingWaitlistClaseId] = useState(null)
+
+  console.debug('ActividadPage - clase:', clase)
+
+  async function handleReservar() {
+    if (!clase || !Number.isFinite(claseId)) {
+      setRequestError('Necesitás seleccionar una clase válida para reservar.')
+      return
+    }
+
+    if (clase.ya_reservado) {
+      setRequestError('')
+      setSuccessMessage('Ya estás reservado en esta clase.')
+      setPendingWaitlistClaseId(null)
+      return
+    }
+
+    setIsSubmitting(true)
+    setRequestError('')
+    setSuccessMessage('')
+    setPendingWaitlistClaseId(null)
+
+    try {
+      const result = await reservarEspontanea({ clase_id: claseId })
+
+      if (result.status === 'no_cupo') {
+        setSuccessMessage(result.message)
+        setPendingWaitlistClaseId(claseId)
+        return
+      }
+
+      if (result.status === 'payment_required' && result.payment_url) {
+        window.location.assign(result.payment_url)
+        return
+      }
+
+      if (result.status === 'reserved' || result.status === 'already_reserved') {
+        setSuccessMessage(result.message)
+        return
+      }
+
+      setSuccessMessage(result.message || 'Reserva procesada.')
+    } catch (error) {
+      if (error?.data?.status === 'no_cupo') {
+        setSuccessMessage(error?.data?.message)
+        setPendingWaitlistClaseId(claseId)
+        return
+      }
+
+      if (error?.data?.status === 'already_reserved') {
+        setSuccessMessage(error?.data?.message)
+        return
+      }
+
+      setRequestError(error?.data?.message || 'No se pudo realizar la reserva.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  async function handleEntrarListaEspera() {
+    if (!pendingWaitlistClaseId) return
+
+    setIsSubmitting(true)
+    setRequestError('')
+    setSuccessMessage('')
+
+    try {
+      const result = await entrarListaEspera({ clase_id: pendingWaitlistClaseId })
+      setSuccessMessage(result.message)
+      setPendingWaitlistClaseId(null)
+    } catch (error) {
+      setRequestError(
+        error?.data?.message || 'No se pudo ingresar a la lista de espera.'
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  function handleCancelarListaEspera() {
+    setPendingWaitlistClaseId(null)
+  }
 
   return (
     <section className="dashboard-shell">
@@ -21,7 +110,7 @@ export default function ActividadPage() {
           <p className="auth-subtitle">Reserva</p>
           <h1>{actividadTitle}</h1>
           <p className="dashboard-copy">
-            Esta pantalla queda preparada como siguiente paso del flujo de reserva.
+            Confirmá la clase seleccionada y avanzá con la reserva.
           </p>
         </header>
 
@@ -45,14 +134,68 @@ export default function ActividadPage() {
                 <dt>Cupos</dt>
                 <dd>{clase.cupos}</dd>
               </div>
+              {clase.precio !== undefined && clase.precio !== null ? (
+                <div>
+                  <dt>Precio</dt>
+                  <dd>$ {clase.precio}</dd>
+                </div>
+              ) : null}
             </dl>
           ) : (
             <p className="dashboard-copy">Todavía no hay una clase seleccionada para esta actividad.</p>
           )}
 
+          {requestError ? (
+            <p className="banner banner--error" role="alert">
+              {requestError}
+            </p>
+          ) : null}
+
+          {successMessage ? (
+            <p className="dashboard-copy" role="status">
+              {successMessage}
+            </p>
+          ) : null}
+
+          {pendingWaitlistClaseId ? (
+            <section className="test-credentials-card" aria-label="Sin cupo">
+              <div className="section-heading">
+                <h3>Sin cupo</h3>
+                <p>
+                  No hay más cupo en la clase seleccionada.
+                  ¿Querés entrar a la lista de espera?
+                </p>
+              </div>
+
+              <div className="role-grid">
+                <button
+                  type="button"
+                  className="primary-action"
+                  onClick={handleEntrarListaEspera}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Procesando...' : 'Entrar a lista de espera'}
+                </button>
+                <button
+                  type="button"
+                  className="hero-action"
+                  onClick={handleCancelarListaEspera}
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </section>
+          ) : null}
+
           <div className="actividad-placeholder-page__actions">
-            <button type="button" className="primary-action" disabled>
-              Confirmar reserva próximamente
+            <button
+              type="button"
+              className="primary-action"
+              onClick={handleReservar}
+              disabled={isSubmitting || !clase}
+            >
+              {isSubmitting ? 'Procesando...' : 'Confirmar reserva'}
             </button>
           </div>
         </div>
