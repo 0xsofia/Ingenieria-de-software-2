@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_login import current_user
+from src.core.services import usuarios 
+
 
 from src.core.services.registrarse import (
     registrar_empleado,
@@ -74,3 +76,29 @@ def _require_admin():
         )
 
     return None
+
+@usuarios_bp.route("/lista", methods=["GET"])
+def obtener_usuarios():
+    admin_error = _require_admin()
+    if admin_error is not None:
+        return admin_error
+    try:
+        usuarios.listar_usuarios()
+
+    except Exception as e:
+            return jsonify({"error": str(e)}), 400
+    
+
+@usuarios_bp.route('/api/usuarios', methods=['GET'])
+def listar_usuarios():
+    admin_error = _require_admin()
+    if admin_error is not None:
+        return admin_error
+    
+    nombre_query = request.args.get('nombre', type=str)
+    dni_query = request.args.get('dni', type=str)
+    mail_query = request.args.get('mail', type=str)
+
+    lista_usuarios, status_code = usuarios.filtrar_usuarios(nombre_query, dni_query, mail_query)
+
+    return jsonify(lista_usuarios), status_code

@@ -1,6 +1,6 @@
 from src.core.enums.clase_enum import ActividadEnum, NivelEnum, TipoClaseEnum
 from datetime import date, time
- 
+from src.core.database import db
 
 class Clase(db.Model):
     __tablename__ = "clase"

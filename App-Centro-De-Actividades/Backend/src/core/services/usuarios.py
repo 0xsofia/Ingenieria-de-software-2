@@ -145,3 +145,42 @@ def _integrity_error_response(error):
         "status": "error",
         "message": "No se pudo actualizar el usuario por un conflicto de datos.",
     }, 409
+
+def listar_usuarios():
+    usuarios = Persona.query.all()
+    usuarios_data = [
+        {
+            "id": Persona.persona_id,
+            "nombre": Persona.nombre,
+            "dni": Persona.dni,
+            "telefono": Persona.telefono
+        }
+        for Persona in usuarios
+    ]
+    return {"status": "ok", "usuarios": usuarios_data}, 200
+
+def filtrar_usuarios (nombre_query, dni_query, mail_query):
+    query = Persona.query
+
+    if nombre_query:
+        query = query.filter(Persona.nombre.ilike(f"%{nombre_query}%"))
+        
+    if dni_query:
+        query = query.filter(Persona.dni == dni_query)
+        
+    if mail_query:
+        query = query.filter(Persona.email.ilike(f"%{mail_query}%"))
+
+    usuarios = query.all()
+
+    resultado = []
+    for u in usuarios:
+        resultado.append({
+            "id": u.id,
+            "nombre": u.nombre,
+            "dni": u.dni,
+            "mail": u.mail,
+            "rol": u.rol.value if hasattr(u.rol, 'value') else u.rol # Por si usan Enums
+        })
+
+    return resultado,200
