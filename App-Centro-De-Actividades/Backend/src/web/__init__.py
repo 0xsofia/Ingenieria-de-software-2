@@ -1,6 +1,7 @@
 from flask import Flask
 from flask import render_template
 from flask_cors import CORS
+import os
 from src.web.handlers import error
 from src.core import database
 from src.core.config import config
@@ -14,6 +15,7 @@ from src.web.controllers.perfil_controller import perfil_bp
 from src.web.controllers.actividad_controller import actividad_bp
 from src.web.controllers.clase_controller import clase_bp
 from src.web.controllers.profesor_controller import profesor_bp
+from src.web.controllers.reservas import reservas_bp
 
 from src.core.bcrypt_and_session import bcrypt, cipher, login_manager
 
@@ -26,7 +28,22 @@ def create_app(env="development", static_folder="../../static"):
 
     bcrypt.init_app(app)
     login_manager.init_app(app)
-    CORS(app, supports_credentials=True)
+    frontend_origin = (os.environ.get("FRONTEND_BASE_URL") or "").rstrip("/")
+    allowed_origins = [
+        origin
+        for origin in {
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            frontend_origin,
+        }
+        if origin
+    ]
+
+    CORS(
+        app,
+        supports_credentials=True,
+        resources={r"/api/*": {"origins": allowed_origins}},
+    )
     cipher.init_app(app)
 
     @app.route("/")
@@ -43,6 +60,7 @@ def create_app(env="development", static_folder="../../static"):
     app.register_blueprint(actividad_bp)
     app.register_blueprint(clase_bp)
     app.register_blueprint(profesor_bp)
+    app.register_blueprint(reservas_bp)
 
     @app.cli.command(name="reset_db")
     def reset_db():

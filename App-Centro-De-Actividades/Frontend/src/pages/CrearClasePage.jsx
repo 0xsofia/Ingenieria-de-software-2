@@ -191,7 +191,7 @@ export default function ClasePage() {
         profesor_id: Number(values.profesor_id),
       })
 
-      redirectTo(navigate, '/inicio', {
+      redirectTo(navigate, result.redirect_to || '/clases', {
         flashMessage: result.message || 'La clase fue creada correctamente.',
       })
     } catch (error) {

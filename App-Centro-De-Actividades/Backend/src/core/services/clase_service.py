@@ -152,7 +152,7 @@ def crear_clase_completa(payload):
     return {
         "status": "created",
         "message": "La clase ha sido creada con éxito.",
-        "redirect_to": "/clase2",
+        "redirect_to": "/clases",
         "clase_id": nueva_clase.clase_id
     }, 201
 

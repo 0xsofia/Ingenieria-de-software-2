@@ -11,4 +11,7 @@ export const endpoints = {
   listarClases: '/api/clase/lista',
   obtenerProfesores: '/api/profesor/lista',
   actividades: '/api/actividades',
+  reservaEspontanea: '/api/reservas/espontanea',
+  reservaEspontaneaListaEspera: '/api/reservas/espontanea/lista-espera',
+  reservaEspontaneaPagoRetorno: '/api/reservas/espontanea/pago-retorno',
 }

@@ -67,14 +67,18 @@ def _get_or_create_clase(clase_data):
         actividad=ActividadEnum(clase_data["actividad"]),
     ).first()
 
-    tipo_clase = TipoClaseEnum.PARTICULAR if clase_data["cupos"] == 1 else TipoClaseEnum.GRUPAL
+    tipo_clase = (
+        TipoClaseEnum.PARTICULAR if clase_data["cupos"] == 1 else TipoClaseEnum.GRUPAL
+    )
 
     if clase is None:
         clase = Clase(
             actividad=ActividadEnum(clase_data["actividad"]),
             fecha=fecha_obj,
             horario_inicio=horario_inicio_obj,
-            horario_fin=(datetime.combine(fecha_obj, horario_inicio_obj) + timedelta(hours=1)).time(),
+            horario_fin=(
+                datetime.combine(fecha_obj, horario_inicio_obj) + timedelta(hours=1)
+            ).time(),
             cancha=clase_data["cancha"],
             nivel=NivelEnum(clase_data["nivel"]),
             cupos=clase_data["cupos"],
@@ -89,6 +93,8 @@ def _get_or_create_clase(clase_data):
     clase.nivel = NivelEnum(clase_data["nivel"])
     clase.cupos = clase_data["cupos"]
     clase.tipo_clase = tipo_clase
-    clase.horario_fin = (datetime.combine(fecha_obj, horario_inicio_obj) + timedelta(hours=1)).time()
+    clase.horario_fin = (
+        datetime.combine(fecha_obj, horario_inicio_obj) + timedelta(hours=1)
+    ).time()
     db.session.flush()
     return clase
