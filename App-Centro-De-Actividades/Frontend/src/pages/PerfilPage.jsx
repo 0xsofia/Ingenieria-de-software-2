@@ -24,7 +24,9 @@ function PerfilPage() {
               <Link className="secondary-action" to="/perfil/actualizar">
                 Actualizar perfil
               </Link>
-              <button type="button" className="secondary-action">Mis pagos</button>
+              <Link className="secondary-action" to="/mis-pagos">
+                Mis pagos
+              </Link>
               <button type="button" className="secondary-action">Mis clases</button>
             </div>
           </section>

@@ -13,6 +13,7 @@ import ActualizarPerfilPage from '../pages/ActualizarPerfilPage.jsx'
 import CrearClasePage from '../pages/CrearClasePage.jsx'
 import ErrorPage from '../pages/ErrorPage.jsx'
 import ListadoUsuariosPage from '../pages/ListadoUsuariosPage.jsx'
+import MisPagosPage from '../pages/MisPagosPage.jsx'
 import ModificarClasePage from '../pages/ModificarClasePage.jsx'
 import ModificarUsuarioPage from '../pages/ModificarUsuarioPage.jsx'
 import RegistrarEmpleadoPage from '../pages/RegistrarEmpleadoPage.jsx'
@@ -73,6 +74,10 @@ const router = createBrowserRouter([
       {
         path: '/perfil/actualizar',
         element: <ActualizarPerfilPage />,
+      },
+      {
+        path: '/mis-pagos',
+        element: <MisPagosPage />,
       },
       {
         path: '/actividades',
