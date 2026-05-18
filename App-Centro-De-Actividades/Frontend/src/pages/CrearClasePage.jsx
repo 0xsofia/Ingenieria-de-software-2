@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import DynamicForm2 from '../components/forms/DynamicForm2'
 import { crearClase, obtenerProfesores } from '../api/clase'
 import { useAuth } from '../hooks/useAuth'
 import { redirectTo } from '../services/redirectTo'
-import { useNavigate } from 'react-router-dom'
 import { ACTIVIDADES } from '../constants/actividades'
+import './ActividadPage.css'
 
 const NIVELES = ['Principiante', 'Intermedio', 'Avanzado']
 
@@ -13,7 +14,7 @@ const hoy = new Date().toISOString().split('T')[0]
 
 export default function ClasePage() {
   const navigate = useNavigate()
-  const { isAuthenticated, isBootstrapping } = useAuth()
+  const { isAuthenticated, isBootstrapping, session } = useAuth()
   const [serverErrors, setServerErrors] = useState({})
   const [generalError, setGeneralError] = useState('')
   const [errorCycle, setErrorCycle] = useState(0)
@@ -22,10 +23,10 @@ export default function ClasePage() {
   const [loadingProfesores, setLoadingProfesores] = useState(true)
 
   useEffect(() => {
-    if (isAuthenticated) {
-      redirectTo(navigate, '/inicio')
+    if (!isBootstrapping && !isAuthenticated) {
+      redirectTo(navigate, '/login')
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, isBootstrapping, navigate])
 
   useEffect(() => {
     const cargarProfesores = async () => {
@@ -219,12 +220,26 @@ export default function ClasePage() {
     )
   }
 
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+
+  if (session?.role !== 'empleado') {
+    return <Navigate to="/inicio" replace />
+  }
+
   return (
-    <main className="auth-shell">
-      <section className="auth-frame">
-        <header className="auth-header">
+    <section className="dashboard-shell">
+      <section className="dashboard-frame dashboard-frame--compact">
+        <div className="actividad-placeholder-page__top-link">
+          <Link className="secondary-action" to="/clases">
+            Volver a clases
+          </Link>
+        </div>
+
+        <header className="dashboard-header">
           <p className="auth-subtitle">Crear clase</p>
-          <h1>Centro de actividades deportivas</h1>
+          <h1>Nueva clase</h1>
         </header>
 
         <DynamicForm2
@@ -239,6 +254,6 @@ export default function ClasePage() {
           errorCycle={errorCycle}
         />
       </section>
-    </main>
+    </section>
   )
 }

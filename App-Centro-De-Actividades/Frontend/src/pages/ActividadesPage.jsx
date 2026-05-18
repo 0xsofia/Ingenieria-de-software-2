@@ -1,24 +1,38 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { obtenerActividades } from '../api/actividad'
 
-function ActividadesPage() {
-  const [actividades, setActividades] = useState([])
+import { listarClases } from '../api/clase'
+import FilterForm from '../components/listing/FilterForm'
+import SectionedTableList from '../components/listing/SectionedTableList'
+import { ACTIVIDADES } from '../constants/actividades'
+import './ActividadesPage.css'
+
+const INITIAL_FILTERS = Object.freeze({
+  actividad: '',
+  horario: '',
+})
+
+export default function ActividadesPage() {
+  const [clases, setClases] = useState([])
+  const [submittedFilters, setSubmittedFilters] = useState(INITIAL_FILTERS)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     let cancelled = false
 
-    async function loadActividades() {
+    async function loadClases() {
+      setIsLoading(true)
+      setError('')
+
       try {
-        const data = await obtenerActividades()
+        const result = await listarClases()
         if (!cancelled) {
-          setActividades(data.actividades || [])
+          setClases(Array.isArray(result) ? result : [])
         }
-      } catch (err) {
+      } catch {
         if (!cancelled) {
-          setError('No se pudieron cargar las actividades. Intente de nuevo.')
+          setError('No se pudieron cargar las clases disponibles para reservar.')
         }
       } finally {
         if (!cancelled) {
@@ -27,49 +41,166 @@ function ActividadesPage() {
       }
     }
 
-    loadActividades()
+    loadClases()
 
     return () => {
       cancelled = true
     }
   }, [])
 
-  function getSlug(nombre) {
-    return String(nombre)
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '')
-  }
+  const horarioOptions = useMemo(
+    () => Array.from(new Set(clases.map((clase) => clase.horario_inicio))).sort(),
+    [clases]
+  )
+
+  const filterFields = useMemo(
+    () => [
+      {
+        name: 'actividad',
+        label: 'Actividad',
+        type: 'select',
+        placeholder: 'Todas las actividades',
+        options: ACTIVIDADES,
+      },
+      {
+        name: 'horario',
+        label: 'Horario',
+        type: 'select',
+        placeholder: 'Todos los horarios',
+        options: horarioOptions.map((horario) => ({
+          value: horario,
+          label: horario,
+        })),
+      },
+    ],
+    [horarioOptions]
+  )
+
+  const filteredClases = useMemo(() => {
+    return clases.filter((clase) => {
+      if (submittedFilters.actividad && clase.actividad !== submittedFilters.actividad) {
+        return false
+      }
+
+      if (submittedFilters.horario && clase.horario_inicio !== submittedFilters.horario) {
+        return false
+      }
+
+      return true
+    })
+  }, [clases, submittedFilters])
+
+  const hasActiveFilters = Object.values(submittedFilters).some(Boolean)
 
   return (
-    <main className="dashboard-shell profile-shell">
-      <section className="dashboard-frame profile-frame">
-        <header className="dashboard-header profile-header">
-          <h1>Actividades</h1>
-        </header>
-
-        {isLoading ? (
-          <p>Cargando actividades...</p>
-        ) : error ? (
-          <p>{error}</p>
-        ) : (
-          <div className="profile-grid">
-            {actividades.map((actividad) => {
-              const slug = getSlug(actividad.nombre)
-              return (
-                <article key={actividad.actividad_id} className="profile-summary-card">
-                  <h2>{actividad.nombre}</h2>
-                  <Link className="primary-action" to={`/actividad/:${slug}`}state={{ id: actividad.actividad_id }}>
-                    Ver actividad
-                  </Link>
-                </article>
-              )
-            })}
+    <section className="dashboard-shell">
+      <section className="dashboard-frame actividades-page">
+        <div className="actividades-page__header">
+          <div>
+            <p className="auth-subtitle">Reservas</p>
+            <h1>Actividades y horarios</h1>
+            <p className="dashboard-copy">
+              Elegí la actividad, filtrá por horario y avanzá al flujo mínimo de reserva.
+            </p>
           </div>
-        )}
+        </div>
+
+        <div className="actividades-page__content">
+          <FilterForm
+            title="Encontrar una clase"
+            description="Usá estos filtros para encontrar la clase que querés reservar."
+            fields={filterFields}
+            initialValues={submittedFilters}
+            onSubmit={setSubmittedFilters}
+            submitLabel="Aplicar filtros"
+            resetLabel="Limpiar"
+            isSubmitting={isLoading}
+          />
+
+          {error ? (
+            <p className="banner banner--error" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          {isLoading ? (
+            <p className="dashboard-copy">Cargando actividades disponibles...</p>
+          ) : (
+            <>
+              <div className="actividades-page__status-row">
+                <p className="dashboard-copy">{filteredClases.length} clase(s) disponibles</p>
+              </div>
+
+              <SectionedTableList
+                sections={[
+                  {
+                    key: 'actividades',
+                    title: 'Clases para reservar',
+                    items: filteredClases,
+                    emptyMessage: hasActiveFilters
+                      ? 'No hay clases para el filtro aplicado.'
+                      : 'Aún no hay clases disponibles para reservar.',
+                  },
+                ]}
+                columns={[
+                  {
+                    key: 'actividad',
+                    header: 'Actividad',
+                    render: (clase) => (
+                      <div className="sectioned-table-list__primary-cell">
+                        <strong>{clase.actividad}</strong>
+                        <span>{clase.nivel}</span>
+                      </div>
+                    ),
+                  },
+                  {
+                    key: 'fecha',
+                    header: 'Fecha',
+                  },
+                  {
+                    key: 'horario',
+                    header: 'Horario',
+                    render: (clase) => `${clase.horario_inicio} - ${clase.horario_fin}`,
+                  },
+                  {
+                    key: 'profesor_nombre',
+                    header: 'Profesor',
+                    render: (clase) => clase.profesor_nombre || 'A confirmar',
+                  },
+                  {
+                    key: 'cupos',
+                    header: 'Cupos',
+                  },
+                ]}
+                getRowKey={(clase) => clase.clase_id}
+                emptyMessage={
+                  hasActiveFilters
+                    ? 'No hay clases para el filtro aplicado.'
+                    : 'Aún no hay clases disponibles para reservar.'
+                }
+                renderActions={(clase) => (
+                  <div className="sectioned-table-list__actions">
+                    <Link
+                      className="primary-action"
+                      to={`/actividad/${getSlug(clase.actividad)}`}
+                      state={{ clase }}
+                    >
+                      Reservar
+                    </Link>
+                  </div>
+                )}
+              />
+            </>
+          )}
+        </div>
       </section>
-    </main>
+    </section>
   )
 }
 
-export default ActividadesPage
+function getSlug(nombre) {
+  return String(nombre)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}

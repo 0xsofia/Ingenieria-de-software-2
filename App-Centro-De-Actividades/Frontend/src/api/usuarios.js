@@ -6,6 +6,14 @@ export async function registrarEmpleado(payload) {
   return data
 }
 
+export async function listarUsuarios(filters) {
+  const params = Object.fromEntries(
+    Object.entries(filters || {}).filter(([, value]) => value !== '' && value !== null && value !== undefined)
+  )
+  const { data } = await http.get(endpoints.users, { params })
+  return data
+}
+
 export async function obtenerUsuarioModificable(personaId) {
   const { data } = await http.get(`${endpoints.users}/${personaId}`)
   return data

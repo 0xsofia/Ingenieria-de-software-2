@@ -1,34 +1,43 @@
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
 
+import { useAuth } from '../hooks/useAuth'
 import './ActividadPage.css'
 
-export default function ActividadPage() {
-  const { actividadName } = useParams()
+export default function ModificarClasePage() {
+  const { session } = useAuth()
+  const { claseId } = useParams()
   const location = useLocation()
   const clase = location.state?.clase
-  const actividadTitle = formatActividadTitle(actividadName)
+
+  if (session?.role !== 'empleado') {
+    return <Navigate to="/inicio" replace />
+  }
 
   return (
     <section className="dashboard-shell">
       <section className="dashboard-frame actividad-placeholder-page">
         <div className="actividad-placeholder-page__top-link">
-          <Link className="secondary-action" to="/actividades">
-            Volver a actividades
+          <Link className="secondary-action" to="/clases">
+            Volver a clases
           </Link>
         </div>
 
         <header className="dashboard-header actividad-placeholder-page__header">
-          <p className="auth-subtitle">Reserva</p>
-          <h1>{actividadTitle}</h1>
+          <p className="auth-subtitle">Gestión de clases</p>
+          <h1>Modificar clase #{claseId}</h1>
           <p className="dashboard-copy">
-            Esta pantalla queda preparada como siguiente paso del flujo de reserva.
+            Esta vista queda conectada como placeholder para el flujo de modificación.
           </p>
         </header>
 
         <div className="actividad-placeholder-page__card">
-          <h2>Clase seleccionada</h2>
+          <h2>Resumen</h2>
           {clase ? (
             <dl className="actividad-placeholder-page__details">
+              <div>
+                <dt>Actividad</dt>
+                <dd>{clase.actividad}</dd>
+              </div>
               <div>
                 <dt>Fecha</dt>
                 <dd>{clase.fecha}</dd>
@@ -41,31 +50,18 @@ export default function ActividadPage() {
                 <dt>Profesor</dt>
                 <dd>{clase.profesor_nombre || 'A confirmar'}</dd>
               </div>
-              <div>
-                <dt>Cupos</dt>
-                <dd>{clase.cupos}</dd>
-              </div>
             </dl>
           ) : (
-            <p className="dashboard-copy">Todavía no hay una clase seleccionada para esta actividad.</p>
+            <p className="dashboard-copy">No hay datos precargados para esta clase todavía.</p>
           )}
 
           <div className="actividad-placeholder-page__actions">
             <button type="button" className="primary-action" disabled>
-              Confirmar reserva próximamente
+              Guardar cambios próximamente
             </button>
           </div>
         </div>
       </section>
     </section>
   )
-}
-
-function formatActividadTitle(slug) {
-  return String(slug || 'actividad')
-    .replace(/-/g, ' ')
-    .split(' ')
-    .filter(Boolean)
-    .map((word) => word[0]?.toUpperCase() + word.slice(1))
-    .join(' ')
 }

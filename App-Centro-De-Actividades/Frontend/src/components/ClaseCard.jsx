@@ -1,6 +1,12 @@
 import './ClaseCard.css'
 
-export default function ClaseCard({ clase, onView, onReserve }) {
+export default function ClaseCard({
+  clase,
+  onView,
+  onReserve,
+  viewLabel = 'Ver',
+  reserveLabel = 'Inscribirme',
+}) {
   return (
     <article className="clase-card">
       <div className="clase-card__header">
@@ -34,10 +40,10 @@ export default function ClaseCard({ clase, onView, onReserve }) {
         <div className="clase-card__note">ID: {clase.clase_id}</div>
         <div className="clase-card__actions">
           <button type="button" className="secondary-action" onClick={() => onView(clase)}>
-            Ver
+            {viewLabel}
           </button>
           <button type="button" className="primary-action" onClick={() => onReserve(clase)}>
-            Inscribirme
+            {reserveLabel}
           </button>
         </div>
       </div>

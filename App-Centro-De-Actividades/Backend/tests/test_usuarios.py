@@ -167,6 +167,105 @@ class UsuariosTestCase(unittest.TestCase):
         self.assertEqual(response.json["user"]["dni"], "33333333")
         self.assertEqual(response.json["user"]["roles"], ["empleado"])
 
+    def test_admin_puede_listar_usuarios_modificables(self):
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        self._crear_usuario_con_roles(
+            email="empleado@centro.test",
+            dni="30000002",
+            password="123456",
+            roles=["empleado"],
+        )
+        self._crear_usuario_con_roles(
+            email="socio@centro.test",
+            dni="30000003",
+            password="123456",
+            roles=["socio"],
+        )
+        self._login_admin()
+
+        response = self.client.get("/api/usuarios")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["status"], "ok")
+        self.assertEqual(len(response.json["users"]), 2)
+        self.assertEqual(
+            [user["roles"] for user in response.json["users"]],
+            [["empleado"], ["socio"]],
+        )
+
+    def test_empleado_puede_filtrar_usuarios_por_dni_email_y_nombre(self):
+        self._crear_usuario_con_roles(
+            email="empleado@centro.test",
+            dni="30000002",
+            password="123456",
+            roles=["empleado"],
+        )
+        socio = self._crear_usuario_con_roles(
+            email="killiam@gmail.com",
+            dni="44000000",
+            password="123456",
+            roles=["socio"],
+        )
+        socio.nombre = "Killiam"
+        socio.apellido = "Mbape"
+        db.session.commit()
+        self.client.post(
+            "/api/login",
+            json={"email": "empleado@centro.test", "password": "123456"},
+        )
+
+        response_by_dni = self.client.get("/api/usuarios?dni=44000000")
+        response_by_email = self.client.get("/api/usuarios?email=KILLIAM@GMAIL.COM")
+        response_by_name = self.client.get("/api/usuarios?nombre=killiam mbape")
+
+        self.assertEqual(response_by_dni.status_code, 200)
+        self.assertEqual(len(response_by_dni.json["users"]), 1)
+        self.assertEqual(response_by_dni.json["users"][0]["dni"], "44000000")
+
+        self.assertEqual(response_by_email.status_code, 200)
+        self.assertEqual(len(response_by_email.json["users"]), 1)
+        self.assertEqual(response_by_email.json["users"][0]["email"], "killiam@gmail.com")
+
+        self.assertEqual(response_by_name.status_code, 200)
+        self.assertEqual(len(response_by_name.json["users"]), 1)
+        self.assertEqual(response_by_name.json["users"][0]["email"], "killiam@gmail.com")
+
+    def test_listado_de_usuarios_devuelve_vacio_si_no_hay_coincidencias(self):
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        self._login_admin()
+
+        response = self.client.get("/api/usuarios?nombre=nadie")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["users"], [])
+
+    def test_listado_de_usuarios_falla_si_usuario_no_tiene_permiso(self):
+        self._crear_usuario_con_roles(
+            email="socio@centro.test",
+            dni="30000003",
+            password="123456",
+            roles=["socio"],
+        )
+        self.client.post(
+            "/api/login",
+            json={"email": "socio@centro.test", "password": "123456"},
+        )
+
+        response = self.client.get("/api/usuarios")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json["status"], "error")
+
     def test_admin_puede_modificar_usuario_sin_cambiar_email(self):
         self._crear_usuario_con_roles(
             email="admin@centro.test",

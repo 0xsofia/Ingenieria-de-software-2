@@ -1,0 +1,49 @@
+.listado-usuarios-page {
+  display: grid;
+  gap: 28px;
+}
+
+.listado-usuarios-page__header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.listado-usuarios-page__header-row h1,
+.listado-usuarios-page__status-row p {
+  margin: 0;
+}
+
+.listado-usuarios-page__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.listado-usuarios-page__header-actions .primary-action {
+  margin-top: 0;
+}
+
+.listado-usuarios-page__content {
+  display: grid;
+  gap: 22px;
+}
+
+.listado-usuarios-page__status-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .listado-usuarios-page__header-actions {
+    width: 100%;
+  }
+
+  .listado-usuarios-page__header-actions > * {
+    width: 100%;
+  }
+}

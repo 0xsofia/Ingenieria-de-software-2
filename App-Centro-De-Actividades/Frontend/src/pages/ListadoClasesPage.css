@@ -68,6 +68,10 @@
   margin: 0;
 }
 
+.listado-clases__header-row .primary-action {
+  margin-top: 0;
+}
+
 .listado-clases__status-row {
   display: flex;
   justify-content: flex-end;

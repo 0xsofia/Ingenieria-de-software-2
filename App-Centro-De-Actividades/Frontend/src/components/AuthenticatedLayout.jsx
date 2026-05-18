@@ -9,7 +9,7 @@ import Hero from './Hero.jsx'
 function AuthenticatedLayout() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { clearAuth, isAuthenticated, isBootstrapping } = useAuth()
+  const { clearAuth, isAuthenticated, isBootstrapping, session } = useAuth()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [flashMessage, setFlashMessage] = useState('')
 
@@ -55,7 +55,7 @@ function AuthenticatedLayout() {
 
   return (
     <div className="app-shell">
-      <Hero onLogout={handleLogout} isLoggingOut={isLoggingOut} />
+      <Hero role={session?.role} onLogout={handleLogout} isLoggingOut={isLoggingOut} />
       {flashMessage ? (
         <section className="dashboard-shell">
           <section className="dashboard-frame dashboard-frame--compact">
