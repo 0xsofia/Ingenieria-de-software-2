@@ -24,13 +24,13 @@ export async function modificarUsuario(personaId, payload) {
   return data
 }
 
-export async function listarUsuarios(nombre = '', dni = '', mail = '') {
-  const { data } = await http.get(endpoints.users, {
-    params: {
-      nombre: nombre,
-      dni: dni,
-      mail: mail
-    }
-  })
-  return data
-}
+// export async function listarUsuarios(nombre = '', dni = '', mail = '') {
+//   const { data } = await http.get(endpoints.users, {
+//     params: {
+//       nombre: nombre,
+//       dni: dni,
+//       mail: mail
+//     }
+//   })
+//   return data
+// }
