@@ -1,13 +1,42 @@
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
 
 from src.core.database import db
-from src.core.models.persona import Persona
+from src.core.models.persona import Persona, PersonaRolPuente
 from src.core.services.registrarse import (
     normalizar_email,
     validar_payload_registro_empleado,
 )
 
 USER_UPDATED_MESSAGE = "El usuario ha sido actualizado con éxito."
+
+
+def listar_usuarios(filters=None):
+    normalized_filters = _normalizar_filtros_listado(filters)
+
+    query = Persona.query.options(
+        joinedload(Persona.empleado),
+        joinedload(Persona.socio),
+        joinedload(Persona.persona_roles).joinedload(PersonaRolPuente.rol),
+    ).filter(db.or_(Persona.empleado.has(), Persona.socio.has()))
+
+    if normalized_filters["dni"]:
+        query = query.filter(Persona.dni == normalized_filters["dni"])
+
+    if normalized_filters["email"]:
+        query = query.filter(db.func.lower(Persona.email) == normalized_filters["email"])
+
+    if normalized_filters["nombre"]:
+        nombre_completo = db.func.lower(Persona.nombre + " " + Persona.apellido)
+        query = query.filter(nombre_completo.contains(normalized_filters["nombre"]))
+
+    users = query.order_by(Persona.apellido, Persona.nombre, Persona.persona_id).all()
+
+    return {
+        "status": "ok",
+        "users": [_serializar_usuario(persona) for persona in users],
+        "filters": normalized_filters,
+    }, 200
 
 
 def obtener_usuario_modificable(persona_id):
@@ -94,11 +123,13 @@ def _serializar_usuario(persona):
         "dni": persona.dni,
         "email": persona.email,
         "nombre": persona.nombre,
+        "nombre_completo": persona.nombre_completo,
         "apellido": persona.apellido,
         "telefono": persona.telefono,
         "calle": persona.calle,
         "numero_puerta": persona.numero_puerta,
         "codigo_postal": persona.codigo_postal,
+        "estado": persona.estado,
         "roles": _roles_modificables(persona),
     }
 
@@ -113,6 +144,16 @@ def _roles_modificables(persona):
         roles.append("socio")
 
     return roles
+
+
+def _normalizar_filtros_listado(filters):
+    filters = filters or {}
+
+    return {
+        "dni": str(filters.get("dni") or "").strip(),
+        "email": normalizar_email(filters.get("email") or ""),
+        "nombre": str(filters.get("nombre") or "").strip().lower(),
+    }
 
 
 def _not_found_response():

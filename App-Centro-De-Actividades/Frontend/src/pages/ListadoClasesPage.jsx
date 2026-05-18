@@ -1,25 +1,35 @@
 import { useEffect, useState } from 'react'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
+
 import { listarClases } from '../api/clase'
 import ClaseCard from '../components/ClaseCard'
 import { ActividadFilter } from '../components/ActividadFilter'
 import { ACTIVIDADES } from '../constants/actividades'
+import { useAuth } from '../hooks/useAuth'
 import './ListadoClasesPage.css'
 
 export default function ListadoClasesPage() {
+  const navigate = useNavigate()
+  const { session } = useAuth()
   const [clases, setClases] = useState([])
   const [actividad, setActividad] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  const canManageClasses = session?.role === 'empleado'
+
   useEffect(() => {
+    if (!canManageClasses) {
+      return
+    }
+
     const fetchClases = async () => {
       try {
         setLoading(true)
         const result = await listarClases(actividad)
         setClases(result)
         setError('')
-      } catch (err) {
-        console.error(err)
+      } catch {
         setError('No se pudieron cargar las clases.')
       } finally {
         setLoading(false)
@@ -27,14 +37,18 @@ export default function ListadoClasesPage() {
     }
 
     fetchClases()
-  }, [actividad])
+  }, [actividad, canManageClasses])
 
-  const handleViewClass = (clase) => {
-    console.log('Ver clase:', clase)
+  if (!canManageClasses) {
+    return <Navigate to="/inicio" replace />
   }
 
-  const handleReserveClass = (clase) => {
-    console.log('Reservar clase:', clase)
+  function handleViewClass(clase) {
+    navigate(`/clases/${clase.clase_id}/modificar`, { state: { clase } })
+  }
+
+  function handleEditClass(clase) {
+    navigate(`/clases/${clase.clase_id}/modificar`, { state: { clase } })
   }
 
   return (
@@ -42,29 +56,34 @@ export default function ListadoClasesPage() {
       <section className="dashboard-frame">
         <div className="listado-clases__header-row">
           <div>
-            <h1>Clases disponibles</h1>
-            <p className="dashboard-copy">Selecciona una actividad para filtrar las clases en el backend.</p>
+            <p className="auth-subtitle">Gestión de clases</p>
+            <h1>Ver clases</h1>
+            <p className="dashboard-copy">
+              Revisá las clases creadas, filtrá por actividad y avanzá al flujo de modificación.
+            </p>
           </div>
+
+          <Link className="primary-action" to="/clases/crear">
+            Crear clase
+          </Link>
         </div>
 
         {loading ? (
           <p>Cargando clases...</p>
         ) : error ? (
-          <p style={{ color: 'red' }}>{error}</p>
+          <p className="banner banner--error" role="alert">{error}</p>
         ) : (
           <div className="listado-clases__controls">
-            <ActividadFilter
-              value={actividad}
-              options={ACTIVIDADES}
-              onChange={setActividad}
-            />
+            <ActividadFilter value={actividad} options={ACTIVIDADES} onChange={setActividad} />
 
             <div className="listado-clases__status-row">
               <p className="dashboard-copy">{clases.length} clase(s) encontradas</p>
             </div>
 
             {clases.length === 0 ? (
-              <div className="listado-clases__empty">No hay clases que coincidan con la actividad seleccionada.</div>
+              <div className="listado-clases__empty">
+                No hay clases que coincidan con la actividad seleccionada.
+              </div>
             ) : (
               <div className="listado-clases__cards">
                 {clases.map((clase) => (
@@ -72,7 +91,9 @@ export default function ListadoClasesPage() {
                     key={clase.clase_id}
                     clase={clase}
                     onView={handleViewClass}
-                    onReserve={handleReserveClass}
+                    onReserve={handleEditClass}
+                    viewLabel="Ver detalle"
+                    reserveLabel="Modificar"
                   />
                 ))}
               </div>

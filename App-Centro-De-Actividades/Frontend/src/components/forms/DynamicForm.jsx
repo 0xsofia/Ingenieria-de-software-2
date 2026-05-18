@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import './DynamicForm.css'
 
@@ -13,23 +13,13 @@ function DynamicForm({
   generalError = '',
   errorCycle = 0,
 }) {
-  const [values, setValues] = useState(initialValues)
+  const [values, setValues] = useState(() => initialValues)
   const [clientErrors, setClientErrors] = useState({})
   const [dismissedErrorState, setDismissedErrorState] = useState({
     cycle: errorCycle,
     serverFields: {},
     general: false,
   })
-
-  useEffect(() => {
-    setValues(initialValues)
-    setClientErrors({})
-    setDismissedErrorState({
-      cycle: errorCycle,
-      serverFields: {},
-      general: false,
-    })
-  }, [initialValues])
 
   const hasFreshErrors = dismissedErrorState.cycle !== errorCycle
   const dismissedServerErrors = hasFreshErrors ? {} : dismissedErrorState.serverFields

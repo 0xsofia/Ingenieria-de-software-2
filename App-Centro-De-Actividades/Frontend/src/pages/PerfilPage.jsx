@@ -1,4 +1,3 @@
-import '../App.css'
 import './PerfilPage.css'
 import PerfilInfo from '../components/perfil/PerfilInfo'
 import PerfilUpdateForm from '../components/perfil/PerfilUpdateForm'
@@ -18,7 +17,7 @@ function PerfilPage() {
             </div>
             <div className="profile-details">
               <h2>Datos del perfil</h2>
-              <PerfilInfo hideRole />
+              <PerfilInfo />
             </div>
           </section>
 
@@ -39,4 +38,4 @@ function PerfilPage() {
   )
 }
 
-export default PerfilPage;
+export default PerfilPage

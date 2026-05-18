@@ -2,7 +2,6 @@ import { startTransition, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { confirmarPagoRetorno } from '../api/reservas'
-import '../App.css'
 
 function PagoRetornoPage() {
   const location = useLocation()
