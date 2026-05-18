@@ -3,7 +3,8 @@
 1. registrarse en ngrok , obtener el auth token , e instalar ngrok
 2. modificar plantilla_ngrok.yml con el authtoken de ngrok. Cambiarle el nombre a ngrok.yml
 3. correr ngrok , con el comando : ngrok start --config=ngrok.yml --all. tambien se puede correr ngrok con el archivo bash , runNgrok.sh
-4. obtener la url del front al correr ngrok , y ponerla en el .env 
+4. obtener la url del front al correr ngrok , y ponerla en el .env del back, en FRONTEND_BASE_URL y FRONTEND_LOGIN_URL (agregando el /login)
+5. obtener la url del back en ngrok , y ponerla en el .env.development del front , en VITE_API_BASE_URL y VITE_API_URL
 
 > NOTA: la url de ngrok cambia cada vez que corres el ngrok .
 
