@@ -19,6 +19,10 @@
   gap: 16px;
 }
 
+.dynamic-form__actions .primary-action {
+  justify-self: start;
+}
+
 @media (max-width: 768px) {
   .dynamic-form__grid {
     grid-template-columns: 1fr;
@@ -26,5 +30,9 @@
 
   .dynamic-form__field--full {
     grid-column: auto;
+  }
+
+  .dynamic-form__actions .primary-action {
+    justify-self: stretch;
   }
 }

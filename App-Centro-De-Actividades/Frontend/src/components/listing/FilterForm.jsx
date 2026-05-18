@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useRef } from 'react'
 
 import './FilterForm.css'
 
@@ -36,27 +36,25 @@ export default function FilterForm({
   isSubmitting = false,
   submitOnReset = true,
 }) {
-  const [values, setValues] = useState(() => buildFormValues(fields, initialValues))
-
-  useEffect(() => {
-    setValues(buildFormValues(fields, initialValues))
-  }, [fields, initialValues])
-
-  function handleChange(fieldName, fieldValue) {
-    setValues((currentValues) => ({
-      ...currentValues,
-      [fieldName]: fieldValue,
-    }))
-  }
+  const formRef = useRef(null)
+  const formKey = JSON.stringify([fields.map(({ name }) => name), initialValues])
 
   function handleSubmit(event) {
     event.preventDefault()
+
+    const formData = new FormData(event.currentTarget)
+    const values = fields.reduce((accumulator, field) => {
+      accumulator[field.name] = formData.get(field.name) ?? ''
+      return accumulator
+    }, {})
+
     onSubmit(normalizeValues(values, fields))
   }
 
   function handleReset() {
+    formRef.current?.reset()
+
     const nextValues = buildFormValues(fields, {})
-    setValues(nextValues)
 
     if (submitOnReset) {
       onSubmit(normalizeValues(nextValues, fields))
@@ -71,15 +69,14 @@ export default function FilterForm({
         {description ? <p className="dashboard-copy">{description}</p> : null}
       </div>
 
-      <form className="filter-form" onSubmit={handleSubmit}>
+      <form key={formKey} ref={formRef} className="filter-form" onSubmit={handleSubmit}>
         <div className="filter-form__grid">
           {fields.map((field) => {
             const commonProps = {
               id: field.name,
               name: field.name,
-              value: values[field.name] ?? '',
+              defaultValue: initialValues[field.name] ?? '',
               disabled: isSubmitting,
-              onChange: (event) => handleChange(field.name, event.target.value),
             }
 
             return (

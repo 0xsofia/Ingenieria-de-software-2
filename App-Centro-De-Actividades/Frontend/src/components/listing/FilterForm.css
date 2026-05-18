@@ -2,9 +2,10 @@
   display: grid;
   gap: 18px;
   padding: 24px;
-  border: 1px solid var(--border-strong);
-  border-radius: 18px;
-  background: var(--surface-soft);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(238, 243, 248, 0.92));
+  box-shadow: var(--shadow-soft);
 }
 
 .filter-form-card__title {
@@ -12,13 +13,9 @@
   gap: 8px;
 }
 
-.filter-form-card__title h2 {
-  margin: 0;
-}
-
 .filter-form {
   display: grid;
-  gap: 18px;
+  gap: 20px;
 }
 
 .filter-form__grid {
@@ -29,19 +26,19 @@
 
 .filter-form__control {
   width: 100%;
-  min-height: 56px;
+  min-height: 52px;
   box-sizing: border-box;
   padding: 14px 16px;
-  border: 2px solid var(--border-strong);
-  border-radius: 14px;
-  background: var(--surface);
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-control);
+  background: rgba(255, 255, 255, 0.96);
   color: var(--text-strong);
   font: inherit;
 }
 
 .filter-form__control:focus {
   outline: none;
-  border-color: var(--text-strong);
+  border-color: rgba(21, 58, 96, 0.62);
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
@@ -57,6 +54,10 @@
 }
 
 @media (max-width: 640px) {
+  .filter-form-card {
+    padding: 18px;
+  }
+
   .filter-form__actions > * {
     width: 100%;
   }

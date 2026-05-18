@@ -1,11 +1,5 @@
 import FilterForm from '../listing/FilterForm'
 
-export const INITIAL_USER_FILTERS = Object.freeze({
-  dni: '',
-  email: '',
-  nombre: '',
-})
-
 const USER_FILTER_FIELDS = [
   {
     name: 'dni',

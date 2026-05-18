@@ -1,37 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-  --bg: #ececec;
-  --surface: #ffffff;
-  --surface-soft: #f3f3f3;
-  --text: #4e4e4e;
-  --text-soft: #666666;
-  --text-strong: #111111;
-  --border-muted: #b8b8b8;
-  --border-strong: #2f2f2f;
-  --button-bg: #d6d6d6;
-  --button-hover: #c8c8c8;
-  --focus-ring: rgba(17, 17, 17, 0.12);
-  --danger: #7a2424;
-  --danger-bg: #f1dfdf;
-  --danger-border: rgba(122, 36, 36, 0.28);
-  --success: #1f5b36;
-  --success-bg: #dfeedf;
-  --success-border: rgba(31, 91, 54, 0.24);
-  --shadow: rgba(0, 0, 0, 0.08) 0 18px 36px -26px;
+  --bg: #dfe7ef;
+  --bg-soft: #edf3f8;
+  --surface: rgba(253, 254, 255, 0.96);
+  --surface-strong: #ffffff;
+  --surface-soft: #eef3f8;
+  --surface-muted: #e3ebf4;
+  --surface-contrast: #0f2236;
+  --text: #44586d;
+  --text-soft: #657b91;
+  --text-strong: #102033;
+  --text-inverse: #f4f8fc;
+  --border-muted: #c5d0dc;
+  --border-strong: #1f3347;
+  --border-subtle: rgba(31, 51, 71, 0.14);
+  --button-bg: #153a60;
+  --button-hover: #0f2f4e;
+  --button-bg-soft: #edf3fa;
+  --button-hover-soft: #e0ebf6;
+  --focus-ring: rgba(37, 99, 235, 0.18);
+  --danger: #8f3140;
+  --danger-bg: #faeef0;
+  --danger-border: rgba(143, 49, 64, 0.22);
+  --success: #1f5b52;
+  --success-bg: #e7f4f1;
+  --success-border: rgba(31, 91, 82, 0.22);
+  --shadow: 0 30px 84px -46px rgba(15, 23, 42, 0.42);
+  --shadow-soft: 0 24px 48px -40px rgba(15, 23, 42, 0.3);
   --shell-padding: clamp(18px, 2vw, 32px);
-  --frame-padding-inline: clamp(20px, 2.4vw, 40px);
-  --frame-padding-block: clamp(28px, 3vw, 52px);
+  --frame-padding-inline: clamp(20px, 2.8vw, 42px);
+  --frame-padding-block: clamp(24px, 3vw, 44px);
   --section-gap: clamp(18px, 2vw, 28px);
-  --field-gap: clamp(8px, 1vw, 12px);
-  --field-label-size: clamp(16px, 1vw + 0.65rem, 20px);
-  --input-padding-y: clamp(14px, 1.5vw, 18px);
-  --input-padding-x: clamp(16px, 1.7vw, 20px);
-  --button-font-size: clamp(18px, 1vw + 0.7rem, 22px);
-
-  --sans: 'Trebuchet MS', 'Segoe UI', sans-serif;
-  --heading: 'Trebuchet MS', 'Segoe UI', sans-serif;
-
-  font: clamp(15px, 0.26vw + 0.86rem, 18px) / 145% var(--sans);
-  letter-spacing: 0.18px;
+  --field-gap: 10px;
+  --field-label-size: clamp(0.92rem, 0.3vw + 0.9rem, 1.02rem);
+  --input-padding-y: clamp(14px, 1.4vw, 16px);
+  --input-padding-x: clamp(14px, 1.8vw, 18px);
+  --button-font-size: clamp(0.92rem, 0.3vw + 0.9rem, 1rem);
+  --radius-frame: 8px;
+  --radius-panel: 6px;
+  --radius-control: 4px;
+  --app-nav-height: 92px;
+  --sans: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+  --heading: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  font: clamp(15px, 0.2vw + 0.9rem, 17px) / 1.55 var(--sans);
+  letter-spacing: 0.01em;
   color-scheme: light;
   color: var(--text);
   background: var(--bg);
@@ -41,52 +58,101 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
-  background: var(--bg);
+  min-height: 100svh;
+  background:
+    radial-gradient(circle at top left, rgba(91, 149, 214, 0.18), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(223, 231, 239, 0.94)),
+    linear-gradient(rgba(31, 51, 71, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 51, 71, 0.05) 1px, transparent 1px),
+    var(--bg);
+  background-size: auto, auto, 28px 28px, 28px 28px, auto;
+  color: var(--text);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.14), transparent 42%);
+  opacity: 0.8;
 }
 
 #root {
+  position: relative;
   min-height: 100svh;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(37, 99, 235, 0.18);
+  color: var(--text-strong);
 }
 
 h1,
 h2,
 h3 {
+  margin: 0;
   font-family: var(--heading);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-strong);
+  line-height: 0.98;
+  letter-spacing: 0.01em;
 }
 
 h1 {
-  font-size: clamp(30px, 1.35vw + 1.4rem, 46px);
-  letter-spacing: -0.04em;
-  margin: 0;
-  line-height: 1.02;
+  font-size: clamp(2.4rem, 4vw, 4.8rem);
 }
 
 h2 {
-  font-size: clamp(22px, 0.9vw + 1rem, 32px);
-  line-height: 1.15;
-  letter-spacing: -0.03em;
-  margin: 0;
+  font-size: clamp(1.7rem, 1.5vw, 2.5rem);
 }
 
 h3 {
-  margin: 0;
+  font-size: clamp(1.2rem, 0.6vw + 1rem, 1.5rem);
 }
 
 p {
   margin: 0;
 }
 
+@media (max-width: 768px) {
+  :root {
+    --app-nav-height: 80px;
+  }
+}
+
 @media (max-width: 640px) {
   :root {
     --shell-padding: 14px;
     --frame-padding-inline: 16px;
-    --frame-padding-block: 22px;
+    --frame-padding-block: 20px;
     --section-gap: 16px;
-    --field-label-size: 15px;
-    --button-font-size: 18px;
+    --field-label-size: 0.9rem;
+    --button-font-size: 0.9rem;
+  }
+
+  body {
+    background-size: auto, auto, 22px 22px, 22px 22px, auto;
   }
 }

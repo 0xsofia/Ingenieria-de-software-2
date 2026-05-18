@@ -2,10 +2,16 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 
 import { listarUsuarios } from '../api/usuarios'
-import FiltroUsuarios, { INITIAL_USER_FILTERS } from '../components/usuarios/FiltroUsuarios'
+import FiltroUsuarios from '../components/usuarios/FiltroUsuarios'
 import ListadoUsuarios from '../components/usuarios/ListadoUsuarios'
 import { useAuth } from '../hooks/useAuth'
 import './ListadoUsuariosPage.css'
+
+const INITIAL_USER_FILTERS = Object.freeze({
+  dni: '',
+  email: '',
+  nombre: '',
+})
 
 export default function ListadoUsuariosPage() {
   const { session } = useAuth()
@@ -52,6 +58,11 @@ export default function ListadoUsuariosPage() {
     }
   }, [canViewUsers])
 
+  const hasActiveFilters = useMemo(
+    () => Object.values(submittedFilters).some(Boolean),
+    [submittedFilters]
+  )
+
   if (!canViewUsers) {
     return <Navigate to="/inicio" replace />
   }
@@ -70,11 +81,6 @@ export default function ListadoUsuariosPage() {
       setIsLoading(false)
     }
   }
-
-  const hasActiveFilters = useMemo(
-    () => Object.values(submittedFilters).some(Boolean),
-    [submittedFilters]
-  )
 
   const emptyMessage = hasActiveFilters
     ? 'No se encontraron usuarios para el filtro aplicado.'
