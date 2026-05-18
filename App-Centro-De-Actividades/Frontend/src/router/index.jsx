@@ -9,6 +9,7 @@ import PerfilPage from '../pages/PerfilPage.jsx'
 import RegistrarsePage from '../pages/RegistrarsePage.jsx'
 import ActividadesPage from '../pages/ActividadesPage.jsx'
 import ActividadPage from '../pages/ActividadPage.jsx'
+import ActualizarPerfilPage from '../pages/ActualizarPerfilPage.jsx'
 import CrearClasePage from '../pages/CrearClasePage.jsx'
 import ErrorPage from '../pages/ErrorPage.jsx'
 import ListadoUsuariosPage from '../pages/ListadoUsuariosPage.jsx'
@@ -68,6 +69,10 @@ const router = createBrowserRouter([
       {
         path: '/verperfil',
         element: <PerfilPage />,
+      },
+      {
+        path: '/perfil/actualizar',
+        element: <ActualizarPerfilPage />,
       },
       {
         path: '/actividades',
