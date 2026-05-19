@@ -50,5 +50,6 @@ class Reserva(db.Model):
         server_default=db.func.now(),
     )
     confirmada_en = db.Column(db.DateTime(timezone=True), nullable=True)
+    cancelada_en = db.Column(db.DateTime(timezone=True), nullable=True)
 
     clase = db.relationship("Clase", back_populates="reservas")

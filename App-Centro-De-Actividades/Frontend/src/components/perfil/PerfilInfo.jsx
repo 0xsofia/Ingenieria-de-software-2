@@ -32,7 +32,7 @@ function PerfilInfo() {
         <h2>Mis intereses</h2>
         <ul>
           <li>
-            {session.intereses || 'No definidos'}
+            {session.intereses || ''}
           </li>
         </ul>
       </div>

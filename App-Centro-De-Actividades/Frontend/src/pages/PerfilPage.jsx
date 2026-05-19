@@ -1,8 +1,10 @@
+import { Link } from 'react-router-dom'
 import './PerfilPage.css'
 import PerfilInfo from '../components/perfil/PerfilInfo'
-import PerfilUpdateForm from '../components/perfil/PerfilUpdateForm'
-
+import { useAuth } from '../hooks/useAuth'
 function PerfilPage() {
+  const { session } = useAuth()
+  
   return (
     <main className="dashboard-shell profile-shell">
       <section className="dashboard-frame profile-frame">
@@ -12,27 +14,34 @@ function PerfilPage() {
 
         <div className="profile-grid">
           <section className="profile-summary-card">
-            <div className="profile-picture-card">
-              <div className="profile-picture-placeholder">Foto de perfil</div>
-            </div>
             <div className="profile-details">
-              <h2>Datos del perfil</h2>
+              <h2>Datos personales</h2>
               <PerfilInfo />
             </div>
           </section>
 
-          <section className="profile-update-card">
-            <PerfilUpdateForm />
+          <section className="profile-actions-card">
+            <div className="profile-actions-card__header">
+              <h2>Accesos rápidos</h2>
+              <Link className="secondary-action" to="/perfil/actualizar">
+                Actualizar perfil
+              </Link>
+            </div>
+
+            <div className="profile-actions">
+              {session?.role === 'socio' && (
+                <>
+                  <Link className="secondary-action" to="/mis-pagos">
+                    Mis pagos
+                  </Link>
+                  <Link className="secondary-action" to="/mis-clases">
+                    Mis clases
+                  </Link>
+                </>
+              )}
+            </div>
           </section>
         </div>
-
-        <section className="profile-actions-card">
-          <h2>Accesos rápidos</h2>
-          <div className="profile-actions">
-            <button type="button" className="secondary-action">Mis pagos</button>
-            <button type="button" className="secondary-action">Mis clases</button>
-          </div>
-        </section>
       </section>
     </main>
   )

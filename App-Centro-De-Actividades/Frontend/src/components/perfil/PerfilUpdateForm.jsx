@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { actualizarPerfil } from '../../api/perfil'
 import { useAuth } from '../../hooks/useAuth'
 
 function PerfilUpdateForm() {
+  const navigate = useNavigate()
   const { session, setAuthenticatedSession, isBootstrapping } = useAuth()
   const [formValues, setFormValues] = useState({})
   const [errors, setErrors] = useState({})
@@ -39,6 +41,7 @@ function PerfilUpdateForm() {
       })
       const updatedProfile = data.profile
       setAuthenticatedSession({ ...session, ...updatedProfile })
+      navigate('/verperfil')
     } catch (error) {
       const responseErrors = error.data?.errors
       if (responseErrors) {
@@ -55,9 +58,6 @@ function PerfilUpdateForm() {
 
   return (
     <section className="profile-update-form">
-      <div className="form-header">
-        <h2>Actualizar perfil</h2>
-      </div>
 
       <form onSubmit={handleSubmit} className="profile-update-form__form">
         <div className="profile-update-field">

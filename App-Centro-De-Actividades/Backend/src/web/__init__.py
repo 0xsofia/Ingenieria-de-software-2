@@ -16,6 +16,7 @@ from src.web.controllers.actividad_controller import actividad_bp
 from src.web.controllers.clase_controller import clase_bp
 from src.web.controllers.profesor_controller import profesor_bp
 from src.web.controllers.reservas import reservas_bp
+from src.web.controllers.pagos_controller import pagos_bp
 
 from src.core.bcrypt_and_session import bcrypt, cipher, login_manager
 
@@ -61,6 +62,7 @@ def create_app(env="development", static_folder="../../static"):
     app.register_blueprint(clase_bp)
     app.register_blueprint(profesor_bp)
     app.register_blueprint(reservas_bp)
+    app.register_blueprint(pagos_bp)
 
     @app.cli.command(name="reset_db")
     def reset_db():

@@ -40,8 +40,8 @@ class ProductionConfig(Config):
 
 class DevelopmentConfig(Config):
     ...
-    SESSION_COOKIE_SECURE = False
-    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = "None"
     DB_USER = environ.get('DB_USER')
     DB_PASSWORD = environ.get('DB_PASSWORD')
     DB_HOST = environ.get('DB_HOST')
