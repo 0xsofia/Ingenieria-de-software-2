@@ -10,7 +10,7 @@ CLASES_TO_SEED = [
         "actividad": "Voley",
         "fecha": "2026-06-01",
         "horario_inicio": "08:00",
-        "cancha": "Cancha A",
+        "cancha": "Voley",
         "nivel": "Principiante",
         "cupos": 8,
         "profesor_dni": "12345678",
@@ -41,6 +41,15 @@ CLASES_TO_SEED = [
         "nivel": "Intermedio",
         "cupos": 12,
         "profesor_dni": "44332211",
+    },
+    {
+        "actividad": "Voley",
+        "fecha": "2026-05-12",
+        "horario_inicio": "19:00",
+        "cancha": "Voley",
+        "nivel": "Principiante",
+        "cupos": 10,
+        "profesor_dni": "12345678",
     },
 ]
 
