@@ -5,19 +5,17 @@ import { listarClases } from '../api/clase'
 import FilterForm from '../components/listing/FilterForm'
 import SectionedTableList from '../components/listing/SectionedTableList'
 import { ACTIVIDADES } from '../constants/actividades'
+import { useAuth } from '../hooks/useAuth'
 import './ActividadesPage.css'
 
 const INITIAL_FILTERS = Object.freeze({
   actividad: '',
-  dia: '',
+  fecha: '',
   horario: '',
 })
 
-const WEEKDAY_FORMATTER = new Intl.DateTimeFormat('es-AR', {
-  weekday: 'long',
-})
-
 export default function ActividadesPage() {
+  const { session } = useAuth()
   const [clases, setClases] = useState([])
   const [submittedFilters, setSubmittedFilters] = useState(INITIAL_FILTERS)
   const [isLoading, setIsLoading] = useState(true)
@@ -58,13 +56,13 @@ export default function ActividadesPage() {
     [clases]
   )
 
-  const diaOptions = useMemo(
+  const fechaOptions = useMemo(
     () =>
       Array.from(new Set(clases.map((clase) => clase.fecha)))
         .sort()
         .map((fecha) => ({
           value: fecha,
-          label: formatClaseDate(fecha),
+          label: fecha,
         })),
     [clases]
   )
@@ -79,11 +77,11 @@ export default function ActividadesPage() {
         options: ACTIVIDADES,
       },
       {
-        name: 'dia',
-        label: 'Día',
+        name: 'fecha',
+        label: 'Fecha',
         type: 'select',
-        placeholder: 'Todos los días',
-        options: diaOptions,
+        placeholder: 'Todas las fechas',
+        options: fechaOptions,
       },
       {
         name: 'horario',
@@ -96,7 +94,7 @@ export default function ActividadesPage() {
         })),
       },
     ],
-    [diaOptions, horarioOptions]
+    [fechaOptions, horarioOptions]
   )
 
   const filteredClases = useMemo(() => {
@@ -105,7 +103,7 @@ export default function ActividadesPage() {
         return false
       }
 
-      if (submittedFilters.dia && clase.fecha !== submittedFilters.dia) {
+      if (submittedFilters.fecha && clase.fecha !== submittedFilters.fecha) {
         return false
       }
 
@@ -118,6 +116,7 @@ export default function ActividadesPage() {
   }, [clases, submittedFilters])
 
   const hasActiveFilters = Object.values(submittedFilters).some(Boolean)
+  const canReserve = session?.role === 'socio'
 
   return (
     <section className="dashboard-shell">
@@ -180,7 +179,6 @@ export default function ActividadesPage() {
                   {
                     key: 'fecha',
                     header: 'Fecha',
-                    render: (clase) => formatClaseDate(clase.fecha),
                   },
                   {
                     key: 'horario',
@@ -203,17 +201,21 @@ export default function ActividadesPage() {
                     ? 'No hay clases para el filtro aplicado.'
                     : 'Aún no hay clases disponibles para reservar.'
                 }
-                renderActions={(clase) => (
-                  <div className="sectioned-table-list__actions">
-                    <Link
-                      className="primary-action"
-                      to={`/actividad/${getSlug(clase.actividad)}`}
-                      state={{ clase }}
-                    >
-                      Reservar
-                    </Link>
-                  </div>
-                )}
+                renderActions={
+                  canReserve
+                    ? (clase) => (
+                        <div className="sectioned-table-list__actions">
+                          <Link
+                            className="primary-action"
+                            to={`/actividad/${getSlug(clase.actividad)}`}
+                            state={{ clase }}
+                          >
+                            Reservar
+                          </Link>
+                        </div>
+                      )
+                    : undefined
+                }
               />
             </>
           )}
@@ -228,19 +230,4 @@ function getSlug(nombre) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
-}
-
-function formatClaseDate(value) {
-  const [year, month, day] = String(value)
-    .split('-')
-    .map((part) => Number(part))
-
-  const date = new Date(year, month - 1, day)
-  const weekday = WEEKDAY_FORMATTER.format(date)
-
-  return `${capitalize(weekday)} ${day}`
-}
-
-function capitalize(value) {
-  return value.charAt(0).toUpperCase() + value.slice(1)
 }
