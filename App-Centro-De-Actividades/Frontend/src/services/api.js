@@ -14,4 +14,6 @@ export const endpoints = {
   reservaEspontanea: '/api/reservas/espontanea',
   reservaEspontaneaListaEspera: '/api/reservas/espontanea/lista-espera',
   reservaEspontaneaPagoRetorno: '/api/reservas/espontanea/pago-retorno',
+  EscanearQR: '/api/asistencia/escanearQR',
+  GenerarQR: '/api/asistencia/generarQR/<int:reserva_id>',
 }

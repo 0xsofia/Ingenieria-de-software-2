@@ -9,6 +9,8 @@ from src.core.seeds import run_seeds
 from src.web.controllers.iniciar_sesion import login_bp
 from src.web.controllers.registrarse import registrarse_bp
 from src.web.controllers.usuarios import usuarios_bp
+from src.web.controllers.escanear_qr import escanearQR_bp   
+from src.web.controllers.generar_qr import generar_token_asistencia_bp  
 
 from src.web.controllers.session_controller import session_bp
 from src.web.controllers.perfil_controller import perfil_bp
@@ -61,6 +63,8 @@ def create_app(env="development", static_folder="../../static"):
     app.register_blueprint(clase_bp)
     app.register_blueprint(profesor_bp)
     app.register_blueprint(reservas_bp)
+    app.register_blueprint(escanearQR_bp)
+    app.register_blueprint(generar_token_asistencia_bp) 
 
     @app.cli.command(name="reset_db")
     def reset_db():
