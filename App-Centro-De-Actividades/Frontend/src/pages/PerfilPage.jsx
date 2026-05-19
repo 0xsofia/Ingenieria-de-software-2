@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import './PerfilPage.css'
 import PerfilInfo from '../components/perfil/PerfilInfo'
-
+import { useAuth } from '../hooks/useAuth'
 function PerfilPage() {
+  const { session } = useAuth()
+  
   return (
     <main className="dashboard-shell profile-shell">
       <section className="dashboard-frame profile-frame">
@@ -20,16 +22,21 @@ function PerfilPage() {
 
           <section className="profile-actions-card">
             <h2>Accesos rápidos</h2>
+            
             <div className="profile-actions">
               <Link className="secondary-action" to="/perfil/actualizar">
                 Actualizar perfil
               </Link>
-              <Link className="secondary-action" to="/mis-pagos">
-                Mis pagos
-              </Link>
-              <Link className="secondary-action" to="/mis-clases">
-                Mis clases
-              </Link>
+              {session?.role === 'socio' && (
+                <>
+                  <Link className="secondary-action" to="/mis-pagos">
+                    Mis pagos
+                  </Link>
+                  <Link className="secondary-action" to="/mis-clases">
+                    Mis clases
+                  </Link>
+                </>
+              )}
             </div>
           </section>
         </div>
