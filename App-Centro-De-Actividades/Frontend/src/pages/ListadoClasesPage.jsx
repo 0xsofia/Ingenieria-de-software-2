@@ -68,9 +68,14 @@ export default function ListadoClasesPage() {
             </p>
           </div>
 
-          <Link className="primary-action" to="/clases/crear">
-            Crear clase
-          </Link>
+          <div className="listado-clases__actions">
+            <Link className="primary-action" to="/clases/crear">
+              Crear clase
+            </Link>
+            <Link className="secondary-action" to="/profesor/crear">
+              Crear profesor
+            </Link>
+          </div>
         </div>
 
         {loading ? (

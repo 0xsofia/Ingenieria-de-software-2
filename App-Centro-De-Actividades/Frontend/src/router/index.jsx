@@ -20,6 +20,7 @@ import RegistrarEmpleadoPage from '../pages/RegistrarEmpleadoPage.jsx'
 import MisClasesPage from '../pages/MisClasesPage.jsx'
 import EscanearQRPage from '../pages/EscanearQRPage.jsx'
 import GenerarQRPage from '../pages/GenerarQRPage.jsx'
+import CrearProfesorPage from '../pages/CrearProfesorPage.jsx'
 
 
 const router = createBrowserRouter([
@@ -49,6 +50,10 @@ const router = createBrowserRouter([
       {
         path: '/clases/crear',
         element: <CrearClasePage />,
+      },
+      {
+        path: '/profesor/crear',
+        element: <CrearProfesorPage />,
       },
       {
         path: '/clases/:claseId/modificar',
