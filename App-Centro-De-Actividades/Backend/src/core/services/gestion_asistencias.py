@@ -2,6 +2,7 @@ from zoneinfo import ZoneInfo
 import jwt
 import os
 from datetime import datetime, timedelta
+from flask_login import current_user
 from src.core.database import db
 from src.core.models.reserva import Reserva
 from src.core.models.clase import Clase
@@ -18,6 +19,15 @@ class FueraDeHorarioException(BusinessException):
     pass
 
 class ClienteNoAsociadoException(BusinessException):
+    pass
+
+class AutenticacionRequeridaException(BusinessException):
+    pass
+
+class AccesoQRDenegadoException(BusinessException):
+    pass
+
+class QRInvalidoException(BusinessException):
     pass
 
 class AsistenciaYaRegistradaException(BusinessException):
@@ -38,6 +48,8 @@ def generar_token_asistencia(reserva_id):
 
     # Al hacer una query de dos modelos, SQLAlchemy nos devuelve una tupla desestructurable:
     reserva, clase = resultado
+
+    _validar_acceso_generacion_qr(reserva)
 
     id_socio = reserva.socio_id
     id_reserva_real = reserva.reserva_id
@@ -88,25 +100,23 @@ def generar_token_asistencia(reserva_id):
 def registrar_asistencia(dni, id_reserva, id_clase):
     """Ejecuta los controles de validación de ingreso y registra el presente en la BD."""
     # 1. Buscamos la reserva real
-    reserva = Reserva.query.get(id_reserva)
+    reserva = db.session.get(Reserva, id_reserva)
     if not reserva:
         raise ReservaNoEncontradaException("El QR es inválido.")
 
     # 2. Buscamos la persona por el DNI provisto en el QR para validar consistencia
-    persona = Persona.query.filter_by(dni=str(dni)).first()
-    # clase = Clase.query.get(id_clase).first() 
+    persona = Persona.query.filter_by(dni=str(dni).strip()).first()
+
+    if not persona or reserva.socio_id != persona.persona_id:
+        raise QRInvalidoException("El QR es inválido.")
+
+    _validar_acceso_escaneo_qr(reserva, persona)
 
     if id_clase is not None:
-        clase_reserva_id = reserva.clase_id if hasattr(reserva, 'clase_id') else reserva.clase.clase_id
-        
-        if int(clase_reserva_id) != int(id_clase):
-            raise ClienteNoAsociadoException(
-                "La reserva escaneada corresponde a otra clase o turno horario diferente."
+        if int(reserva.clase_id) != int(id_clase):
+            raise AccesoQRDenegadoException(
+                "El QR escaneado no corresponde a la clase seleccionada."
             )
-    
-    # Validación: Que el DNI pertenezca al dueño de la reserva
-    if not persona or reserva.socio_id != persona.persona_id:
-        raise ClienteNoAsociadoException("El cliente no está registrado para la clase seleccionada.")
 
     # 3. Validación: Impedir duplicados controlando el estado string de tu modelo
     if reserva.estado == "asistio":
@@ -120,6 +130,36 @@ def registrar_asistencia(dni, id_reserva, id_clase):
     db.session.commit()
     
     return f"Asistencia registrada con éxito para {persona.nombre_completo} en la clase de {reserva.clase.actividad.value}."
+
+
+def _validar_acceso_generacion_qr(reserva):
+    if not current_user.is_authenticated:
+        raise AutenticacionRequeridaException(
+            "Debes iniciar sesión para generar el QR de asistencia."
+        )
+
+    if getattr(current_user, "role", None) != "socio":
+        raise AccesoQRDenegadoException(
+            "Solo los socios pueden generar códigos QR de asistencia."
+        )
+
+    if reserva.socio_id != current_user.persona_id:
+        raise AccesoQRDenegadoException(
+            "Solo puedes generar el QR de tus propias reservas."
+        )
+
+
+def _validar_acceso_escaneo_qr(reserva, persona):
+    if not current_user.is_authenticated:
+        raise AutenticacionRequeridaException(
+            "Debes iniciar sesión para escanear códigos QR de asistencia."
+        )
+
+    if getattr(current_user, "role", None) == "socio":
+        if reserva.socio_id != current_user.persona_id or persona.persona_id != current_user.persona_id:
+            raise AccesoQRDenegadoException(
+                "Como socio solo puedes escanear tus propios códigos QR de asistencia."
+            )
 
 
 # def registrar_asistencia_qr(token):

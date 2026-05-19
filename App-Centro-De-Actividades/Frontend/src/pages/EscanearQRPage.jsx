@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom'; 
+import { Navigate, useParams } from 'react-router-dom'; 
 import { Html5Qrcode } from "html5-qrcode"; 
 import { AlertTriangle, Loader2, CheckCircle2, RefreshCw } from 'lucide-react';
 import { escanearQR } from '../api/asistencias'; 
+import { useAuth } from '../hooks/useAuth';
 import './EscanearQRPage.css';
 
 const EscanearQR = () => {
@@ -10,6 +11,7 @@ const EscanearQR = () => {
     const [errorLog, setErrorLog] = useState(null);
     const [cargando, setCargando] = useState(false);
     const { idClase } = useParams(); 
+    const { session } = useAuth();
     const html5QrCodeRef = useRef(null);
     
     useEffect(() => {
@@ -110,6 +112,10 @@ const EscanearQR = () => {
     const onScanFailure = (error) => {
         // Omisión de ruidos de lectura
     };
+
+    if (session?.role !== 'empleado') {
+        return <Navigate to="/inicio" replace />;
+    }
 
     return (
         <div className="max-w-md mx-auto p-6 bg-white rounded-3xl border border-gray-100 shadow-xl mt-8 font-sans">

@@ -1,7 +1,12 @@
-from flask import Flask, Blueprint,request, jsonify
-from src.core.services.gestion_asistencias import ( registrar_asistencia, 
-                                                    ClienteNoAsociadoException,
-                                                    AsistenciaYaRegistradaException)
+from flask import Blueprint, request, jsonify
+from src.core.services.gestion_asistencias import (
+    AccesoQRDenegadoException,
+    AsistenciaYaRegistradaException,
+    AutenticacionRequeridaException,
+    QRInvalidoException,
+    ReservaNoEncontradaException,
+    registrar_asistencia,
+)
 
 escanearQR_bp = Blueprint('scanQR', __name__, url_prefix='/api/asistencia')
 
@@ -55,33 +60,53 @@ def endpoint_escanear_qr():
     dni = data.get('dni')
     id_reserva_raw = data.get('id_reserva')
     id_clase_raw = data.get('id_clase')
-    print(id_clase_raw)
+
     try:
         id_reserva = int(id_reserva_raw)
     except (ValueError, TypeError):
         return jsonify({"error": "El QR es inválido."}), 400
 
-    # Si el frontend envió el id_clase, lo casteamos de forma segura
-    # if id_clase_raw is not None:
-    #     try:
-    #         id_clase = int(id_clase_raw)
-    #     except (ValueError, TypeError):
-    #         return jsonify({"error": "El identificador de clase provisto es inválido."}), 400
+    id_clase = None
+    if id_clase_raw is not None:
+        try:
+            id_clase = int(id_clase_raw)
+        except (ValueError, TypeError):
+            return jsonify({
+                "error": "QR inválido",
+                "message": "El identificador de clase provisto es inválido.",
+            }), 400
 
     try:
-        # 🚀 Pasamos id_clase a la función lógica de negocio
-        mensaje_exito = registrar_asistencia(dni, id_reserva, id_clase_raw)
+        mensaje_exito = registrar_asistencia(dni, id_reserva, id_clase)
         return jsonify({
             "status": "success",
             "message": mensaje_exito
         }), 200
-        
-    except ClienteNoAsociadoException as e:
+
+    except AutenticacionRequeridaException as e:
         return jsonify({
-            "error": "No registrado",
+            "error": "No autenticado",
+            "message": str(e)
+        }), 401
+
+    except AccesoQRDenegadoException as e:
+        return jsonify({
+            "error": "Acceso denegado",
+            "message": str(e)
+        }), 403
+
+    except QRInvalidoException as e:
+        return jsonify({
+            "error": "QR inválido",
+            "message": str(e)
+        }), 400
+
+    except ReservaNoEncontradaException as e:
+        return jsonify({
+            "error": "No encontrado",
             "message": str(e)
         }), 404
-        
+
     except AsistenciaYaRegistradaException as e:
         return jsonify({
             "error": "Ya escaneado",
@@ -90,4 +115,3 @@ def endpoint_escanear_qr():
         
     except Exception as e:
         return jsonify({"error": "Error interno del servidor", "message": str(e)}), 500
-
