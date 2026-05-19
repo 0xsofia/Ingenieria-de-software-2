@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 
 import { listarClases } from '../api/clase'
 import ClaseCard from '../components/ClaseCard'
-import { ActividadFilter } from '../components/ActividadFilter'
+import FilterForm from '../components/listing/FilterForm'
 import { ACTIVIDADES } from '../constants/actividades'
 import { useAuth } from '../hooks/useAuth'
 import './ListadoClasesPage.css'
@@ -12,12 +12,61 @@ export default function ListadoClasesPage() {
   const navigate = useNavigate()
   const { session } = useAuth()
   const [clases, setClases] = useState([])
-  const [actividad, setActividad] = useState('')
+  const [filters, setFilters] = useState({
+    actividad: '',
+    fecha: '',
+    horario: '',
+  })
+  const [submittedFilters, setSubmittedFilters] = useState({
+    actividad: '',
+    fecha: '',
+    horario: '',
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   const canManageClasses = session?.role === 'empleado'
-  const hasActiveFilter = actividad !== ''
+  const hasActiveFilter = Object.values(submittedFilters).some(Boolean)
+
+  const horarioOptions = useMemo(
+    () => {
+      const horas = []
+      for (let i = 8; i <= 24; i++) {
+        horas.push(`${String(i).padStart(2, '0')}:00`)
+      }
+      return horas
+    },
+    []
+  )
+
+  const filterFields = useMemo(
+    () => [
+      {
+        name: 'actividad',
+        label: 'Actividad',
+        type: 'select',
+        options: ACTIVIDADES,
+        placeholder: 'Todas las actividades',
+      },
+      {
+        name: 'fecha',
+        label: 'Fecha',
+        type: 'date',
+        placeholder: 'Seleccionar fecha',
+      },
+      {
+        name: 'horario',
+        label: 'Horario',
+        type: 'select',
+        options: horarioOptions.map((horario) => ({
+          value: horario,
+          label: horario,
+        })),
+        placeholder: 'Todos los horarios',
+      },
+    ],
+    [horarioOptions]
+  )
 
   useEffect(() => {
     if (!canManageClasses) {
@@ -27,7 +76,7 @@ export default function ListadoClasesPage() {
     const fetchClases = async () => {
       try {
         setLoading(true)
-        const result = await listarClases(actividad)
+        const result = await listarClases(submittedFilters)
         setClases(result)
         setError('')
       } catch {
@@ -38,7 +87,7 @@ export default function ListadoClasesPage() {
     }
 
     fetchClases()
-  }, [actividad, canManageClasses])
+  }, [submittedFilters, canManageClasses])
 
   if (!canManageClasses) {
     return <Navigate to="/inicio" replace />
@@ -54,6 +103,11 @@ export default function ListadoClasesPage() {
 
   function handleScanQR(clase) {
     navigate(`/clases/${clase.clase_id}/qr`, { state: { clase } })
+  }
+
+  function handleFilterSubmit(values) {
+    setFilters(values)
+    setSubmittedFilters(values)
   }
 
   return (
@@ -84,7 +138,15 @@ export default function ListadoClasesPage() {
           <p className="banner banner--error" role="alert">{error}</p>
         ) : (
           <div className="listado-clases__controls">
-            <ActividadFilter value={actividad} options={ACTIVIDADES} onChange={setActividad} />
+            <FilterForm
+              title="Buscar clases"
+              description="Filtrá por actividad, horario y día."
+              fields={filterFields}
+              initialValues={filters}
+              onSubmit={handleFilterSubmit}
+              submitLabel="Filtrar"
+              resetLabel="Limpiar"
+            />
 
             <div className="listado-clases__status-row">
               <p className="dashboard-copy">{clases.length} clase(s) encontradas</p>
@@ -93,7 +155,7 @@ export default function ListadoClasesPage() {
             {clases.length === 0 ? (
               <div className="listado-clases__empty">
                 {hasActiveFilter
-                  ? 'No se encontraron clases para la actividad seleccionada.'
+                  ? 'Sin resultados para los filtros aplicados.'
                   : 'No se encontraron clases registradas.'}
               </div>
             ) : (
@@ -104,7 +166,7 @@ export default function ListadoClasesPage() {
                     clase={clase}
                     onView={handleViewClass}
                     onReserve={handleEditClass}
-                    onScanQR={handleScanQR}     // Ejecuta la redirección a la cámara
+                    onScanQR={handleScanQR}
                     viewScanLabel="Escanear QR"
                     viewLabel="Ver detalle"
                     reserveLabel="Modificar"

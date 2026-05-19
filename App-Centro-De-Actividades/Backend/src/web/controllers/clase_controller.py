@@ -25,7 +25,9 @@ def crear_clase():
 @clase_bp.get("/lista")
 def listar_clases():
     actividad = (request.args.get("actividad") or "").strip()
-    clases = obtener_clases(actividad)
+    fecha = (request.args.get("fecha") or "").strip()
+    horario = (request.args.get("horario") or "").strip()
+    clases = obtener_clases(actividad, fecha, horario)
     clases_data = [
         {
             "clase_id": clase.clase_id,

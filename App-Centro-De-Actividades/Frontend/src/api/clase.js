@@ -6,8 +6,21 @@ export async function crearClase(payload) {
   return data
 }
 
-export async function listarClases(actividad) {
-  const params = actividad ? { actividad } : undefined
+export async function listarClases(filters = {}) {
+  const params = {}
+
+  if (filters.actividad) {
+    params.actividad = filters.actividad
+  }
+
+  if (filters.fecha) {
+    params.fecha = filters.fecha
+  }
+
+  if (filters.horario) {
+    params.horario = filters.horario
+  }
+
   const { data } = await http.get(endpoints.listarClases, { params })
   return data
 }

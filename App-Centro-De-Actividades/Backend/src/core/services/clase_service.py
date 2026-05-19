@@ -172,14 +172,28 @@ def crear_clase_completa(payload):
     }, 201
 
 
-def obtener_clases(actividad=None):
-    """Obtiene las clases con un filtro opcional por actividad."""
+def obtener_clases(actividad=None, fecha=None, horario=None):
+    """Obtiene las clases con filtros opcionales por actividad, fecha y horario."""
     query = Clase.query
 
     if actividad:
         try:
             actividad_enum = ActividadEnum(actividad)
             query = query.filter(Clase.actividad == actividad_enum)
+        except ValueError:
+            return []
+
+    if fecha:
+        try:
+            fecha_obj = datetime.strptime(fecha, "%Y-%m-%d").date()
+            query = query.filter(Clase.fecha == fecha_obj)
+        except ValueError:
+            return []
+
+    if horario:
+        try:
+            horario_obj = datetime.strptime(horario, "%H:%M").time()
+            query = query.filter(Clase.horario_inicio == horario_obj)
         except ValueError:
             return []
 
