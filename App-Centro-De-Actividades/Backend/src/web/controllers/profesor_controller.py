@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 
 from src.core.database import db
 from src.core.models.profesor import Profesor
+from src.core.services.registrarse import validar_telefono_registro
 
 profesor_bp = Blueprint("profesor_bp", __name__, url_prefix="/api/profesor")
 
@@ -36,15 +37,30 @@ def crear_profesor():
     dni = (payload.get("dni") or "").strip()
     telefono = (payload.get("telefono") or "").strip()
 
-    if not nombre or not dni or not telefono:
+    errors = {}
+
+    if not nombre:
+        errors["nombre"] = "El nombre es obligatorio."
+
+    if not dni:
+        errors["dni"] = "El DNI es obligatorio."
+    elif not dni.isdigit():
+        errors["dni"] = "Ingresá el DNI solo con números."
+
+    if not telefono:
+        errors["telefono"] = "El teléfono es obligatorio."
+    else:
+        telefono_normalizado, telefono_error = validar_telefono_registro(telefono)
+        if telefono_error is not None:
+            errors["telefono"] = telefono_error
+        else:
+            telefono = telefono_normalizado
+
+    if errors:
         return jsonify({
-            "message": "Todos los campos son obligatorios.",
+            "message": "Hay errores de validación en el formulario.",
             "status": "validation_error",
-            "errors": {
-                **({"nombre": "El nombre es obligatorio."} if not nombre else {}),
-                **({"dni": "El DNI es obligatorio."} if not dni else {}),
-                **({"telefono": "El teléfono es obligatorio."} if not telefono else {}),
-            },
+            "errors": errors,
         }), 400
 
     profesor_existente = Profesor.query.filter_by(dni=dni).first()

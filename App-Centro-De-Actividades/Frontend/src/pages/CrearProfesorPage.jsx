@@ -4,6 +4,7 @@ import { z } from 'zod'
 import DynamicForm2 from '../components/forms/DynamicForm2'
 import { crearProfesor } from '../api/profesor'
 import { useAuth } from '../hooks/useAuth'
+import { getPhoneValidationMessage } from '../utils/phoneValidation'
 import { redirectTo } from '../services/redirectTo'
 import './ActividadPage.css'
 
@@ -25,8 +26,21 @@ export default function CrearProfesorPage() {
     () =>
       z.object({
         nombre: z.string().trim().min(1, 'El nombre es obligatorio.'),
-        dni: z.string().trim().min(1, 'El DNI es obligatorio.'),
-        telefono: z.string().trim().min(1, 'El teléfono es obligatorio.'),
+        dni: z
+          .string()
+          .trim()
+          .min(1, 'El DNI es obligatorio.')
+          .regex(/^[0-9]+$/, 'Ingresá el DNI solo con números.'),
+        telefono: z
+          .string()
+          .trim()
+          .min(1, 'El teléfono es obligatorio.')
+          .superRefine((value, ctx) => {
+            const validationMessage = getPhoneValidationMessage(value)
+            if (validationMessage) {
+              ctx.addIssue({ code: 'custom', message: validationMessage })
+            }
+          }),
       }),
     []
   )
