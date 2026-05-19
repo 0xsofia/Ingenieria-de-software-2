@@ -9,7 +9,6 @@ const USER_COLUMNS = [
     render: (user) => (
       <div className="sectioned-table-list__primary-cell">
         <strong>{user.nombre_completo}</strong>
-        <span>{user.estado}</span>
       </div>
     ),
   },
@@ -43,16 +42,10 @@ const USER_COLUMNS = [
 export default function ListadoUsuarios({ users, emptyMessage, canManageUsers }) {
   const sections = [
     {
-      key: 'empleados',
-      title: 'Empleados',
-      emptyMessage: 'No hay empleados para mostrar.',
-      items: users.filter((user) => user.roles.includes('empleado')),
-    },
-    {
-      key: 'socios',
-      title: 'Socios',
-      emptyMessage: 'No hay socios para mostrar.',
-      items: users.filter((user) => user.roles.includes('socio')),
+      key: 'usuarios',
+      title: 'Usuarios registrados',
+      emptyMessage,
+      items: users,
     },
   ]
 
@@ -60,7 +53,7 @@ export default function ListadoUsuarios({ users, emptyMessage, canManageUsers })
     <SectionedTableList
       sections={sections}
       columns={USER_COLUMNS}
-      getRowKey={(user, sectionKey) => `${sectionKey}-${user.persona_id}`}
+      getRowKey={(user) => user.persona_id}
       emptyMessage={emptyMessage}
       renderActions={
         canManageUsers
