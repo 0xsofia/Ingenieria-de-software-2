@@ -3,9 +3,11 @@ import './ClaseCard.css'
 export default function ClaseCard({
   clase,
   onView,
+  onScanQR,
   onReserve,
   viewLabel = 'Ver',
   reserveLabel = 'Inscribirme',
+  viewScanLabel = 'Escanear QR',
 }) {
   return (
     <article className="clase-card">
@@ -39,6 +41,11 @@ export default function ClaseCard({
       <div className="clase-card__footer">
         <div className="clase-card__note">ID: {clase.clase_id}</div>
         <div className="clase-card__actions">
+          {onScanQR && (
+              <button type="button" className="secondary-action scan-qr-action" onClick={() => onScanQR(clase)}>
+                {viewScanLabel}
+              </button>
+            )}
           <button type="button" className="secondary-action" onClick={() => onView(clase)}>
             {viewLabel}
           </button>

@@ -3,31 +3,42 @@
   max-width: 100%;
 }
 
-.mis-clases-list {
-  display: grid;
-  gap: 24px;
+.mis-clases-table-wrapper {
   margin-top: 24px;
-}
-
-.mis-clases-card {
+  overflow-x: auto;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-panel);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(236, 242, 248, 0.94));
-  padding: 24px;
-  display: grid;
-  gap: 20px;
+  background: rgba(255, 255, 255, 0.82);
   box-shadow: var(--shadow-soft);
 }
 
-.mis-clases-card__header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+.mis-clases-table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
 }
 
-.mis-clases-card__status {
+.mis-clases-table th,
+.mis-clases-table td {
+  padding: 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+}
+
+.mis-clases-table th {
+  background: rgba(227, 235, 244, 0.74);
+  font-size: 0.74rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.mis-clases-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.mis-clases-table__status {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -39,50 +50,87 @@
   color: var(--text-strong);
 }
 
-.mis-clases-card__details {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px;
-  margin: 0;
-}
-
-.mis-clases-card__details dt {
-  font-weight: 600;
-  color: var(--text-strong);
-  margin-bottom: 6px;
-}
-
-.mis-clases-card__details dd {
-  margin: 0;
-  color: var(--text-soft);
-}
-
-.mis-clases-card__actions {
+.mis-clases-table__actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 16px;
 }
 
-.mis-clases-card__actions .primary-action {
+.mis-clases-table__actions .primary-action {
   margin-top: 0;
   text-transform: none;
   letter-spacing: normal;
   font-size: 1rem;
 }
 
-.mis-clases-card__hint {
+.mis-clases-table__hint {
   margin: 0;
   color: var(--text-soft);
 }
 
+.mis-clases-table__empty {
+  min-height: 168px;
+  text-align: center;
+  color: var(--text-soft);
+}
+
 @media (max-width: 720px) {
-  .mis-clases-card {
-    padding: 20px;
+  .mis-clases-table {
+    min-width: 0;
   }
 
-  .mis-clases-card__actions {
+  .mis-clases-table thead {
+    display: none;
+  }
+
+  .mis-clases-table,
+  .mis-clases-table tbody,
+  .mis-clases-table tr,
+  .mis-clases-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .mis-clases-table tr {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .mis-clases-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .mis-clases-table td {
+    padding: 10px 16px;
+    border-bottom: 0;
+  }
+
+  .mis-clases-table td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-soft);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .mis-clases-table__actions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .mis-clases-table__actions > * {
+    width: 100%;
+  }
+
+  .mis-clases-table__empty {
+    min-height: 0;
+    padding: 24px 16px;
+  }
+
+  .mis-clases-table__empty::before {
+    content: none;
   }
 }

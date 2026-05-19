@@ -21,12 +21,14 @@ function PerfilPage() {
           </section>
 
           <section className="profile-actions-card">
-            <h2>Accesos rápidos</h2>
-            
-            <div className="profile-actions">
+            <div className="profile-actions-card__header">
+              <h2>Accesos rápidos</h2>
               <Link className="secondary-action" to="/perfil/actualizar">
                 Actualizar perfil
               </Link>
+            </div>
+
+            <div className="profile-actions">
               {session?.role === 'socio' && (
                 <>
                   <Link className="secondary-action" to="/mis-pagos">

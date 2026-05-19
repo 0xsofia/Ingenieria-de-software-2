@@ -5,14 +5,17 @@ import { listarClases } from '../api/clase'
 import FilterForm from '../components/listing/FilterForm'
 import SectionedTableList from '../components/listing/SectionedTableList'
 import { ACTIVIDADES } from '../constants/actividades'
+import { useAuth } from '../hooks/useAuth'
 import './ActividadesPage.css'
 
 const INITIAL_FILTERS = Object.freeze({
   actividad: '',
+  fecha: '',
   horario: '',
 })
 
 export default function ActividadesPage() {
+  const { session } = useAuth()
   const [clases, setClases] = useState([])
   const [submittedFilters, setSubmittedFilters] = useState(INITIAL_FILTERS)
   const [isLoading, setIsLoading] = useState(true)
@@ -53,6 +56,17 @@ export default function ActividadesPage() {
     [clases]
   )
 
+  const fechaOptions = useMemo(
+    () =>
+      Array.from(new Set(clases.map((clase) => clase.fecha)))
+        .sort()
+        .map((fecha) => ({
+          value: fecha,
+          label: fecha,
+        })),
+    [clases]
+  )
+
   const filterFields = useMemo(
     () => [
       {
@@ -61,6 +75,13 @@ export default function ActividadesPage() {
         type: 'select',
         placeholder: 'Todas las actividades',
         options: ACTIVIDADES,
+      },
+      {
+        name: 'fecha',
+        label: 'Fecha',
+        type: 'select',
+        placeholder: 'Todas las fechas',
+        options: fechaOptions,
       },
       {
         name: 'horario',
@@ -73,12 +94,16 @@ export default function ActividadesPage() {
         })),
       },
     ],
-    [horarioOptions]
+    [fechaOptions, horarioOptions]
   )
 
   const filteredClases = useMemo(() => {
     return clases.filter((clase) => {
       if (submittedFilters.actividad && clase.actividad !== submittedFilters.actividad) {
+        return false
+      }
+
+      if (submittedFilters.fecha && clase.fecha !== submittedFilters.fecha) {
         return false
       }
 
@@ -91,6 +116,7 @@ export default function ActividadesPage() {
   }, [clases, submittedFilters])
 
   const hasActiveFilters = Object.values(submittedFilters).some(Boolean)
+  const canReserve = session?.role === 'socio'
 
   return (
     <section className="dashboard-shell">
@@ -99,15 +125,12 @@ export default function ActividadesPage() {
           <div>
             <p className="auth-subtitle">Reservas</p>
             <h1>Actividades y horarios</h1>
-            <p className="dashboard-copy">
-              Elegí la actividad, filtrá por horario y avanzá al flujo mínimo de reserva.
-            </p>
           </div>
         </div>
 
         <div className="actividades-page__content">
           <FilterForm
-            title="Encontrar una clase"
+            title="Reserva tu próxima clase"
             description="Usá estos filtros para encontrar la clase que querés reservar."
             fields={filterFields}
             initialValues={submittedFilters}
@@ -178,17 +201,21 @@ export default function ActividadesPage() {
                     ? 'No hay clases para el filtro aplicado.'
                     : 'Aún no hay clases disponibles para reservar.'
                 }
-                renderActions={(clase) => (
-                  <div className="sectioned-table-list__actions">
-                    <Link
-                      className="primary-action"
-                      to={`/actividad/${getSlug(clase.actividad)}`}
-                      state={{ clase }}
-                    >
-                      Reservar
-                    </Link>
-                  </div>
-                )}
+                renderActions={
+                  canReserve
+                    ? (clase) => (
+                        <div className="sectioned-table-list__actions">
+                          <Link
+                            className="primary-action"
+                            to={`/actividad/${getSlug(clase.actividad)}`}
+                            state={{ clase }}
+                          >
+                            Reservar
+                          </Link>
+                        </div>
+                      )
+                    : undefined
+                }
               />
             </>
           )}

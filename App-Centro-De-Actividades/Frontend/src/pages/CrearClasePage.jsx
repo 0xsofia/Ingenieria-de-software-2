@@ -93,6 +93,10 @@ export default function ClasePage() {
           .coerce.number()
           .int('Los cupos deben ser un número entero.')
           .min(1, 'Los cupos deben ser al menos 1.'),
+        precio: z
+          .coerce.number()
+          .positive('El precio debe ser mayor a 0.')
+          .refine((value) => !Number.isNaN(value), 'El precio debe ser un número válido.'),
         profesor_id: z
           .coerce.number()
           .min(1, 'El profesor es obligatorio.'),
@@ -152,6 +156,15 @@ export default function ClasePage() {
         min: '1',
       },
       {
+        name: 'precio',
+        label: 'Precio',
+        type: 'number',
+        required: true,
+        min: '0.01',
+        step: '0.01',
+        placeholder: 'Ingrese el precio en pesos',
+      },
+      {
         name: 'profesor_id',
         label: 'Profesor',
         type: 'select',
@@ -173,6 +186,7 @@ export default function ClasePage() {
       cancha: '',
       nivel: '',
       cupos: 1,
+      precio: 1,
       profesor_id: '',
     }),
     []
@@ -189,6 +203,7 @@ export default function ClasePage() {
         ...values,
         horario_inicio: Number(values.horario_inicio),
         cupos: Number(values.cupos),
+        precio: Number(values.precio),
         profesor_id: Number(values.profesor_id),
       })
 

@@ -17,6 +17,7 @@ export default function ListadoClasesPage() {
   const [error, setError] = useState('')
 
   const canManageClasses = session?.role === 'empleado'
+  const hasActiveFilter = actividad !== ''
 
   useEffect(() => {
     if (!canManageClasses) {
@@ -51,6 +52,10 @@ export default function ListadoClasesPage() {
     navigate(`/clases/${clase.clase_id}/modificar`, { state: { clase } })
   }
 
+  function handleScanQR(clase) {
+    navigate(`/clases/${clase.clase_id}/qr`, { state: { clase } })
+  }
+
   return (
     <section className="dashboard-shell">
       <section className="dashboard-frame">
@@ -82,7 +87,9 @@ export default function ListadoClasesPage() {
 
             {clases.length === 0 ? (
               <div className="listado-clases__empty">
-                No hay clases que coincidan con la actividad seleccionada.
+                {hasActiveFilter
+                  ? 'No se encontraron clases para la actividad seleccionada.'
+                  : 'No se encontraron clases registradas.'}
               </div>
             ) : (
               <div className="listado-clases__cards">
@@ -92,6 +99,8 @@ export default function ListadoClasesPage() {
                     clase={clase}
                     onView={handleViewClass}
                     onReserve={handleEditClass}
+                    onScanQR={handleScanQR}     // Ejecuta la redirección a la cámara
+                    viewScanLabel="Escanear QR"
                     viewLabel="Ver detalle"
                     reserveLabel="Modificar"
                   />

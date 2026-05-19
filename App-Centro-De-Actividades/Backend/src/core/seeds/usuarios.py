@@ -25,10 +25,11 @@ USERS_TO_SEED = [
         "dni": "30000001",
         "nombre": "Admin",
         "apellido": "Centro",
-        "telefono": "0111511111111",
+        "telefono": "2215003001",
         "calle": "Calle 1",
         "numero_puerta": "100",
         "codigo_postal": "1900",
+        "intereses": "",
         "roles": ["administrador"],
     },
     {
@@ -36,10 +37,11 @@ USERS_TO_SEED = [
         "dni": "30000002",
         "nombre": "Empleada",
         "apellido": "Mostrador",
-        "telefono": "0111522222222",
+        "telefono": "2215003002",
         "calle": "Calle 2",
         "numero_puerta": "200",
         "codigo_postal": "1900",
+        "intereses": "",
         "roles": ["empleado", "socio"],
     },
     {
@@ -47,10 +49,59 @@ USERS_TO_SEED = [
         "dni": "30000003",
         "nombre": "Socia",
         "apellido": "Activa",
-        "telefono": "0111533333333",
+        "telefono": "2215003003",
         "calle": "Calle 3",
         "numero_puerta": "300",
         "codigo_postal": "1900",
+        "intereses": "",
+        "roles": ["socio"],
+    },
+    {
+        "email": "dni.duplicado@example.com",
+        "dni": "22222222",
+        "nombre": "Dni",
+        "apellido": "Duplicado",
+        "telefono": "2215003004",
+        "calle": "Calle 4",
+        "numero_puerta": "400",
+        "codigo_postal": "1900",
+        "intereses": "",
+        "roles": ["socio"],
+    },
+    {
+        "email": "example@gmail.com",
+        "dni": "55555555",
+        "nombre": "Luiz",
+        "apellido": "Petri",
+        "telefono": "2217776633",
+        "calle": "59",
+        "numero_puerta": "326",
+        "codigo_postal": "1900",
+        "intereses": "",
+        "roles": ["socio"],
+    },
+    {
+        "email": "example2@gmail.com",
+        "dni": "77777777",
+        "nombre": "Lucas",
+        "apellido": "Petri",
+        "telefono": "2217776634",
+        "calle": "60",
+        "numero_puerta": "327",
+        "codigo_postal": "1900",
+        "intereses": "",
+        "roles": ["socio"],
+    },
+    {
+        "email": "example123@gmail.com",
+        "dni": "44444445",
+        "nombre": "Juan",
+        "apellido": "Gomez",
+        "telefono": "2214446634",
+        "calle": "10",
+        "numero_puerta": "1518",
+        "codigo_postal": "1900",
+        "intereses": "Me gusta jugar al futbol",
         "roles": ["socio"],
     },
 ]
@@ -71,7 +122,7 @@ def seed_usuarios():
 
 def _get_or_create_persona(user_data):
     email = user_data["email"].strip().lower()
-    persona = Persona.query.filter_by(email=email).first()
+    persona = _find_persona_for_seed(email=email, dni=user_data["dni"])
 
     if persona is None:
         persona = Persona(
@@ -84,6 +135,7 @@ def _get_or_create_persona(user_data):
             numero_puerta=user_data["numero_puerta"],
             codigo_postal=user_data["codigo_postal"],
             estado="activo",
+            intereses=_normalize_optional_text(user_data.get("intereses", "")),
             password_hash=_hash_password(DEFAULT_PASSWORD),
         )
         db.session.add(persona)
@@ -91,6 +143,7 @@ def _get_or_create_persona(user_data):
         return persona
 
     persona.dni = user_data["dni"]
+    persona.email = email
     persona.nombre = user_data["nombre"]
     persona.apellido = user_data["apellido"]
     persona.telefono = user_data["telefono"]
@@ -98,9 +151,18 @@ def _get_or_create_persona(user_data):
     persona.numero_puerta = user_data["numero_puerta"]
     persona.codigo_postal = user_data["codigo_postal"]
     persona.estado = "activo"
+    persona.intereses = _normalize_optional_text(user_data.get("intereses", ""))
     persona.password_hash = _hash_password(DEFAULT_PASSWORD)
     db.session.flush()
     return persona
+
+
+def _find_persona_for_seed(email, dni):
+    persona = Persona.query.filter_by(email=email).first()
+    if persona is not None:
+        return persona
+
+    return Persona.query.filter_by(dni=dni.strip()).first()
 
 
 def _get_or_create_role(role_name):
@@ -168,3 +230,7 @@ def _hash_password(password):
 
 def _normalize_name(value):
     return value.strip().lower()
+
+
+def _normalize_optional_text(value):
+    return (value or "").strip()
