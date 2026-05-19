@@ -1,6 +1,6 @@
 from zoneinfo import ZoneInfo
-import jwt
-import os
+# import jwt
+# import os
 from datetime import datetime, timedelta
 from flask_login import current_user
 from src.core.database import db
@@ -161,19 +161,3 @@ def _validar_acceso_escaneo_qr(reserva, persona):
                 "Como socio solo puedes escanear tus propios códigos QR de asistencia."
             )
 
-
-# def registrar_asistencia_qr(token):
-#     """Desencripta un token JWT e impacta la asistencia de forma directa."""
-#     try:
-#         payload = jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=["HS256"])
-        
-#         # Usamos el método de clase que ya contiene todas las validaciones de negocio e impacta la BD
-#         return registrar_asistencia(
-#             dni=payload.get('dni'), 
-#             id_reserva=payload.get('id_reserva')
-#         )
-        
-#     except jwt.ExpiredSignatureError:
-#         raise ValueError("El QR ha expirado")
-#     except jwt.InvalidTokenError:
-#         raise ValueError("QR inválido")
