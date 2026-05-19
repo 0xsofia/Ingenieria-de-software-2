@@ -66,6 +66,8 @@ class Socio(db.Model):
         primary_key=True,
     )
 
+    descuento_bloqueado_hasta = db.Column(db.Date, nullable=True)
+
     persona = db.relationship("Persona", back_populates="socio")
 
 

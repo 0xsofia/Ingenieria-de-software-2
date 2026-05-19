@@ -15,3 +15,13 @@ export async function confirmarPagoRetorno(payload) {
   const { data } = await http.post(endpoints.reservaEspontaneaPagoRetorno, payload)
   return data
 }
+
+export async function listarMisClases() {
+  const { data } = await http.get(endpoints.misClases)
+  return data
+}
+
+export async function cancelarReservaEspontanea(payload) {
+  const { data } = await http.post(endpoints.reservaEspontaneaCancelar, payload)
+  return data
+}

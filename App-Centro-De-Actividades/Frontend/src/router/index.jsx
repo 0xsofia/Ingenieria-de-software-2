@@ -9,14 +9,17 @@ import PerfilPage from '../pages/PerfilPage.jsx'
 import RegistrarsePage from '../pages/RegistrarsePage.jsx'
 import ActividadesPage from '../pages/ActividadesPage.jsx'
 import ActividadPage from '../pages/ActividadPage.jsx'
+import ActualizarPerfilPage from '../pages/ActualizarPerfilPage.jsx'
 import CrearClasePage from '../pages/CrearClasePage.jsx'
 import ErrorPage from '../pages/ErrorPage.jsx'
 import ListadoUsuariosPage from '../pages/ListadoUsuariosPage.jsx'
+import MisPagosPage from '../pages/MisPagosPage.jsx'
 import ModificarClasePage from '../pages/ModificarClasePage.jsx'
 import ModificarUsuarioPage from '../pages/ModificarUsuarioPage.jsx'
 import RegistrarEmpleadoPage from '../pages/RegistrarEmpleadoPage.jsx'
 import EscanearQRPage from '../pages/EscanearQRPage.jsx'
 import GenerarQRPage from '../pages/GenerarQRPage.jsx'
+import MisClasesPage from '../pages/MisClasesPage.jsx'
 
 
 const router = createBrowserRouter([
@@ -78,6 +81,18 @@ const router = createBrowserRouter([
       {
         path: '/verperfil',
         element: <PerfilPage />,
+      },
+      {
+        path: '/perfil/actualizar',
+        element: <ActualizarPerfilPage />,
+      },
+      {
+        path: '/mis-pagos',
+        element: <MisPagosPage />,
+      },
+      {
+        path: '/mis-clases',
+        element: <MisClasesPage />,
       },
       {
         path: '/actividades',
