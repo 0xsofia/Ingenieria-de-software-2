@@ -16,6 +16,7 @@ class Clase(db.Model):
     cupos = db.Column(
         db.Integer, nullable=False
     )  # ver de ponerle por defualt 0 o mayor que cero como regla aca?
+    precio = db.Column(db.Numeric(10, 2), nullable=True)
     tipo_clase = db.Column(db.Enum(TipoClaseEnum), nullable=False)
     creado_en = db.Column(
         db.DateTime(timezone=True), nullable=False, server_default=db.func.now()

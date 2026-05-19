@@ -20,6 +20,10 @@ function Hero({ role, onLogout, isLoggingOut = false }) {
     navigationItems.splice(1, 0, { to: '/clases', label: 'Ver Clases' })
   }
 
+  if (role === 'socio') {
+    navigationItems.splice(2, 0, { to: '/mis-clases', label: 'Mis clases' })
+  }
+
   function closeMenu() {
     setIsMenuOpen(false)
   }

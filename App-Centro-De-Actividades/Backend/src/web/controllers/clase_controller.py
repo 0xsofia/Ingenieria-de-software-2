@@ -36,6 +36,7 @@ def listar_clases():
             "cancha": clase.cancha,
             "nivel": clase.nivel.value,
             "cupos": clase.cupos,
+            "precio": float(clase.precio) if clase.precio is not None else None,
             "tipo_clase": clase.tipo_clase.value,
             "profesor_id": clase.profesor_id,
             "profesor_nombre": clase.profesor.nombre if clase.profesor else None,

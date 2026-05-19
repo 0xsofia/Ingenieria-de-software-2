@@ -95,6 +95,12 @@
   gap: 18px;
 }
 
+.profile-update-card .primary-action,
+.profile-actions .secondary-action {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 .profile-update-field {
   display: grid;
   gap: 10px;
