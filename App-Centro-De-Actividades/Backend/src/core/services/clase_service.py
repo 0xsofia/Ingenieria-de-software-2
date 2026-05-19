@@ -78,15 +78,14 @@ def validar_payload_clase(payload):
         except (ValueError, TypeError):
             errors["cupos"] = "Los cupos deben ser un número válido."
 
-    # Validar precio (opcional)
     precio_raw = normalized_payload.get("precio")
     if precio_raw is None or str(precio_raw).strip() == "":
-        normalized_payload["precio"] = None
+        errors["precio"] = "El precio es obligatorio."
     else:
         try:
             precio_value = float(precio_raw)
-            if precio_value < 0:
-                errors["precio"] = "El precio no puede ser negativo."
+            if precio_value <= 0:
+                errors["precio"] = "El precio debe ser mayor a 0."
             else:
                 normalized_payload["precio"] = precio_value
         except (ValueError, TypeError):
