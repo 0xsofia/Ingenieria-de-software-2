@@ -17,4 +17,6 @@ export const endpoints = {
   misClases: '/api/reservas/mis-clases',
   reservaEspontaneaCancelar: '/api/reservas/espontanea/cancelar',
   misPagos: '/api/pagos/',
+  EscanearQR: '/api/asistencia/escanearQR',
+  GenerarQR: '/api/asistencia/generarQR/<int:reserva_id>',
 }

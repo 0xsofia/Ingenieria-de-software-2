@@ -52,6 +52,10 @@ export default function ListadoClasesPage() {
     navigate(`/clases/${clase.clase_id}/modificar`, { state: { clase } })
   }
 
+  function handleScanQR(clase) {
+    navigate(`/clases/${clase.clase_id}/qr`, { state: { clase } })
+  }
+
   return (
     <section className="dashboard-shell">
       <section className="dashboard-frame">
@@ -95,6 +99,8 @@ export default function ListadoClasesPage() {
                     clase={clase}
                     onView={handleViewClass}
                     onReserve={handleEditClass}
+                    onScanQR={handleScanQR}     // Ejecuta la redirección a la cámara
+                    viewScanLabel="Escanear QR"
                     viewLabel="Ver detalle"
                     reserveLabel="Modificar"
                   />

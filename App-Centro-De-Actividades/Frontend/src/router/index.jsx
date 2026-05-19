@@ -18,6 +18,8 @@ import ModificarClasePage from '../pages/ModificarClasePage.jsx'
 import ModificarUsuarioPage from '../pages/ModificarUsuarioPage.jsx'
 import RegistrarEmpleadoPage from '../pages/RegistrarEmpleadoPage.jsx'
 import MisClasesPage from '../pages/MisClasesPage.jsx'
+import EscanearQRPage from '../pages/EscanearQRPage.jsx'
+import GenerarQRPage from '../pages/GenerarQRPage.jsx'
 
 
 const router = createBrowserRouter([
@@ -51,6 +53,14 @@ const router = createBrowserRouter([
       {
         path: '/clases/:claseId/modificar',
         element: <ModificarClasePage />,
+      },
+      {
+        path: '/clases/:idClase/qr',
+        element: <EscanearQRPage />,
+      },
+      {
+        path: '/reservas/:idReserva/qr',
+        element: <GenerarQRPage />,
       },
       {
         path: '/pago/retorno',
