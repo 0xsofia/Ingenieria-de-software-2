@@ -1,0 +1,88 @@
+.mis-clases-shell .dashboard-frame {
+  width: min(100%, 1200px);
+  max-width: 100%;
+}
+
+.mis-clases-list {
+  display: grid;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.mis-clases-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(236, 242, 248, 0.94));
+  padding: 24px;
+  display: grid;
+  gap: 20px;
+  box-shadow: var(--shadow-soft);
+}
+
+.mis-clases-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mis-clases-card__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-muted);
+  background: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.mis-clases-card__details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin: 0;
+}
+
+.mis-clases-card__details dt {
+  font-weight: 600;
+  color: var(--text-strong);
+  margin-bottom: 6px;
+}
+
+.mis-clases-card__details dd {
+  margin: 0;
+  color: var(--text-soft);
+}
+
+.mis-clases-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.mis-clases-card__actions .primary-action {
+  margin-top: 0;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 1rem;
+}
+
+.mis-clases-card__hint {
+  margin: 0;
+  color: var(--text-soft);
+}
+
+@media (max-width: 720px) {
+  .mis-clases-card {
+    padding: 20px;
+  }
+
+  .mis-clases-card__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

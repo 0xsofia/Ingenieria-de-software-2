@@ -27,7 +27,9 @@ function PerfilPage() {
               <Link className="secondary-action" to="/mis-pagos">
                 Mis pagos
               </Link>
-              <button type="button" className="secondary-action">Mis clases</button>
+              <Link className="secondary-action" to="/mis-clases">
+                Mis clases
+              </Link>
             </div>
           </section>
         </div>

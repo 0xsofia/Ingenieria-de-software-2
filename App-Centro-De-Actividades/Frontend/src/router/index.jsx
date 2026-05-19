@@ -17,6 +17,7 @@ import MisPagosPage from '../pages/MisPagosPage.jsx'
 import ModificarClasePage from '../pages/ModificarClasePage.jsx'
 import ModificarUsuarioPage from '../pages/ModificarUsuarioPage.jsx'
 import RegistrarEmpleadoPage from '../pages/RegistrarEmpleadoPage.jsx'
+import MisClasesPage from '../pages/MisClasesPage.jsx'
 
 
 const router = createBrowserRouter([
@@ -78,6 +79,10 @@ const router = createBrowserRouter([
       {
         path: '/mis-pagos',
         element: <MisPagosPage />,
+      },
+      {
+        path: '/mis-clases',
+        element: <MisClasesPage />,
       },
       {
         path: '/actividades',
