@@ -84,8 +84,8 @@ def validar_payload_clase(payload):
     else:
         try:
             precio_value = float(precio_raw)
-            if precio_value <= 0:
-                errors["precio"] = "El precio debe ser mayor a 0."
+            if precio_value < 0:
+                errors["precio"] = "El precio no puede ser negativo."
             else:
                 normalized_payload["precio"] = precio_value
         except (ValueError, TypeError):

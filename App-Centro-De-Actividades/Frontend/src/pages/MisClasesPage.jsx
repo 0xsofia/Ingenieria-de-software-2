@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import {
   cancelarReservaEspontanea,
@@ -7,6 +8,7 @@ import {
 import './MisClasesPage.css'
 
 function MisClasesPage() {
+  const navigate = useNavigate()
   const [reservas, setReservas] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -22,6 +24,21 @@ function MisClasesPage() {
       }),
     [],
   )
+
+  function handleAbandonarListaEspera(reserva) {
+    if (!reserva?.reserva_id) return
+
+    setError('')
+    setFeedback('Funcionalidad de abandonar lista de espera todavía no está implementada.')
+  }
+
+  function handleGenerarQR(reserva) {
+    if (!reserva?.reserva_id) return
+
+    setError('')
+    // Navega a la página que ya realiza la llamada al backend y renderiza el QR
+    navigate(`/reservas/${reserva.reserva_id}/qr`)
+  }
 
   useEffect(() => {
     fetchReservas()
@@ -144,7 +161,7 @@ function MisClasesPage() {
                 {reservas.length === 0 ? (
                   <tr>
                     <td className="mis-clases-table__empty" colSpan={9}>
-                      No tenes reservas activas por el momento.
+                      Aún no hay clases asociadas.
                     </td>
                   </tr>
                 ) : (
@@ -170,6 +187,22 @@ function MisClasesPage() {
                       </td>
                       <td data-label="Acciones">
                         <div className="mis-clases-table__actions">
+                          <button
+                            type="button"
+                            className="secondary-action"
+                            onClick={() => handleAbandonarListaEspera(reserva)}
+                          >
+                            Abandonar lista de espera
+                          </button>
+
+                          <button
+                            type="button"
+                            className="secondary-action"
+                            onClick={() => handleGenerarQR(reserva)}
+                          >
+                            Generar QR
+                          </button>
+
                           <button
                             type="button"
                             className="primary-action"
