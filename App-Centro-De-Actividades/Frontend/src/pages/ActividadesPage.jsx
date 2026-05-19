@@ -9,7 +9,12 @@ import './ActividadesPage.css'
 
 const INITIAL_FILTERS = Object.freeze({
   actividad: '',
+  dia: '',
   horario: '',
+})
+
+const WEEKDAY_FORMATTER = new Intl.DateTimeFormat('es-AR', {
+  weekday: 'long',
 })
 
 export default function ActividadesPage() {
@@ -53,6 +58,17 @@ export default function ActividadesPage() {
     [clases]
   )
 
+  const diaOptions = useMemo(
+    () =>
+      Array.from(new Set(clases.map((clase) => clase.fecha)))
+        .sort()
+        .map((fecha) => ({
+          value: fecha,
+          label: formatClaseDate(fecha),
+        })),
+    [clases]
+  )
+
   const filterFields = useMemo(
     () => [
       {
@@ -61,6 +77,13 @@ export default function ActividadesPage() {
         type: 'select',
         placeholder: 'Todas las actividades',
         options: ACTIVIDADES,
+      },
+      {
+        name: 'dia',
+        label: 'Día',
+        type: 'select',
+        placeholder: 'Todos los días',
+        options: diaOptions,
       },
       {
         name: 'horario',
@@ -73,12 +96,16 @@ export default function ActividadesPage() {
         })),
       },
     ],
-    [horarioOptions]
+    [diaOptions, horarioOptions]
   )
 
   const filteredClases = useMemo(() => {
     return clases.filter((clase) => {
       if (submittedFilters.actividad && clase.actividad !== submittedFilters.actividad) {
+        return false
+      }
+
+      if (submittedFilters.dia && clase.fecha !== submittedFilters.dia) {
         return false
       }
 
@@ -99,15 +126,12 @@ export default function ActividadesPage() {
           <div>
             <p className="auth-subtitle">Reservas</p>
             <h1>Actividades y horarios</h1>
-            <p className="dashboard-copy">
-              Elegí la actividad, filtrá por horario y avanzá al flujo mínimo de reserva.
-            </p>
           </div>
         </div>
 
         <div className="actividades-page__content">
           <FilterForm
-            title="Encontrar una clase"
+            title="Reserva tu próxima clase"
             description="Usá estos filtros para encontrar la clase que querés reservar."
             fields={filterFields}
             initialValues={submittedFilters}
@@ -156,6 +180,7 @@ export default function ActividadesPage() {
                   {
                     key: 'fecha',
                     header: 'Fecha',
+                    render: (clase) => formatClaseDate(clase.fecha),
                   },
                   {
                     key: 'horario',
@@ -203,4 +228,19 @@ function getSlug(nombre) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
+}
+
+function formatClaseDate(value) {
+  const [year, month, day] = String(value)
+    .split('-')
+    .map((part) => Number(part))
+
+  const date = new Date(year, month - 1, day)
+  const weekday = WEEKDAY_FORMATTER.format(date)
+
+  return `${capitalize(weekday)} ${day}`
+}
+
+function capitalize(value) {
+  return value.charAt(0).toUpperCase() + value.slice(1)
 }
