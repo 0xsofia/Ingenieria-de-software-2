@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Html5Qrcode } from 'html5-qrcode'; // 👈 Usamos la clase directa (sin interfaces raras)
-import { CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { useParams } from 'react-router-dom'; 
+import { Html5Qrcode } from "html5-qrcode"; 
+import { AlertTriangle, Loader2, CheckCircle2, RefreshCw } from 'lucide-react';
 import { escanearQR } from '../api/asistencias'; 
 import './EscanearQRPage.css';
 
@@ -8,9 +9,9 @@ const EscanearQR = () => {
     const [resultadoEscaneo, setResultadoEscaneo] = useState(null);
     const [errorLog, setErrorLog] = useState(null);
     const [cargando, setCargando] = useState(false);
-    
+    const { idClase } = useParams(); 
     const html5QrCodeRef = useRef(null);
-
+    
     useEffect(() => {
         const timer = setTimeout(() => {
             iniciarCamaraDirecta();
@@ -83,7 +84,7 @@ const EscanearQR = () => {
             }
 
             // Llamamos a tu servicio asíncrono
-            const data = await escanearQR(payload);
+            const data = await escanearQR(payload, idClase);
             setResultadoEscaneo(data.message || "Asistencia registrada con éxito.");
 
         } catch (err) {

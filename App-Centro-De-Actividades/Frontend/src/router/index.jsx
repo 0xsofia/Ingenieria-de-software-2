@@ -52,7 +52,7 @@ const router = createBrowserRouter([
         element: <ModificarClasePage />,
       },
       {
-        path: '/clases/:claseId/qr',
+        path: '/clases/:idClase/qr',
         element: <EscanearQRPage />,
       },
       {

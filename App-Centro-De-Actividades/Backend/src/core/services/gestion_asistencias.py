@@ -1,3 +1,4 @@
+from zoneinfo import ZoneInfo
 import jwt
 import os
 from datetime import datetime, timedelta
@@ -26,61 +27,65 @@ class HorarioInvalidoException(Exception): pass
 
 
 def generar_token_asistencia(reserva_id):
-    """
-    Valida la reserva y retorna el payload para el QR.
-    Soporta que la reserva venga de la BD o estructurada como dict.
-    """
-    # Force la consulta limpia al ORM usando el ID numérico
-    reserva = db.session.query(Reserva).filter(Reserva.reserva_id == reserva_id).first()
+    # 🚀 FORZAMOS UN JOIN LIMPIO: Traemos la Reserva y su Clase correspondiente en una sola consulta
+    resultado = db.session.query(Reserva, Clase)\
+        .join(Clase, Reserva.clase_id == Clase.clase_id)\
+        .filter(Reserva.reserva_id == reserva_id)\
+        .first()
     
-    if not reserva:
-        raise ReservaNoEncontradaException(f"No se encontró la reserva con ID {reserva_id}.")
+    if not resultado:
+        raise ReservaNoEncontradaException(f"No se encontró la reserva con ID {reserva_id} o su clase asociada.")
 
-    # Control de contingencia: Si por algún motivo previo se transformó en un dict
-    if isinstance(reserva, dict):
-        id_socio = reserva.get("socio_id")
-        id_reserva_real = reserva.get("reserva_id")
-        reserva_objeto = db.session.query(Reserva).filter(Reserva.reserva_id == id_reserva_real).first()
-        clase = reserva_objeto.clase
-        estado_reserva = reserva.get("estado")
-    else:
-        # Comportamiento normal con el Modelo ORM
-        id_socio = reserva.get("socio_id") if isinstance(reserva, dict) else reserva.socio_id
-        clase = reserva.clase
-        id_reserva_real = reserva.reserva_id
-        estado_reserva = reserva.estado
+    # Al hacer una query de dos modelos, SQLAlchemy nos devuelve una tupla desestructurable:
+    reserva, clase = resultado
 
-    # Buscar la persona/socio para extraer los datos del QR
+    id_socio = reserva.socio_id
+    id_reserva_real = reserva.reserva_id
+    estado_reserva = reserva.estado
+
+    # Buscamos el socio asociado
     persona = db.session.query(Persona).filter(Persona.persona_id == id_socio).first()
     if not persona:
         raise ReservaNoEncontradaException("No se encontró el socio vinculado a la reserva.")
 
-    # --- Validación de Horarios (+/- 15 minutos) ---
+    if estado_reserva == "asistio":
+        return {
+            "dni": persona.dni,
+            "id_reserva": id_reserva_real,
+            "nombre": persona.nombre,
+            "clase": clase.actividad.name.capitalize() if hasattr(clase.actividad, 'name') else str(clase.actividad),
+            "ya_asistio": True
+        }
+
+    # ⏰ Ahora 'clase' viene 100% verificado desde el JOIN explícito de la query
     inicio_clase_dt = datetime.combine(clase.fecha, clase.horario_inicio)
-    ahora = datetime.now()
+
+    tz_argentina = ZoneInfo("America/Argentina/Buenos_Aires")
+    ahora = datetime.now(tz_argentina).replace(tzinfo=None) 
 
     limite_inferior = inicio_clase_dt - timedelta(minutes=15)
     limite_superior = inicio_clase_dt + timedelta(minutes=15)
-
-    if estado_reserva == "asistio":
-        raise FueraDeHorarioException("Ya registraste tu asistencia para esta clase.")
+    
+    # print(f"\n🔍 DEBUG RESERVA ID: {reserva_id}", flush=True)
+    # print(f"⏰ HORA ACTUAL DEL SISTEMA: {ahora.strftime('%H:%M:%S')}", flush=True)
+    # print(f"📌 MARGEN INFERIOR PERMITIDO: {limite_inferior.strftime('%H:%M:%S')}", flush=True)
+    # print(f"📌 MARGEN SUPERIOR PERMITIDO: {limite_superior.strftime('%H:%M:%S')}\n", flush=True)
 
     if ahora < limite_inferior:
         raise FueraDeHorarioException("Aún es temprano. Podrás visualizar tu QR 15 minutos antes de la clase.")
 
     if ahora > limite_superior:
         raise FueraDeHorarioException("El margen de tiempo de 15 minutos para ingresar ha expirado.")
-
-    # Retorno exitoso del payload plano
+    
     return {
         "dni": persona.dni,
         "id_reserva": id_reserva_real,
         "nombre": persona.nombre,
-        "apellido": persona.apellido,
-        "clase": clase.actividad.name.capitalize() if hasattr(clase.actividad, 'name') else str(clase.actividad)
+        "clase": clase.actividad.name.capitalize() if hasattr(clase.actividad, 'name') else str(clase.actividad),
+        "ya_asistio": False
     }
 
-def registrar_asistencia(dni, id_reserva):
+def registrar_asistencia(dni, id_reserva, id_clase):
     """Ejecuta los controles de validación de ingreso y registra el presente en la BD."""
     # 1. Buscamos la reserva real
     reserva = Reserva.query.get(id_reserva)
@@ -89,6 +94,15 @@ def registrar_asistencia(dni, id_reserva):
 
     # 2. Buscamos la persona por el DNI provisto en el QR para validar consistencia
     persona = Persona.query.filter_by(dni=str(dni)).first()
+    # clase = Clase.query.get(id_clase).first() 
+
+    if id_clase is not None:
+        clase_reserva_id = reserva.clase_id if hasattr(reserva, 'clase_id') else reserva.clase.clase_id
+        
+        if int(clase_reserva_id) != int(id_clase):
+            raise ClienteNoAsociadoException(
+                "La reserva escaneada corresponde a otra clase o turno horario diferente."
+            )
     
     # Validación: Que el DNI pertenezca al dueño de la reserva
     if not persona or reserva.socio_id != persona.persona_id:
