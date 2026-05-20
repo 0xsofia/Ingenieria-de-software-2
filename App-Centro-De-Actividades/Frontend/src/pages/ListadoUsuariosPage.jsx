@@ -93,9 +93,9 @@ export default function ListadoUsuariosPage() {
           <div>
             <p className="auth-subtitle">Administración</p>
             <h1>Usuarios</h1>
-            <p className="dashboard-copy">
+            {/* <p className="dashboard-copy">
               Todos los usuarios se muestran en una sola tabla y el rol indica si es socio o empleado.
-            </p>
+            </p> */}
           </div>
 
           <div className="listado-usuarios-page__header-actions">

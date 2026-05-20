@@ -37,7 +37,7 @@ export default function FiltroPagos({ initialValues, onSubmit, isSubmitting }) {
   return (
     <FilterForm
       title="Filtrar pagos"
-      description="Buscá por DNI, email, nombre o rango de fechas para encontrar pagos específicos."
+      description=""
       fields={PAYMENT_FILTER_FIELDS}
       initialValues={initialValues}
       onSubmit={onSubmit}

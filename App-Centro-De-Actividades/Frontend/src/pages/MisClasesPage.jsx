@@ -121,9 +121,9 @@ function MisClasesPage() {
       <section className="dashboard-frame mis-clases-frame">
         <header className="dashboard-header mis-clases-header">
           <h1>Mis clases</h1>
-          <p className="dashboard-copy">
+          {/* <p className="dashboard-copy">
             Gestiona tus reservas y consulta si aplica reintegro.
-          </p>
+          </p> */}
         </header>
 
         {error ? (

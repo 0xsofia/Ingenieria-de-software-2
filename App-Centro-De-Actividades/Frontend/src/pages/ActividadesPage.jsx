@@ -135,7 +135,7 @@ export default function ActividadesPage() {
             fields={filterFields}
             initialValues={submittedFilters}
             onSubmit={setSubmittedFilters}
-            submitLabel="Aplicar filtros"
+            submitLabel="Filtrar"
             resetLabel="Limpiar"
             isSubmitting={isLoading}
           />

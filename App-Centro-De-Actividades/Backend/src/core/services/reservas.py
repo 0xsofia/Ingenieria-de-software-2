@@ -48,7 +48,15 @@ def iniciar_reserva_espontanea(clase_id):
         .order_by(Reserva.reserva_id.desc())
         .first()
     )
+
+    existing_pending = existing is not None and existing.estado == "pendiente_pago"
+
     if existing is not None:
+        print(f"existing.estado={existing.estado}")
+    print(existing is not None and not existing_pending)
+
+    # Si ya tengo una reserva activa que no esté pendiente de pago, no dejo reservar de nuevo. Si la reserva está pendiente de pago, dejo continuar para intentar cobrar o usar crédito.
+    if existing is not None and not existing_pending:
         return {
             "status": "already_reserved",
             "message": "Ya estás reservado en esta clase.",
@@ -56,7 +64,7 @@ def iniciar_reserva_espontanea(clase_id):
             "clase_id": clase.clase_id,
         }, 409
 
-    if _cupo_disponible(clase) <= 0:
+    if not existing_pending and _cupo_disponible(clase) <= 0:
         return {
             "status": "no_cupo",
             "message": "No hay más cupo en la clase seleccionada.",
@@ -68,7 +76,7 @@ def iniciar_reserva_espontanea(clase_id):
     precio = _clase_precio(clase)
     requiere_pago = credito is None and precio is not None and precio > 0
 
-    reserva = Reserva(
+    reserva = existing if existing_pending else Reserva(
         clase_id=clase.clase_id,
         socio_id=socio_id,
         tipo_reserva="espontanea",
@@ -76,7 +84,19 @@ def iniciar_reserva_espontanea(clase_id):
         confirmada_en=None if requiere_pago else _now(),
     )
 
-    db.session.add(reserva)
+    # hago que si reserva ya existe pero está pendiente de pago, se intente actualizar esa reserva en lugar de crear una nueva. Esto es para evitar que si el usuario tiene un pago pendiente y vuelve a intentar reservar, se le cree una nueva reserva en lugar de usar la existente.
+    if existing_pending:
+        if requiere_pago:
+            reserva.estado = "pendiente_pago"
+            reserva.confirmada_en = None
+        else:
+            reserva.estado = "confirmada"
+            reserva.confirmada_en = _now()
+    else:
+        db.session.add(reserva)
+    
+    
+
     try:
         db.session.flush()
     except IntegrityError:

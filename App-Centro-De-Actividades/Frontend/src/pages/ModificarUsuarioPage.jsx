@@ -260,9 +260,9 @@ function ModificarUsuarioPage() {
         <header className="dashboard-header modify-user-header">
           <p className="auth-subtitle">Administración</p>
           <h1>Modificar usuario</h1>
-          <p className="modify-user-copy">
+          {/* <p className="modify-user-copy">
             Editá los datos de {roleSummary} sin cambiar la contraseña ni el DNI registrado.
-          </p>
+          </p> */}
         </header>
 
         <div className="auth-form-shell">

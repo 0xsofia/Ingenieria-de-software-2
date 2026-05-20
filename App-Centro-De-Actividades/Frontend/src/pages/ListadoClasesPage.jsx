@@ -117,9 +117,9 @@ export default function ListadoClasesPage() {
           <div>
             <p className="auth-subtitle">Gestión de clases</p>
             <h1>Ver clases</h1>
-            <p className="dashboard-copy">
+            {/* <p className="dashboard-copy">
               Revisá las clases creadas, filtrá por actividad y avanzá al flujo de modificación.
-            </p>
+            </p> */}
           </div>
 
           <div className="listado-clases__actions">
@@ -140,7 +140,7 @@ export default function ListadoClasesPage() {
           <div className="listado-clases__controls">
             <FilterForm
               title="Buscar clases"
-              description="Filtrá por actividad, horario y día."
+              description=""
               fields={filterFields}
               initialValues={filters}
               onSubmit={handleFilterSubmit}

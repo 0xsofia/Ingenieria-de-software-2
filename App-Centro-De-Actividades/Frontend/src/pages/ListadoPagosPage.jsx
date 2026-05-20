@@ -94,9 +94,9 @@ export default function ListadoPagosPage() {
           <div>
             <p className="auth-subtitle">Administración</p>
             <h1>Pagos</h1>
-            <p className="dashboard-copy">
+            {/* <p className="dashboard-copy">
               Todos los pagos se muestran en una sola tabla y se pueden filtrar por cliente y fecha.
-            </p>
+            </p> */}
           </div>
 
           <div className="listado-pagos-page__header-actions">
