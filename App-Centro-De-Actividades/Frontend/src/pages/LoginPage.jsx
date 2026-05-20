@@ -263,7 +263,7 @@ function LoginPage() {
                 </p>
               </form>
 
-              <section className="test-credentials-card" aria-labelledby="test-credentials-title">
+              {/* <section className="test-credentials-card" aria-labelledby="test-credentials-title">
                 <div className="section-heading">
                   <h2 id="test-credentials-title">Credenciales de prueba</h2>
                   <p>Podés usar cualquiera de estas cuentas seed para entrar.</p>
@@ -282,7 +282,7 @@ function LoginPage() {
                     </article>
                   ))}
                 </div>
-              </section>
+              </section> */}
             </>
           )}
         </div>
