@@ -76,6 +76,8 @@ function MisClasesPage() {
         reserva_id: reserva.reserva_id,
       })
 
+      console.log(result)
+
       let message = result.message || 'Reserva cancelada.'
       if (result.reintegro?.estado === 'reintegrado') {
         message += ' Reintegro parcial iniciado.'

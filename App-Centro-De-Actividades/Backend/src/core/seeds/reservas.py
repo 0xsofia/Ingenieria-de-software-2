@@ -233,7 +233,8 @@ def _ensure_clase_exists(data):
             nivel=nivel_enum,
             cupos=data["cupos"],
             tipo_clase=TipoClaseEnum.PARTICULAR,
-            profesor_id=prof_id
+            profesor_id=prof_id,
+            precio=123
         )
         db.session.add(clase)
         db.session.flush()

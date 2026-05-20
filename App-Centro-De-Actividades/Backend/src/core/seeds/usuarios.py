@@ -104,6 +104,18 @@ USERS_TO_SEED = [
         "intereses": "Me gusta jugar al futbol",
         "roles": ["socio"],
     },
+    {
+        "email": "credito@gmail.com",
+        "dni": "11111169",
+        "nombre": "Credito",
+        "apellido": "Credito",
+        "telefono": "323421341234",
+        "calle": "10",
+        "numero_puerta": "1518",
+        "codigo_postal": "1900",
+        "intereses": "Me gusta jugar al futbol",
+        "roles": ["socio"],
+    },
 ]
 
 

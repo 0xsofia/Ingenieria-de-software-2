@@ -123,7 +123,7 @@ def iniciar_reserva_espontanea(clase_id):
 
         return {
             "status": "reserved",
-            "message": "Usted tiene credito a favor, se omitio el cobro.",
+            "message": "Usted tiene credito a favor, se omitio el cobro, reserva confirmada",
             "reserva_id": reserva.reserva_id,
             "payment_required": False,
         }, 200
