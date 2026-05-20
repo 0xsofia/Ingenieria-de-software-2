@@ -144,12 +144,12 @@ const EscanearQR = () => {
                     <CheckCircle2 className="mx-auto text-green-600 mb-3" size={48} />
                     <h3 className="text-lg font-bold text-green-800">¡Ingreso Autorizado!</h3>
                     <p className="text-green-700 text-sm mt-2">{resultadoEscaneo}</p>
-                    <button 
+                    {/* <button 
                         onClick={iniciarCamaraDirecta}
                         className="mt-6 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-xl text-sm transition-all shadow-md shadow-green-100"
                     >
                         Escanear Siguiente
-                    </button>
+                    </button> */}
                 </div>
             )}
 
@@ -159,12 +159,12 @@ const EscanearQR = () => {
                     <AlertTriangle className="mx-auto text-red-500 mb-3" size={48} />
                     <h3 className="text-lg font-bold text-red-800">Acceso Denegado</h3>
                     <p className="text-red-700 text-sm mt-2">{errorLog}</p>
-                    <button 
+                    {/* <button 
                         onClick={iniciarCamaraDirecta}
                         className="mt-6 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-xl text-sm transition-all shadow-md shadow-red-100"
                     >
                         Reintentar Escaneo
-                    </button>
+                    </button> */}
                 </div>
             )}
         </div>

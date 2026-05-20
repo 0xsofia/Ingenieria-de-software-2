@@ -145,7 +145,6 @@ export default function ListadoClasesPage() {
               initialValues={filters}
               onSubmit={handleFilterSubmit}
               submitLabel="Filtrar"
-              resetLabel="Limpiar"
             />
 
             <div className="listado-clases__status-row">

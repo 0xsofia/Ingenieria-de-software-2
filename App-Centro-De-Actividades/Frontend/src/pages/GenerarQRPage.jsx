@@ -67,12 +67,12 @@ const GenerarQR = () => {
                     <p className="text-red-700 text-sm whitespace-pre-line leading-relaxed mb-6">
                         {errorMsg}
                     </p>
-                    <button 
+                    {/* <button 
                         onClick={() => window.location.reload()}
                         className="bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2.5 px-6 rounded-xl text-sm transition-all"
                     >
                         Volver a intentar
-                    </button>
+                    </button> */}
                 </div>
             </div>
         );
