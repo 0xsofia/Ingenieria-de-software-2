@@ -28,6 +28,7 @@ class UsuariosTestCase(unittest.TestCase):
     ):
         mock_generate_temporary_password.return_value = "Temp42#Pwd"
         empleado_role = self._crear_rol("empleado")
+        socio_role = self._crear_rol("socio")
         self._crear_usuario_con_roles(
             email="admin@centro.test",
             dni="30000001",
@@ -46,12 +47,18 @@ class UsuariosTestCase(unittest.TestCase):
         persona = Persona.query.filter_by(email="jorge.petri@example.com").first()
         self.assertIsNotNone(persona)
         self.assertIsNotNone(db.session.get(Empleado, persona.persona_id))
+        self.assertIsNotNone(db.session.get(Socio, persona.persona_id))
         self.assertTrue(
             bcrypt.check_password_hash(persona.password_hash, "Temp42#Pwd")
         )
         self.assertIsNotNone(
             PersonaRolPuente.query.filter_by(
                 persona_id=persona.persona_id, rol_id=empleado_role.rol_id
+            ).first()
+        )
+        self.assertIsNotNone(
+            PersonaRolPuente.query.filter_by(
+                persona_id=persona.persona_id, rol_id=socio_role.rol_id
             ).first()
         )
         mock_send_employee_access_email.assert_called_once_with(
@@ -70,6 +77,7 @@ class UsuariosTestCase(unittest.TestCase):
             "No se pudo enviar el email con la contraseña temporal del empleado."
         )
         self._crear_rol("empleado")
+        self._crear_rol("socio")
         self._crear_usuario_con_roles(
             email="admin@centro.test",
             dni="30000001",
@@ -116,6 +124,7 @@ class UsuariosTestCase(unittest.TestCase):
 
     def test_registro_de_empleado_reutiliza_validacion_de_dni_y_telefono(self):
         self._crear_rol("empleado")
+        self._crear_rol("socio")
         self._crear_usuario_con_roles(
             email="admin@centro.test",
             dni="30000001",

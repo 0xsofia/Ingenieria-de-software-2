@@ -121,10 +121,10 @@ def _validar_payload_persona(payload, require_password_fields):
 
 
 def registrar_socio(payload):
-    return _registrar_persona_con_rol(
+    return _registrar_persona_con_roles(
         payload=payload,
-        role_name="socio",
-        entity_factory=Socio,
+        role_names=("socio",),
+        entity_factories=(Socio,),
         password=payload["password"],
         missing_role_message=(
             "El registro no está disponible porque falta la configuración del rol socio."
@@ -137,13 +137,13 @@ def registrar_socio(payload):
 def registrar_empleado(payload):
     credenciales = provisionar_acceso_empleado(payload)
 
-    return _registrar_persona_con_rol(
+    return _registrar_persona_con_roles(
         payload=payload,
-        role_name="empleado",
-        entity_factory=Empleado,
+        role_names=("empleado", "socio"),
+        entity_factories=(Empleado, Socio),
         password=credenciales["temporary_password"],
         missing_role_message=(
-            "El registro no está disponible porque falta la configuración del rol empleado."
+            "El registro no está disponible porque falta la configuración de los roles empleado o socio."
         ),
         success_message="El empleado fue registrado correctamente y se envió por email la contraseña temporal.",
         redirect_to="/usuarios",
@@ -173,11 +173,11 @@ def _entregar_acceso_empleado(*, payload, persona, credenciales):
     )
 
 
-def _registrar_persona_con_rol(
+def _registrar_persona_con_roles(
     *,
     payload,
-    role_name,
-    entity_factory,
+    role_names,
+    entity_factories,
     password,
     missing_role_message,
     success_message,
@@ -200,8 +200,13 @@ def _registrar_persona_con_rol(
             400,
         )
 
-    role = Rol.query.filter(db.func.lower(Rol.nombre) == role_name).first()
-    if role is None:
+    normalized_role_names = tuple(normalizar_email(role_name) for role_name in role_names)
+    roles = (
+        Rol.query.filter(db.func.lower(Rol.nombre).in_(normalized_role_names)).all()
+    )
+    roles_by_name = {normalizar_email(role.nombre): role for role in roles}
+
+    if any(role_name not in roles_by_name for role_name in normalized_role_names):
         return {"status": "error", "message": missing_role_message}, 503
 
     persona = Persona(
@@ -220,10 +225,16 @@ def _registrar_persona_con_rol(
     try:
         db.session.add(persona)
         db.session.flush()
-        db.session.add(entity_factory(persona_id=persona.persona_id))
-        db.session.add(
-            PersonaRolPuente(persona_id=persona.persona_id, rol_id=role.rol_id)
-        )
+        for entity_factory in entity_factories:
+            db.session.add(entity_factory(persona_id=persona.persona_id))
+
+        for role_name in normalized_role_names:
+            db.session.add(
+                PersonaRolPuente(
+                    persona_id=persona.persona_id,
+                    rol_id=roles_by_name[role_name].rol_id,
+                )
+            )
         if post_flush_action is not None:
             post_flush_action(persona)
         db.session.commit()
