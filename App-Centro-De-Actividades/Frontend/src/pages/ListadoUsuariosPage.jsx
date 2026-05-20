@@ -42,7 +42,7 @@ export default function ListadoUsuariosPage() {
         }
       } catch (requestError) {
         if (!cancelled) {
-          setError(requestError?.data?.message || 'No se pudo cargar el listado de usuarios.')
+          setError(requestError?.data?.message || "No se encontraron usuarios registrados.")
         }
       } finally {
         if (!cancelled) {

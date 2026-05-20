@@ -10,6 +10,7 @@ export const endpoints = {
   crearClase: '/api/clase/crear',
   listarClases: '/api/clase/lista',
   obtenerProfesores: '/api/profesor/lista',
+  crearProfesor: '/api/profesor/crear',
   actividades: '/api/actividades',
   reservaEspontanea: '/api/reservas/espontanea',
   reservaEspontaneaListaEspera: '/api/reservas/espontanea/lista-espera',
@@ -17,4 +18,7 @@ export const endpoints = {
   misClases: '/api/reservas/mis-clases',
   reservaEspontaneaCancelar: '/api/reservas/espontanea/cancelar',
   misPagos: '/api/pagos/',
+  EscanearQR: '/api/asistencia/escanearQR',
+  GenerarQR: '/api/asistencia/generarQR/<int:reserva_id>',
+  listarPagos: '/api/pagos/lista'
 }

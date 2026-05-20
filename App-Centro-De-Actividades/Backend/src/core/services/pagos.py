@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta
-
+from sqlalchemy.orm import joinedload
+from src.core.database import db
+from src.core.models.persona import Persona
+from src.core.models.pago import Pago
 from flask_login import current_user
 
 from src.core.models.pago import Pago
@@ -101,4 +104,84 @@ def _serializar_pago(pago):
         "monto_pagado": str(pago.monto_pagado) if pago.monto_pagado is not None else None,
         "estado": pago.estado,
         "fecha_pago": pago.fecha_pago.isoformat() if pago.fecha_pago is not None else None,
+    }
+
+def _normalizar_filtros_pagos(filters):
+    filters = filters or {}
+    return {
+        "dni": (filters.get("dni") or "").strip(),
+        "email": (filters.get("email") or "").strip().lower(),
+        "nombre": (filters.get("nombre") or "").strip().lower(),
+        "fecha_desde": filters.get("fecha_desde"),
+        "fecha_hasta": filters.get("fecha_hasta"),
+    }
+
+def listar_pagos(filters=None):
+    normalized_filters = _normalizar_filtros_pagos(filters)
+
+    query = Pago.query.options(
+        joinedload(Pago.socio).joinedload("persona_roles"),
+    )
+
+    # Filtro por DNI
+    if normalized_filters["dni"]:
+        query = query.join(Pago.socio).filter(Persona.dni == normalized_filters["dni"])
+
+    # Filtro por email
+    if normalized_filters["email"]:
+        query = query.join(Pago.socio).filter(
+            db.func.lower(Persona.email) == normalized_filters["email"]
+        )
+
+    # Filtro por nombre completo
+    if normalized_filters["nombre"]:
+        nombre_completo = db.func.lower(Persona.nombre + " " + Persona.apellido)
+        query = query.join(Pago.socio).filter(
+            nombre_completo.contains(normalized_filters["nombre"])
+        )
+
+    # Filtro por rango de fechas
+    if normalized_filters["fecha_desde"] and normalized_filters["fecha_hasta"]:
+        fecha_desde = datetime.strptime(normalized_filters["fecha_desde"], "%d/%m/%Y")
+        fecha_hasta = datetime.strptime(normalized_filters["fecha_hasta"], "%d/%m/%Y")
+
+        if fecha_desde > fecha_hasta:
+            return {
+                "status": "error",
+                "message": "La fecha desde no puede ser mayor a la fecha hasta",
+                "filters": normalized_filters,
+            }, 400
+
+        query = query.filter(Pago.fecha_pago >= fecha_desde, Pago.fecha_pago <= fecha_hasta)
+
+    pagos = query.order_by(Pago.fecha_pago.desc()).all()
+
+    # if not pagos:
+    #     return {
+    #         "status": "ok",
+    #         "message": "No hay pagos para mostrar",
+    #         "filters": normalized_filters,
+    #         "pagos": [],
+    #     }, 200
+
+    return {
+        "status": "ok",
+        "filters": normalized_filters,
+        "pagos": [_serializar_pago(p) for p in pagos],
+    }, 200
+
+
+def _serializar_pago(pago: Pago):
+    return {
+        "pago_id": pago.pago_id,
+        "socio_id": pago.socio_id,
+        "reserva_id": pago.reserva_id,
+        "abono_mensual_id": pago.abono_mensual_id,
+        "proveedor": pago.proveedor,
+        "external_ref": pago.external_ref,
+        "monto_bruto": str(pago.monto_bruto),
+        "descuento_pct": str(pago.descuento_pct),
+        "monto_pagado": str(pago.monto_pagado) if pago.monto_pagado else None,
+        "estado": pago.estado,
+        "fecha_pago": pago.fecha_pago.isoformat() if pago.fecha_pago else None,
     }

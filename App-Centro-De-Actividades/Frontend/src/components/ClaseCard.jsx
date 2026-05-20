@@ -1,11 +1,19 @@
 import './ClaseCard.css'
 
+const currencyFormatter = new Intl.NumberFormat('es-AR', {
+  style: 'currency',
+  currency: 'ARS',
+  minimumFractionDigits: 2,
+})
+
 export default function ClaseCard({
   clase,
   onView,
+  onScanQR,
   onReserve,
   viewLabel = 'Ver',
   reserveLabel = 'Inscribirme',
+  viewScanLabel = 'Escanear QR',
 }) {
   return (
     <article className="clase-card">
@@ -27,6 +35,14 @@ export default function ClaseCard({
           <span className="clase-card__value">{clase.horario_inicio} - {clase.horario_fin}</span>
         </div>
         <div className="clase-card__meta-item">
+          <span className="clase-card__label">Precio</span>
+          <span className="clase-card__value">
+            {clase.precio !== undefined && clase.precio !== null
+              ? currencyFormatter.format(Number(clase.precio))
+              : 'Sin precio'}
+          </span>
+        </div>
+        <div className="clase-card__meta-item">
           <span className="clase-card__label">Cancha</span>
           <span className="clase-card__value">{clase.cancha}</span>
         </div>
@@ -39,6 +55,11 @@ export default function ClaseCard({
       <div className="clase-card__footer">
         <div className="clase-card__note">ID: {clase.clase_id}</div>
         <div className="clase-card__actions">
+          {onScanQR && (
+              <button type="button" className="secondary-action scan-qr-action" onClick={() => onScanQR(clase)}>
+                {viewScanLabel}
+              </button>
+            )}
           <button type="button" className="secondary-action" onClick={() => onView(clase)}>
             {viewLabel}
           </button>

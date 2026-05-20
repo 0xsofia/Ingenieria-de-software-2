@@ -43,6 +43,10 @@
   box-shadow: var(--shadow-soft);
 }
 
+.profile-actions-card {
+  align-content: start;
+}
+
 .profile-picture-card {
   display: grid;
   gap: 24px;
@@ -68,15 +72,50 @@
   letter-spacing: 0.14em;
 }
 
+.profile-details {
+  display: grid;
+  gap: 18px;
+}
+
 .profile-details h2,
 .profile-actions-card h2,
 .profile-description-card h2 {
   margin: 0;
 }
 
+.info-container > div {
+  display: grid;
+  gap: 14px;
+}
+
+.profile-actions-card__header {
+  display: grid;
+  gap: 16px;
+}
+
+.profile-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.profile-actions-card__header .secondary-action {
+  margin-top: 0;
+  width: 100%;
+}
+
 .profile-actions {
   display: grid;
   gap: 16px;
+  align-content: start;
+}
+
+.profile-actions .secondary-action {
+  margin-top: 0;
+  width: 100%;
+  justify-self: stretch;
 }
 
 .profile-description-text {
@@ -96,7 +135,8 @@
 }
 
 .profile-update-card .primary-action,
-.profile-actions .secondary-action {
+.profile-actions .secondary-action,
+.profile-actions-card__header .secondary-action {
   text-transform: none;
   letter-spacing: normal;
 }
@@ -158,5 +198,10 @@
   .profile-description-card,
   .profile-update-card {
     padding: 18px;
+  }
+
+  .profile-header-row {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

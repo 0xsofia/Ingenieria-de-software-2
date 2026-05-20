@@ -1,0 +1,15 @@
+#reader-asistencia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9fafb;
+}
+
+/* Aplicamos estilos directo al video inyectado */
+#reader-asistencia video {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 320px;
+  object-fit: cover; /* Hace que llene el cuadrado sin deformarse */
+  border-radius: 1rem;
+}

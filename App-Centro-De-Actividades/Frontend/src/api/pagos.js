@@ -8,3 +8,11 @@ export async function obtenerPagos(filters = {}) {
 
   return data
 }
+
+export async function listarPagos(filters = {}) {
+  const { data } = await http.get(endpoints.listarPagos, {
+    params: filters,
+  })
+
+  return data
+}

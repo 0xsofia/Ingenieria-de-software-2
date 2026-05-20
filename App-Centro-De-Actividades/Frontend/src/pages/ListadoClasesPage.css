@@ -26,6 +26,12 @@
   flex-wrap: wrap;
 }
 
+.listado-clases__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .listado-clases__header-row .primary-action {
   margin-top: 0;
 }
@@ -45,4 +51,16 @@
   .listado-clases__header-row > * {
     width: 100%;
   }
+}
+
+.clase-card__actions .scan-qr-action {
+  background-color: #f3f4f6; 
+  border: 1px solid #d1d5db;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.clase-card__actions .scan-qr-action:hover {
+  background-color: #e5e7eb;
+  cursor: pointer;
 }

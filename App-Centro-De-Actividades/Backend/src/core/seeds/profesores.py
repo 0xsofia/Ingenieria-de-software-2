@@ -4,24 +4,24 @@ from src.core.models.profesor import Profesor
 
 PROFESORES_TO_SEED = [
     {
-        "nombre": "Juan García",
+        "nombre": "Carlos",
         "dni": "12345678",
-        "telefono": "1234567890",
+        "telefono": "2215003101",
     },
     {
-        "nombre": "María López",
+        "nombre": "Maria Lopez",
         "dni": "87654321",
-        "telefono": "0987654321",
+        "telefono": "2215003102",
     },
     {
-        "nombre": "Carlos Martínez",
+        "nombre": "Juan Garcia",
         "dni": "11223344",
-        "telefono": "5555555555",
+        "telefono": "2215003103",
     },
     {
-        "nombre": "Ana Rodríguez",
+        "nombre": "Ana Rodriguez",
         "dni": "44332211",
-        "telefono": "6666666666",
+        "telefono": "2215003104",
     },
 ]
 
@@ -29,7 +29,7 @@ PROFESORES_TO_SEED = [
 def seed_profesores():
     for profesor_data in PROFESORES_TO_SEED:
         _get_or_create_profesor(profesor_data)
-    
+
     db.session.commit()
 
 
@@ -47,7 +47,6 @@ def _get_or_create_profesor(profesor_data):
         db.session.flush()
         return profesor
 
-    # Si existe, actualiza los datos
     profesor.nombre = profesor_data["nombre"]
     profesor.telefono = profesor_data["telefono"]
     db.session.flush()

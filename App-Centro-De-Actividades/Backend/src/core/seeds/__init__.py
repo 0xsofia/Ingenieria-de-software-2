@@ -5,9 +5,11 @@ def run_seeds(app):
         from .profesores import seed_profesores
         from .clases import seed_clases
         from .pagos import seed_pagos
+        from .reservas import seed_reservas
 
         seed_actividades()
         seed_usuarios()
         seed_profesores()
         seed_clases()
         seed_pagos()
+        seed_reservas()

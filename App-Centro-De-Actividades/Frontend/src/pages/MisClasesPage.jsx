@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import {
   cancelarReservaEspontanea,
@@ -7,6 +8,7 @@ import {
 import './MisClasesPage.css'
 
 function MisClasesPage() {
+  const navigate = useNavigate()
   const [reservas, setReservas] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -22,6 +24,21 @@ function MisClasesPage() {
       }),
     [],
   )
+
+  function handleAbandonarListaEspera(reserva) {
+    if (!reserva?.reserva_id) return
+
+    setError('')
+    setFeedback('Funcionalidad de abandonar lista de espera todavía no está implementada.')
+  }
+
+  function handleGenerarQR(reserva) {
+    if (!reserva?.reserva_id) return
+
+    setError('')
+    // Navega a la página que ya realiza la llamada al backend y renderiza el QR
+    navigate(`/reservas/${reserva.reserva_id}/qr`)
+  }
 
   useEffect(() => {
     fetchReservas()
@@ -105,7 +122,7 @@ function MisClasesPage() {
         <header className="dashboard-header mis-clases-header">
           <h1>Mis clases</h1>
           <p className="dashboard-copy">
-            Gestiona tus reservas espontaneas y consulta si aplica reintegro.
+            Gestiona tus reservas y consulta si aplica reintegro.
           </p>
         </header>
 
@@ -123,75 +140,92 @@ function MisClasesPage() {
 
         {isLoading ? (
           <p className="dashboard-copy">Cargando reservas...</p>
-        ) : reservas.length === 0 ? (
-          <p className="dashboard-copy">No tenes reservas activas por el momento.</p>
         ) : (
-          <div className="mis-clases-list">
-            {reservas.map((reserva) => (
-              <article key={reserva.reserva_id} className="mis-clases-card">
-                <header className="mis-clases-card__header">
-                  <div>
-                    <p className="auth-subtitle">Reserva</p>
-                    <h2>{reserva.actividad || 'Actividad'}</h2>
-                  </div>
-                  <span className="mis-clases-card__status">
-                    {renderEstado(reserva.estado)}
-                  </span>
-                </header>
+          <div className="mis-clases-table-wrapper">
+            <table className="mis-clases-table">
+              <thead>
+                <tr>
+                  <th scope="col">Actividad</th>
+                  <th scope="col">Fecha</th>
+                  <th scope="col">Horario</th>
+                  <th scope="col">Cancha</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col">Pago</th>
+                  <th scope="col">Monto abonado</th>
+                  <th scope="col">Reintegro estimado</th>
+                  <th scope="col">Acciones</th>
+                </tr>
+              </thead>
 
-                <dl className="mis-clases-card__details">
-                  <div>
-                    <dt>Fecha</dt>
-                    <dd>{reserva.fecha || '-'}</dd>
-                  </div>
-                  <div>
-                    <dt>Horario</dt>
-                    <dd>
-                      {reserva.horario_inicio || '--:--'} - {reserva.horario_fin || '--:--'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Cancha</dt>
-                    <dd>{reserva.cancha || '-'}</dd>
-                  </div>
-                  <div>
-                    <dt>Pago</dt>
-                    <dd>{reserva.pago_estado || 'Sin pago'}</dd>
-                  </div>
-                  <div>
-                    <dt>Monto abonado</dt>
-                    <dd>{renderMonto(reserva.monto_pagado)}</dd>
-                  </div>
-                  <div>
-                    <dt>Reintegro estimado</dt>
-                    <dd>
-                      {reserva.reintegro_aplica
-                        ? renderMonto(reserva.reintegro_estimado)
-                        : 'No aplica'}
-                    </dd>
-                  </div>
-                </dl>
+              <tbody>
+                {reservas.length === 0 ? (
+                  <tr>
+                    <td className="mis-clases-table__empty" colSpan={9}>
+                      Aún no hay clases asociadas.
+                    </td>
+                  </tr>
+                ) : (
+                  reservas.map((reserva) => (
+                    <tr key={reserva.reserva_id}>
+                      <td data-label="Actividad">{reserva.actividad || 'Actividad'}</td>
+                      <td data-label="Fecha">{reserva.fecha || '-'}</td>
+                      <td data-label="Horario">
+                        {reserva.horario_inicio || '--:--'} - {reserva.horario_fin || '--:--'}
+                      </td>
+                      <td data-label="Cancha">{reserva.cancha || '-'}</td>
+                      <td data-label="Estado">
+                        <span className="mis-clases-table__status">
+                          {renderEstado(reserva.estado)}
+                        </span>
+                      </td>
+                      <td data-label="Pago">{reserva.pago_estado || 'Sin pago'}</td>
+                      <td data-label="Monto abonado">{renderMonto(reserva.monto_pagado)}</td>
+                      <td data-label="Reintegro estimado">
+                        {reserva.reintegro_aplica
+                          ? renderMonto(reserva.reintegro_estimado)
+                          : 'No aplica'}
+                      </td>
+                      <td data-label="Acciones">
+                        <div className="mis-clases-table__actions">
+                          <button
+                            type="button"
+                            className="secondary-action"
+                            onClick={() => handleAbandonarListaEspera(reserva)}
+                          >
+                            Abandonar lista de espera
+                          </button>
 
-                <div className="mis-clases-card__actions">
-                  <button
-                    type="button"
-                    className="primary-action"
-                    onClick={() => handleCancelarReserva(reserva)}
-                    disabled={!reserva.puede_cancelar || cancelingId === reserva.reserva_id}
-                  >
-                    {cancelingId === reserva.reserva_id
-                      ? 'Cancelando...'
-                      : 'Cancelar reserva'}
-                  </button>
+                          <button
+                            type="button"
+                            className="secondary-action"
+                            onClick={() => handleGenerarQR(reserva)}
+                          >
+                            Generar QR
+                          </button>
 
-                  {!reserva.puede_cancelar ? (
-                    <p className="mis-clases-card__hint">
-                      Esta reserva ya no puede cancelarse.
-                    </p>
-                  ) : null}
-                </div>
-              </article>
-            ))}
+                          <button
+                            type="button"
+                            className="primary-action"
+                            onClick={() => handleCancelarReserva(reserva)}
+                            disabled={!reserva.puede_cancelar || cancelingId === reserva.reserva_id}
+                          >
+                            {cancelingId === reserva.reserva_id
+                              ? 'Cancelando...'
+                              : 'Cancelar reserva'}
+                          </button>
+
+                          {!reserva.puede_cancelar ? (
+                            <p className="mis-clases-table__hint">
+                              Esta reserva ya no puede cancelarse.
+                            </p>
+                          ) : null}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         )}
       </section>
