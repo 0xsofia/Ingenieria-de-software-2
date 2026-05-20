@@ -56,17 +56,6 @@ export default function ActividadesPage() {
     [clases]
   )
 
-  const fechaOptions = useMemo(
-    () =>
-      Array.from(new Set(clases.map((clase) => clase.fecha)))
-        .sort()
-        .map((fecha) => ({
-          value: fecha,
-          label: fecha,
-        })),
-    [clases]
-  )
-
   const filterFields = useMemo(
     () => [
       {
@@ -79,9 +68,7 @@ export default function ActividadesPage() {
       {
         name: 'fecha',
         label: 'Fecha',
-        type: 'select',
-        placeholder: 'Todas las fechas',
-        options: fechaOptions,
+        type: 'date',
       },
       {
         name: 'horario',
@@ -94,7 +81,7 @@ export default function ActividadesPage() {
         })),
       },
     ],
-    [fechaOptions, horarioOptions]
+    [horarioOptions]
   )
 
   const filteredClases = useMemo(() => {
@@ -136,7 +123,6 @@ export default function ActividadesPage() {
             initialValues={submittedFilters}
             onSubmit={setSubmittedFilters}
             submitLabel="Filtrar"
-            resetLabel="Limpiar"
             isSubmitting={isLoading}
           />
 
@@ -193,6 +179,7 @@ export default function ActividadesPage() {
                   {
                     key: 'cupos',
                     header: 'Cupos',
+                    render: (clase) => `${clase.cupos_ocupados || 0}/${clase.cupos}`,
                   },
                 ]}
                 getRowKey={(clase) => clase.clase_id}

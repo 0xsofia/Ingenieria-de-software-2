@@ -100,16 +100,6 @@ function MisPagosPage() {
               <button type="submit" className="primary-action">
                 Filtrar
               </button>
-              <button
-                type="button"
-                className="secondary-action"
-                onClick={() => {
-                  setFilters({ start_date: '', end_date: '' })
-                  fetchPayments()
-                }}
-              >
-                Limpiar
-              </button>
             </div>
           </form>
         </section>

@@ -1,9 +1,13 @@
 import { Link } from 'react-router-dom'
 
 import logoCad from '../assets/Logo CAD.png'
+import { useAuth } from '../hooks/useAuth'
 import './InicioPage.css'
 
 function InicioPage() {
+  const { session } = useAuth()
+  const canReserve = session?.role === 'socio'
+
   return (
     <section className="dashboard-shell home-landing-shell">
       <section className="dashboard-frame home-landing-frame">
@@ -16,11 +20,13 @@ function InicioPage() {
               actividades del centro en un solo lugar.
             </p>
 
-            <div className="home-landing-actions">
-              <Link className="primary-action" to="/actividades">
-                Reservar clase
-              </Link>
-            </div>
+            {canReserve ? (
+              <div className="home-landing-actions">
+                <Link className="primary-action" to="/actividades">
+                  Reservar clase
+                </Link>
+              </div>
+            ) : null}
 
             <p className="home-landing-footnote">
               CAD © {new Date().getFullYear()} · Reserva tu clase hoy y mantené tu rutina en movimiento.

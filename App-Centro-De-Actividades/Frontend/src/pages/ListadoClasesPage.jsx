@@ -93,12 +93,12 @@ export default function ListadoClasesPage() {
     return <Navigate to="/inicio" replace />
   }
 
-  function handleViewClass(clase) {
-    navigate(`/clases/${clase.clase_id}/modificar`, { state: { clase } })
+  function handleViewClass() {
+    return '#'
   }
 
-  function handleEditClass(clase) {
-    navigate(`/clases/${clase.clase_id}/modificar`, { state: { clase } })
+  function handleEditClass() {
+    return '#'
   }
 
   function handleScanQR(clase) {
@@ -145,7 +145,6 @@ export default function ListadoClasesPage() {
               initialValues={filters}
               onSubmit={handleFilterSubmit}
               submitLabel="Filtrar"
-              resetLabel="Limpiar"
             />
 
             <div className="listado-clases__status-row">

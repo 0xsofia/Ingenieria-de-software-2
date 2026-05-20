@@ -42,7 +42,6 @@ export default function FiltroPagos({ initialValues, onSubmit, isSubmitting }) {
       initialValues={initialValues}
       onSubmit={onSubmit}
       submitLabel="Filtrar pagos"
-      resetLabel="Limpiar filtros"
       isSubmitting={isSubmitting}
     />
   )

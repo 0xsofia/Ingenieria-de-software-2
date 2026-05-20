@@ -32,7 +32,6 @@ export default function FiltroUsuarios({ initialValues, onSubmit, isSubmitting }
       initialValues={initialValues}
       onSubmit={onSubmit}
       submitLabel="Filtrar usuarios"
-      resetLabel="Limpiar filtros"
       isSubmitting={isSubmitting}
     />
   )
