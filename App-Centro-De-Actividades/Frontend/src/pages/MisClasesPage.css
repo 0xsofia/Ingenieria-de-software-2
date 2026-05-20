@@ -1,5 +1,5 @@
 .mis-clases-shell .dashboard-frame {
-  width: min(100%, 1200px);
+  width: min(100%, 1440px);
   max-width: 100%;
 }
 
@@ -14,7 +14,6 @@
 
 .mis-clases-table {
   width: 100%;
-  min-width: 980px;
   border-collapse: collapse;
 }
 
@@ -32,6 +31,8 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text-soft);
+  text-align: center;
+  white-space: nowrap;
 }
 
 .mis-clases-table tbody tr:last-child td {
@@ -48,13 +49,14 @@
   background: rgba(255, 255, 255, 0.8);
   font-weight: 600;
   color: var(--text-strong);
+  white-space: nowrap;
 }
 
 .mis-clases-table__actions {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
 }
 
 .mis-clases-table__actions .primary-action {
@@ -64,9 +66,23 @@
   font-size: 1rem;
 }
 
+.mis-clases-table__actions .primary-action,
+.mis-clases-table__actions .secondary-action {
+  width: 100%;
+  white-space: normal;
+}
+
+.mis-clases-table__actions .secondary-action {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.94rem;
+  line-height: 1.3;
+}
+
 .mis-clases-table__hint {
   margin: 0;
   color: var(--text-soft);
+  text-align: center;
 }
 
 .mis-clases-table__empty {
@@ -75,9 +91,43 @@
   color: var(--text-soft);
 }
 
+@media (min-width: 721px) {
+  .mis-clases-table {
+    table-layout: auto;
+  }
+
+  .mis-clases-table th,
+  .mis-clases-table td {
+    padding: 14px 10px;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  .mis-clases-table__actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: 10px;
+  }
+
+  .mis-clases-table__actions .primary-action,
+  .mis-clases-table__actions .secondary-action {
+    min-height: 64px;
+    align-self: stretch;
+  }
+
+  .mis-clases-table__hint {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 720px) {
   .mis-clases-table {
     min-width: 0;
+  }
+
+  .mis-clases-table {
+    table-layout: auto;
   }
 
   .mis-clases-table thead {
@@ -117,12 +167,18 @@
   }
 
   .mis-clases-table__actions {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
   }
 
   .mis-clases-table__actions > * {
     width: 100%;
+  }
+
+  .mis-clases-table__actions .primary-action,
+  .mis-clases-table__actions .secondary-action {
+    white-space: normal;
   }
 
   .mis-clases-table__empty {
