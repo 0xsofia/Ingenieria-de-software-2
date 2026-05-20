@@ -6,6 +6,8 @@ class Pago(db.Model):
 
     pago_id = db.Column(db.Integer, primary_key=True)
 
+    socio = db.relationship("Socio", backref="pagos")
+    
     socio_id = db.Column(
         db.Integer,
         db.ForeignKey("socio.persona_id"),

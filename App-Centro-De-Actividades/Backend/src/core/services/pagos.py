@@ -2,10 +2,10 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import joinedload
 from src.core.database import db
 from src.core.models.persona import Persona
-from src.core.models.pago import Pago
 from flask_login import current_user
 
 from src.core.models.pago import Pago
+from src.core.models.persona import Socio
 
 
 def listar_pagos_socio(filters=None):
@@ -120,23 +120,23 @@ def listar_pagos(filters=None):
     normalized_filters = _normalizar_filtros_pagos(filters)
 
     query = Pago.query.options(
-        joinedload(Pago.socio).joinedload("persona_roles"),
+        joinedload(Pago.socio).joinedload(Socio.persona).joinedload(Persona.persona_roles)
     )
 
     # Filtro por DNI
     if normalized_filters["dni"]:
-        query = query.join(Pago.socio).filter(Persona.dni == normalized_filters["dni"])
+        query = query.join(Pago.socio).join(Socio.persona).filter(Persona.dni == normalized_filters["dni"])
 
     # Filtro por email
     if normalized_filters["email"]:
-        query = query.join(Pago.socio).filter(
+        query = query.join(Pago.socio).join(Socio.persona).filter(
             db.func.lower(Persona.email) == normalized_filters["email"]
         )
 
     # Filtro por nombre completo
     if normalized_filters["nombre"]:
         nombre_completo = db.func.lower(Persona.nombre + " " + Persona.apellido)
-        query = query.join(Pago.socio).filter(
+        query = query.join(Pago.socio).join(Socio.persona).filter(
             nombre_completo.contains(normalized_filters["nombre"])
         )
 
@@ -156,14 +156,6 @@ def listar_pagos(filters=None):
 
     pagos = query.order_by(Pago.fecha_pago.desc()).all()
 
-    # if not pagos:
-    #     return {
-    #         "status": "ok",
-    #         "message": "No se encontraron pagos registrados",
-    #         "filters": normalized_filters,
-    #         "pagos": [],
-    #     }, 200
-
     return {
         "status": "ok",
         "filters": normalized_filters,
@@ -175,6 +167,9 @@ def _serializar_pago(pago: Pago):
     return {
         "pago_id": pago.pago_id,
         "socio_id": pago.socio_id,
+        "dni": pago.socio.persona.dni if pago.socio and pago.socio.persona else None,
+        "email": pago.socio.persona.email if pago.socio and pago.socio.persona else None,
+        "nombre_completo": pago.socio.persona.nombre_completo if pago.socio and pago.socio.persona else None,
         "reserva_id": pago.reserva_id,
         "abono_mensual_id": pago.abono_mensual_id,
         "proveedor": pago.proveedor,
