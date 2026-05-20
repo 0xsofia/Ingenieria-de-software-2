@@ -37,6 +37,26 @@ CLASES_TO_SEED = [
         "precio": 500
     },
     {
+        "actividad": "Padel",
+        "fecha": "2026-06-05",
+        "horario_inicio": "15:00",
+        "cancha": "Cancha Padel A",
+        "nivel": "Intermedio",
+        "cupos": 4,
+        "profesor_dni": "11223344",
+        "precio": 500
+    },
+    {
+        "actividad": "Padel",
+        "fecha": "2026-06-05",
+        "horario_inicio": "15:00",
+        "cancha": "Cancha Padel B",
+        "nivel": "Intermedio",
+        "cupos": 1,
+        "profesor_dni": "44332211",
+        "precio": 500
+    },
+    {
         "actividad": "Basquet",
         "fecha": "2026-06-02",
         "horario_inicio": "16:00",
