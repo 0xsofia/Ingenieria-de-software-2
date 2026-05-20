@@ -5,7 +5,6 @@ ACTIVIDADES_SEED = [
     {"nombre": "Futbol"},
     {"nombre": "Voley"},
     {"nombre": "Basquet"},
-    {"nombre": "Padel"},
 ]
 
 

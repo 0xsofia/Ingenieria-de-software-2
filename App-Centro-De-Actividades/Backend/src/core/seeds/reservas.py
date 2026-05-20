@@ -50,8 +50,9 @@ RESERVAS_TO_SEED = [
         "socio_email": "david.matias@carpintech.com",
         "tipo_reserva": "estandar",
         "estado": "confirmada",  # Éxito Verde en QR
+        "fecha_str": "2026-06-01",
         "actividad_str": "Futbol",
-        "horario_inicio_str": "10:00",
+        "horario_inicio_str": "18:00",
         "cancha": "Cancha B",
         "nivel_str": "Intermedio",
         "cupos": 10,
@@ -65,9 +66,10 @@ RESERVAS_TO_SEED = [
         "socio_email": "juan.perez@carpintech.com",
         "tipo_reserva": "estandar",
         "estado": "asistio",  # Error 409 (Ya escaneado)
+        "fecha_str": "2026-06-01",
         "actividad_str": "Voley",
         "horario_inicio_str": "08:00",
-        "cancha": "Cancha A",
+        "cancha": "Voley",
         "nivel_str": "Principiante",
         "cupos": 8,
         "profesor_dni": "12345678"  # Juan García
@@ -80,8 +82,9 @@ RESERVAS_TO_SEED = [
         "socio_email": "lau.gomez@carpintech.com",
         "tipo_reserva": "pase_libre",
         "estado": "pendiente_pago",  # Pasa el unique constraint condicional
+        "fecha_str": "2026-06-01",
         "actividad_str": "Futbol",
-        "horario_inicio_str": "10:00",
+        "horario_inicio_str": "18:00",
         "cancha": "Cancha B",
         "nivel_str": "Intermedio",
         "cupos": 10,
@@ -95,12 +98,13 @@ RESERVAS_TO_SEED = [
         "socio_email": "david.matias@carpintech.com",
         "tipo_reserva": "estandar",
         "estado": "confirmada",
-        "actividad_str": "Padel",
-        "horario_inicio_str": "14:00",
-        "cancha": "Cancha C",
-        "nivel_str": "Avanzado",
-        "cupos": 4,
-        "profesor_dni": "11223344"  # Carlos Martínez
+        "fecha_str": "2026-06-12",
+        "actividad_str": "Basquet",
+        "horario_inicio_str": "18:00",
+        "cancha": "Cancha D",
+        "nivel_str": "Intermedio",
+        "cupos": 12,
+        "profesor_dni": "44332211"  # Ana Rodríguez
     }
 ]
 
@@ -205,8 +209,9 @@ def _ensure_socio_exists(data):
 
 
 def _ensure_clase_exists(data):
-    """Garantiza la existencia de la clase en el día de hoy con su Profesor real."""
-    fecha_hoy = date.today()
+    """Garantiza la existencia de la clase semilla con su Profesor real."""
+    fecha_str = (data.get("fecha_str") or "").strip()
+    fecha_clase = date.fromisoformat(fecha_str) if fecha_str else date.today()
     hora_partes = [int(p) for p in data["horario_inicio_str"].split(":")]
     h_inicio = time(hora_partes[0], hora_partes[1])
     h_fin = time((hora_partes[0] + 1) % 24, hora_partes[1])
@@ -216,7 +221,7 @@ def _ensure_clase_exists(data):
 
     clase = Clase.query.filter_by(
         actividad=actividad_enum, 
-        fecha=fecha_hoy, 
+        fecha=fecha_clase, 
         horario_inicio=h_inicio
     ).first()
 
@@ -226,13 +231,15 @@ def _ensure_clase_exists(data):
 
         clase = Clase(
             actividad=actividad_enum,
-            fecha=fecha_hoy, 
+            fecha=fecha_clase,
             horario_inicio=h_inicio,
             horario_fin=h_fin,
             cancha=data["cancha"],
             nivel=nivel_enum,
             cupos=data["cupos"],
-            tipo_clase=TipoClaseEnum.PARTICULAR,
+            tipo_clase=(
+                TipoClaseEnum.PARTICULAR if int(data["cupos"]) == 1 else TipoClaseEnum.GRUPAL
+            ),
             profesor_id=prof_id
         )
         db.session.add(clase)

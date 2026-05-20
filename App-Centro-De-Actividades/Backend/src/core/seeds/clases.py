@@ -19,7 +19,7 @@ CLASES_TO_SEED = [
     {
         "actividad": "Futbol",
         "fecha": "2026-06-01",
-        "horario_inicio": "10:00",
+        "horario_inicio": "18:00",
         "cancha": "Cancha B",
         "nivel": "Intermedio",
         "cupos": 10,
@@ -27,32 +27,12 @@ CLASES_TO_SEED = [
         "precio": 500
     },
     {
-        "actividad": "Padel",
-        "fecha": "2026-06-02",
-        "horario_inicio": "14:00",
-        "cancha": "Cancha C",
-        "nivel": "Avanzado",
-        "cupos": 4,
-        "profesor_dni": "11223344",
-        "precio": 500
-    },
-    {
         "actividad": "Basquet",
-        "fecha": "2026-06-02",
-        "horario_inicio": "16:00",
+        "fecha": "2026-06-12",
+        "horario_inicio": "18:00",
         "cancha": "Cancha D",
         "nivel": "Intermedio",
         "cupos": 12,
-        "profesor_dni": "44332211",
-        "precio": 500
-    },
-    {
-        "actividad": "Basquet",
-        "fecha": "2026-06-02",
-        "horario_inicio": "17:00",
-        "cancha": "Cancha D",
-        "nivel": "Intermedio",
-        "cupos": 0,
         "profesor_dni": "44332211",
         "precio": 500
     },
