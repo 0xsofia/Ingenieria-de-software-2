@@ -83,11 +83,16 @@ def generar_token_asistencia(reserva_id):
     # print(f"📌 MARGEN INFERIOR PERMITIDO: {limite_inferior.strftime('%H:%M:%S')}", flush=True)
     # print(f"📌 MARGEN SUPERIOR PERMITIDO: {limite_superior.strftime('%H:%M:%S')}\n", flush=True)
 
-    if ahora < limite_inferior:
-        raise FueraDeHorarioException("Aún es temprano. Podrás visualizar tu QR 15 minutos antes de la clase.")
+    # if ahora < limite_inferior:
+    #     raise FueraDeHorarioException("Aún es temprano. Podrás visualizar tu QR 15 minutos antes de la clase.")
 
-    if ahora > limite_superior:
-        raise FueraDeHorarioException("El margen de tiempo de 15 minutos para ingresar ha expirado.")
+    # if ahora > limite_superior:
+    #     raise FueraDeHorarioException("El margen de tiempo de 15 minutos para ingresar ha expirado.")
+
+    if not (limite_inferior <= ahora <= limite_superior):
+        raise FueraDeHorarioException(
+            "El QR solo puede visualizarse dentro de los 15 minutos antes y después del inicio de la clase."
+        )
     
     return {
         "dni": persona.dni,
@@ -152,12 +157,12 @@ def _validar_acceso_generacion_qr(reserva):
 def _validar_acceso_escaneo_qr(reserva, persona):
     if not current_user.is_authenticated:
         raise AutenticacionRequeridaException(
-            "Debes iniciar sesión para escanear códigos QR de asistencia."
+            "Debes iniciar sesión para generar códigos QR de asistencia."
         )
 
     if getattr(current_user, "role", None) == "socio":
         if reserva.socio_id != current_user.persona_id or persona.persona_id != current_user.persona_id:
             raise AccesoQRDenegadoException(
-                "Como socio solo puedes escanear tus propios códigos QR de asistencia."
+                "Como socio solo puedes generar  tus propios códigos QR de asistencia."
             )
 

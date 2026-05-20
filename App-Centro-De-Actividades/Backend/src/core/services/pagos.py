@@ -156,7 +156,7 @@ def listar_pagos(filters=None):
     # if not pagos:
     #     return {
     #         "status": "ok",
-    #         "message": "No hay pagos para mostrar",
+    #         "message": "No se encontraron pagos registrados",
     #         "filters": normalized_filters,
     #         "pagos": [],
     #     }, 200
