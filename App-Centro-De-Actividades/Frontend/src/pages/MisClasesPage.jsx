@@ -101,17 +101,6 @@ function MisClasesPage() {
     }
   }
 
-  const renderEstado = (estado) => {
-    const normalized = String(estado || '').toLowerCase()
-    const labels = {
-      confirmada: 'Confirmada',
-      pendiente_pago: 'Pendiente de pago',
-      cancelada: 'Cancelada',
-    }
-
-    return labels[normalized] || estado || 'Sin estado'
-  }
-
   const renderMonto = (value) => {
     if (!value) return '-'
 
@@ -154,7 +143,6 @@ function MisClasesPage() {
                   <th scope="col">Fecha</th>
                   <th scope="col">Horario</th>
                   <th scope="col">Cancha</th>
-                  <th scope="col">Estado</th>
                   <th scope="col">Pago</th>
                   <th scope="col">Monto abonado</th>
                   <th scope="col">Reintegro estimado</th>
@@ -165,7 +153,7 @@ function MisClasesPage() {
               <tbody>
                 {reservas.length === 0 ? (
                   <tr>
-                    <td className="mis-clases-table__empty" colSpan={9}>
+                    <td className="mis-clases-table__empty" colSpan={8}>
                       Aún no hay clases asociadas.
                     </td>
                   </tr>
@@ -178,11 +166,6 @@ function MisClasesPage() {
                         {reserva.horario_inicio || '--:--'} - {reserva.horario_fin || '--:--'}
                       </td>
                       <td data-label="Cancha">{reserva.cancha || '-'}</td>
-                      <td data-label="Estado">
-                        <span className="mis-clases-table__status">
-                          {renderEstado(reserva.estado)}
-                        </span>
-                      </td>
                       <td data-label="Pago">{reserva.pago_estado || 'Sin pago'}</td>
                       <td data-label="Monto abonado">{renderMonto(reserva.monto_pagado)}</td>
                       <td data-label="Reintegro estimado">
