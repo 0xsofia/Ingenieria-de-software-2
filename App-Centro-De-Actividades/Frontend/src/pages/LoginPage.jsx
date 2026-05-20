@@ -191,10 +191,10 @@ function LoginPage() {
             <section className="role-panel" aria-labelledby="role-selection-title">
               <div className="role-copy">
                 <h2 id="role-selection-title">Elegí cómo querés ingresar</h2>
-                <p>
+                {/* <p>
                   La cuenta <strong>{pendingIdentity?.email}</strong> tiene más de un rol
                   disponible.
-                </p>
+                </p> */}
               </div>
 
               <div className="role-grid">

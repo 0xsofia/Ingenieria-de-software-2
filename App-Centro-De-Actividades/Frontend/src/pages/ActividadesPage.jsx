@@ -131,7 +131,7 @@ export default function ActividadesPage() {
         <div className="actividades-page__content">
           <FilterForm
             title="Reserva tu próxima clase"
-            description="Usá estos filtros para encontrar la clase que querés reservar."
+            description=""
             fields={filterFields}
             initialValues={submittedFilters}
             onSubmit={setSubmittedFilters}
@@ -161,7 +161,7 @@ export default function ActividadesPage() {
                     title: 'Clases para reservar',
                     items: filteredClases,
                     emptyMessage: hasActiveFilters
-                      ? 'No hay clases para el filtro aplicado.'
+                      ? 'No hay horarios para el filtro aplicado.'
                       : 'Aún no hay clases disponibles para reservar.',
                   },
                 ]}
@@ -198,7 +198,7 @@ export default function ActividadesPage() {
                 getRowKey={(clase) => clase.clase_id}
                 emptyMessage={
                   hasActiveFilters
-                    ? 'No hay clases para el filtro aplicado.'
+                    ? 'No hay horarios para el filtro aplicado.'
                     : 'Aún no hay clases disponibles para reservar.'
                 }
                 renderActions={
