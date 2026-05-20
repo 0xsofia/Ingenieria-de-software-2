@@ -94,7 +94,7 @@ export default function ListadoUsuariosPage() {
             <p className="auth-subtitle">Administración</p>
             <h1>Usuarios</h1>
             <p className="dashboard-copy">
-              El listado se diferencia entre empleados y socios para cumplir las HU de Sprint 1.
+              Todos los usuarios se muestran en una sola tabla y el rol indica si es socio o empleado.
             </p>
           </div>
 
