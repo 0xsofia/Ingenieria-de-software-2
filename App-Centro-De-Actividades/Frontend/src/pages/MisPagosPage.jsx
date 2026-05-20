@@ -41,7 +41,10 @@ function MisPagosPage() {
     const today = new Date()
     const startDate = filters.start_date ? new Date(filters.start_date) : null
     const endDate = filters.end_date ? new Date(filters.end_date) : null
-
+    if(startDate > endDate) {
+      setError('La fecha desde no puede ser mayor a la fecha hasta.')
+      return
+    }
     if ((startDate && startDate > today) || (endDate && endDate > today)) {
       setError('Las fechas no pueden ser mayores a hoy.')
       return
