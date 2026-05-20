@@ -31,7 +31,7 @@ export default function FiltroUsuarios({ initialValues, onSubmit, isSubmitting }
       fields={USER_FILTER_FIELDS}
       initialValues={initialValues}
       onSubmit={onSubmit}
-      submitLabel="Filtrar usuarios"
+      submitLabel="Filtrar"
       resetLabel="Limpiar filtros"
       isSubmitting={isSubmitting}
     />
