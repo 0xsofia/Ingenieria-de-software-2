@@ -25,6 +25,9 @@ def listar_pagos_socio(filters=None):
 
     query = Pago.query.filter_by(socio_id=current_user.persona_id)
 
+    # filtro la query, en caso de que sea pendiente, no lo muestro
+    query = query.filter(Pago.estado == "aprobado")
+
     if start_date is not None:
         query = query.filter(Pago.fecha_pago >= start_date)
 
