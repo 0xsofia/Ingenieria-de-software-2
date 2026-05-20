@@ -84,7 +84,7 @@ export default function ListadoUsuariosPage() {
 
   const emptyMessage = hasActiveFilters
     ? 'No se encontraron usuarios para el filtro aplicado.'
-    : 'No hay usuarios para mostrar.'
+    : 'No se encontraron usuarios registrados.'
 
   return (
     <section className="dashboard-shell">

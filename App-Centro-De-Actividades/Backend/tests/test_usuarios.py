@@ -40,7 +40,7 @@ class UsuariosTestCase(unittest.TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json["status"], "registered")
-        self.assertEqual(response.json["redirect_to"], "/inicio")
+        self.assertEqual(response.json["redirect_to"], "/usuarios")
         self.assertIn("email", response.json["message"])
 
         persona = Persona.query.filter_by(email="jorge.petri@example.com").first()

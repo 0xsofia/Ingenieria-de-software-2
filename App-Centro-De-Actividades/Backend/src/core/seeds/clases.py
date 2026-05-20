@@ -14,7 +14,7 @@ CLASES_TO_SEED = [
         "nivel": "Principiante",
         "cupos": 8,
         "profesor_dni": "12345678",
-        "precio": 500
+        "precio": 500,
     },
     {
         "actividad": "Futbol",
@@ -24,7 +24,7 @@ CLASES_TO_SEED = [
         "nivel": "Intermedio",
         "cupos": 10,
         "profesor_dni": "87654321",
-        "precio": 500
+        "precio": 500,
     },
     {
         "actividad": "Basquet",
@@ -34,12 +34,21 @@ CLASES_TO_SEED = [
         "nivel": "Intermedio",
         "cupos": 12,
         "profesor_dni": "44332211",
-        "precio": 500
+        "precio": 500,
     },
     {
         "actividad": "Voley",
-        "fecha": "2026-05-12",
-        "horario_inicio": "19:00",
+        "fecha": "2026-05-20",
+        "horario_inicio": "01:00",
+        "cancha": "Voley",
+        "nivel": "Principiante",
+        "cupos": 10,
+        "profesor_dni": "12345678",
+    },
+    {
+        "actividad": "Futbol",
+        "fecha": "2026-05-20",
+        "horario_inicio": "01:00",
         "cancha": "Voley",
         "nivel": "Principiante",
         "cupos": 10,

@@ -146,7 +146,7 @@ def registrar_empleado(payload):
             "El registro no está disponible porque falta la configuración del rol empleado."
         ),
         success_message="El empleado fue registrado correctamente y se envió por email la contraseña temporal.",
-        redirect_to="/inicio",
+        redirect_to="/usuarios",
         post_flush_action=lambda persona: _entregar_acceso_empleado(
             payload=payload,
             persona=persona,

@@ -78,7 +78,7 @@ const EscanearQR = () => {
             try {
                 payload = JSON.parse(decodedText);
             } catch (err) {
-                throw new Error("Formato del QR inválido. El código escaneado no pertenece al sistema del gimnasio.");
+                throw new Error("El QR es inválido.");
             }
 
             if (!payload.dni || !payload.id_reserva) {
