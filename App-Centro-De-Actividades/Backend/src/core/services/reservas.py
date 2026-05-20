@@ -123,7 +123,7 @@ def iniciar_reserva_espontanea(clase_id):
 
         return {
             "status": "reserved",
-            "message": "Usted tiene credito a favor, se omitio el cobro.",
+            "message": "Usted tiene credito a favor, se omitio el cobro, reserva confirmada",
             "reserva_id": reserva.reserva_id,
             "payment_required": False,
         }, 200
@@ -334,6 +334,15 @@ def listar_reservas_socio():
         clase_inicio = _clase_inicio(clase)
         puede_cancelar = _puede_cancelar_reserva(reserva, clase_inicio, ahora)
         pago = pagos_por_reserva.get(reserva.reserva_id)
+
+        print("puede cancelar "+ str(puede_cancelar))
+
+        if pago and pago.estado == "pendiente":
+            puede_cancelar = False
+            print("ASDFSDFASDFASDFASDFASDFASDFASDFASDFASDFASD: ", reserva.reserva_id, pago.pago_id, pago.estado)
+
+        print("puede cancelar "+ str(puede_cancelar))
+
         reintegro_estimado = _calcular_reintegro_estimada(pago, clase_inicio, ahora)
         reintegro_aplica = reintegro_estimado is not None
 
@@ -449,9 +458,25 @@ def cancelar_reserva_espontanea(reserva_id):
 
     db.session.commit()
 
+    reintegro_aplica = reintegro_info["aplica"]
+    if reintegro_aplica and not sancion_aplicada:
+        scenario_code = "escenario_1"
+        scenario_message = "Escenario 1: cancelacion con devolucion del 50% y sin sancion."
+    elif not reintegro_aplica and not sancion_aplicada:
+        scenario_code = "escenario_2"
+        scenario_message = "Escenario 2: cancelacion sin devolucion del 50% y sin sancion."
+    elif reintegro_aplica and sancion_aplicada:
+        scenario_code = "escenario_3"
+        scenario_message = "Escenario 3: cancelacion con devolucion del 50% y con sancion."
+    else:
+        scenario_code = "escenario_4"
+        scenario_message = "Escenario 4: cancelacion sin devolucion del 50% y con sancion."
+
     return {
         "status": "cancelled",
         "message": "La reserva fue cancelada correctamente.",
+        "scenario": scenario_code,
+        "scenario_message": scenario_message,
         "reserva_id": reserva.reserva_id,
         "reintegro": reintegro_info,
         "cancelaciones_mes": cancelaciones_mes,
@@ -572,11 +597,15 @@ def _clase_inicio(clase):
 
 def _puede_cancelar_reserva(reserva, clase_inicio, ahora):
     if reserva is None or clase_inicio is None:
+        print("1")
         return False
+
 
     if reserva.estado not in RESERVA_ESTADOS_OCUPAN_CUPO:
+        print("2")
         return False
 
+    print("clase_inicio > ahora: "+ str(clase_inicio > ahora))
     return clase_inicio > ahora
 
 

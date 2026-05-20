@@ -27,6 +27,26 @@ CLASES_TO_SEED = [
         "precio": 500,
     },
     {
+        "actividad": "Padel",
+        "fecha": "2026-06-05",
+        "horario_inicio": "15:00",
+        "cancha": "Cancha Padel A",
+        "nivel": "Intermedio",
+        "cupos": 4,
+        "profesor_dni": "11223344",
+        "precio": 500
+    },
+    {
+        "actividad": "Padel",
+        "fecha": "2026-06-05",
+        "horario_inicio": "15:00",
+        "cancha": "Cancha Padel B",
+        "nivel": "Intermedio",
+        "cupos": 1,
+        "profesor_dni": "44332211",
+        "precio": 500
+    },
+    {
         "actividad": "Basquet",
         "fecha": "2026-06-12",
         "horario_inicio": "18:00",
@@ -53,6 +73,7 @@ CLASES_TO_SEED = [
         "nivel": "Principiante",
         "cupos": 10,
         "profesor_dni": "12345678",
+        "precio": 500
     },
 ]
 
@@ -96,7 +117,7 @@ def _get_or_create_clase(clase_data):
             cupos=clase_data["cupos"],
             precio=clase_data.get("precio"),
             tipo_clase=tipo_clase,
-            profesor_id=profesor.profesor_id,
+            profesor_id=profesor.profesor_id
         )
         db.session.add(clase)
         db.session.flush()

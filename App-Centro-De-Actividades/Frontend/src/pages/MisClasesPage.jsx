@@ -76,14 +76,19 @@ function MisClasesPage() {
         reserva_id: reserva.reserva_id,
       })
 
+      console.log(result)
+
       let message = result.message || 'Reserva cancelada.'
+      if (result.scenario_message) {
+        message += ` ${result.scenario_message}`
+      }
       if (result.reintegro?.estado === 'reintegrado') {
         message += ' Reintegro parcial iniciado.'
       } else if (result.reintegro?.estado === 'pendiente') {
         message += ' El reintegro quedo pendiente de configuracion.'
       }
 
-      if (result.sancion_aplicada) {
+      if (!result.scenario_message && result.sancion_aplicada) {
         message += ' Se aplico una sancion por cancelaciones repetidas.'
       }
 

@@ -3,27 +3,53 @@ from src.core.database import db
 from src.core.models.reserva import Reserva
 from src.core.models.clase import Clase
 from src.core.models.persona import Persona, Socio
-from src.core.models.profesor import Profesor 
+from src.core.models.profesor import Profesor
 from src.core.enums.clase_enum import ActividadEnum, NivelEnum, TipoClaseEnum
+
 
 # ===========================================================================
 # MAPEADORES DE STRINGS A ENUMS REALES (Evita errores en Postgres)
 # ===========================================================================
 def obtener_actividad_enum(nombre_str):
     mapping = {
-        "voley": ActividadEnum.VOLEY if hasattr(ActividadEnum, 'VOLEY') else ActividadEnum.FUTBOL,
+        "voley": (
+            ActividadEnum.VOLEY
+            if hasattr(ActividadEnum, "VOLEY")
+            else ActividadEnum.FUTBOL
+        ),
         "futbol": ActividadEnum.FUTBOL,
-        "padel": ActividadEnum.PADEL if hasattr(ActividadEnum, 'PADEL') else ActividadEnum.FUTBOL,
-        "basquet": ActividadEnum.BASQUET if hasattr(ActividadEnum, 'BASQUET') else ActividadEnum.FUTBOL,
-        "crossfit": ActividadEnum.CROSSFIT if hasattr(ActividadEnum, 'CROSSFIT') else ActividadEnum.FUTBOL,
+        "padel": (
+            ActividadEnum.PADEL
+            if hasattr(ActividadEnum, "PADEL")
+            else ActividadEnum.FUTBOL
+        ),
+        "basquet": (
+            ActividadEnum.BASQUET
+            if hasattr(ActividadEnum, "BASQUET")
+            else ActividadEnum.FUTBOL
+        ),
+        "crossfit": (
+            ActividadEnum.CROSSFIT
+            if hasattr(ActividadEnum, "CROSSFIT")
+            else ActividadEnum.FUTBOL
+        ),
     }
     return mapping.get(nombre_str.lower().strip(), ActividadEnum.FUTBOL)
+
 
 def obtener_nivel_enum(nivel_str):
     mapping = {
         "principiante": NivelEnum.PRINCIPIANTE,
-        "intermedio": NivelEnum.INTERMEDIO if hasattr(NivelEnum, 'INTERMEDIO') else NivelEnum.PRINCIPIANTE,
-        "avanzado": NivelEnum.AVANZADO if hasattr(NivelEnum, 'AVANZADO') else NivelEnum.PRINCIPIANTE,
+        "intermedio": (
+            NivelEnum.INTERMEDIO
+            if hasattr(NivelEnum, "INTERMEDIO")
+            else NivelEnum.PRINCIPIANTE
+        ),
+        "avanzado": (
+            NivelEnum.AVANZADO
+            if hasattr(NivelEnum, "AVANZADO")
+            else NivelEnum.PRINCIPIANTE
+        ),
     }
     return mapping.get(nivel_str.lower().strip(), NivelEnum.PRINCIPIANTE)
 
@@ -56,7 +82,7 @@ RESERVAS_TO_SEED = [
         "cancha": "Cancha B",
         "nivel_str": "Intermedio",
         "cupos": 10,
-        "profesor_dni": "87654321"  # María López
+        "profesor_dni": "87654321",  # María López
     },
     {
         "reserva_id": 2002,
@@ -72,7 +98,7 @@ RESERVAS_TO_SEED = [
         "cancha": "Voley",
         "nivel_str": "Principiante",
         "cupos": 8,
-        "profesor_dni": "12345678"  # Juan García
+        "profesor_dni": "12345678",  # Juan García
     },
     {
         "reserva_id": 2003,
@@ -88,7 +114,7 @@ RESERVAS_TO_SEED = [
         "cancha": "Cancha B",
         "nivel_str": "Intermedio",
         "cupos": 10,
-        "profesor_dni": "87654321"
+        "profesor_dni": "87654321",
     },
     {
         "reserva_id": 2004,
@@ -104,8 +130,8 @@ RESERVAS_TO_SEED = [
         "cancha": "Cancha D",
         "nivel_str": "Intermedio",
         "cupos": 12,
-        "profesor_dni": "44332211"  # Ana Rodríguez
-    }
+        "profesor_dni": "44332211",  # Ana Rodríguez
+    },
 ]
 
 
@@ -114,25 +140,25 @@ RESERVAS_TO_SEED = [
 # ===========================================================================
 def seed_reservas():
     print("🌱 [SEED] Iniciando base de datos unificada de Carpintech...")
-    
+
     # 1. Creamos / actualizamos los profesores
     for prof_data in PROFESORES_TO_SEED:
         _ensure_profesor_exists(prof_data)
-        
+
     # 2. Procesamos socios, clases y reservas
     for r_data in RESERVAS_TO_SEED:
         socio_id = _ensure_socio_exists(r_data)
         clase_id = _ensure_clase_exists(r_data)
-        
+
         reserva = Reserva.query.get(r_data["reserva_id"])
         if reserva is None:
             reserva = Reserva(
                 reserva_id=r_data["reserva_id"],
                 clase_id=clase_id,
-                socio_id=socio_id, # Asigna la FK limpia a la tabla Socio
+                socio_id=socio_id,  # Asigna la FK limpia a la tabla Socio
                 tipo_reserva=r_data["tipo_reserva"],
                 estado=r_data["estado"],
-                creada_en=datetime.now()
+                creada_en=datetime.now(),
             )
             if r_data["estado"] in ["confirmada", "asistio"]:
                 reserva.confirmada_en = datetime.now()
@@ -142,7 +168,7 @@ def seed_reservas():
             reserva.socio_id = socio_id
             reserva.tipo_reserva = r_data["tipo_reserva"]
             reserva.estado = r_data["estado"]
-            
+
         db.session.flush()
 
     db.session.commit()
@@ -155,18 +181,16 @@ def seed_reservas():
 def _ensure_profesor_exists(data):
     """Busca o inserta al Profesor usando directamente sus columnas propias."""
     profesor = Profesor.query.filter_by(dni=data["dni"]).first()
-    
+
     if profesor is None:
         profesor = Profesor(
-            nombre=data["nombre"],
-            dni=data["dni"],
-            telefono=data["telefono"]
+            nombre=data["nombre"], dni=data["dni"], telefono=data["telefono"]
         )
         db.session.add(profesor)
     else:
         profesor.nombre = data["nombre"]
         profesor.telefono = data["telefono"]
-        
+
     db.session.flush()
     return profesor.profesor_id
 
@@ -175,7 +199,7 @@ def _ensure_socio_exists(data):
     """Busca/Inserta Persona, garantiza existencia en tabla Socio y retorna su ID."""
     dni = data["socio_dni"].strip()
     persona = Persona.query.filter_by(dni=dni).first()
-    
+
     if persona is None:
         persona = Persona(
             dni=dni,
@@ -187,25 +211,29 @@ def _ensure_socio_exists(data):
             calle="Avenida 1",
             numero_puerta="100",
             codigo_postal="1900",
-            estado="activo"
+            estado="activo",
         )
         db.session.add(persona)
         db.session.flush()
 
     # Buscamos el Socio usando la PK compartida o la columna persona_id correspondientemente
-    socio = Socio.query.filter_by(persona_id=persona.persona_id).first() if hasattr(Socio, 'persona_id') else Socio.query.get(persona.persona_id)
-    
+    socio = (
+        Socio.query.filter_by(persona_id=persona.persona_id).first()
+        if hasattr(Socio, "persona_id")
+        else Socio.query.get(persona.persona_id)
+    )
+
     if socio is None:
         socio = Socio()
-        if hasattr(socio, 'persona'):
+        if hasattr(socio, "persona"):
             socio.persona = persona
         else:
             socio.persona_id = persona.persona_id
         db.session.add(socio)
         db.session.flush()
-        
+
     # Retorna el ID que va a ir a parar a Reserva.socio_id (vinculado a socio.persona_id)
-    return socio.persona_id if hasattr(socio, 'persona_id') else persona.persona_id
+    return socio.persona_id if hasattr(socio, "persona_id") else persona.persona_id
 
 
 def _ensure_clase_exists(data):
@@ -215,14 +243,12 @@ def _ensure_clase_exists(data):
     hora_partes = [int(p) for p in data["horario_inicio_str"].split(":")]
     h_inicio = time(hora_partes[0], hora_partes[1])
     h_fin = time((hora_partes[0] + 1) % 24, hora_partes[1])
-    
+
     actividad_enum = obtener_actividad_enum(data["actividad_str"])
     nivel_enum = obtener_nivel_enum(data["nivel_str"])
 
     clase = Clase.query.filter_by(
-        actividad=actividad_enum, 
-        fecha=fecha_clase, 
-        horario_inicio=h_inicio
+        actividad=actividad_enum, fecha=fecha_clase, horario_inicio=h_inicio
     ).first()
 
     if clase is None:
@@ -238,9 +264,12 @@ def _ensure_clase_exists(data):
             nivel=nivel_enum,
             cupos=data["cupos"],
             tipo_clase=(
-                TipoClaseEnum.PARTICULAR if int(data["cupos"]) == 1 else TipoClaseEnum.GRUPAL
+                TipoClaseEnum.PARTICULAR
+                if int(data["cupos"]) == 1
+                else TipoClaseEnum.GRUPAL
             ),
-            profesor_id=prof_id
+            profesor_id=prof_id,
+            precio=123,
         )
         db.session.add(clase)
         db.session.flush()
