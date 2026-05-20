@@ -9,6 +9,10 @@ import { ACTIVIDADES } from '../constants/actividades'
 import './ActividadPage.css'
 
 const NIVELES = ['Principiante', 'Intermedio', 'Avanzado']
+const HORARIOS = Array.from({ length: 24 }, (_, hour) => ({
+  value: String(hour),
+  label: `${String(hour).padStart(2, '0')}:00`,
+}))
 
 const hoy = new Date().toISOString().split('T')[0]
 
@@ -71,11 +75,11 @@ export default function ClasePage() {
             },
             'La fecha no puede ser en el pasado.'
           ),
-        horario_inicio: z.coerce
-          .number()
-          .int()
+        horario_inicio: z
+          .string()
+          .trim()
           .min(1, 'El horario de inicio es obligatorio.')
-          .max(24),
+          .regex(/^(?:[01]?\d|2[0-3])$/, 'El horario de inicio debe estar entre 00:00 y 23:00.'),
         cancha: z
           .string()
           .trim()
@@ -126,10 +130,9 @@ export default function ClasePage() {
       {
         name: 'horario_inicio',
         label: 'Horario de inicio',
-        type: 'number',
+        type: 'select',
         required: true,
-        min:1,
-        max:24,
+        options: HORARIOS,
       },
       {
         name: 'cancha',
@@ -182,7 +185,7 @@ export default function ClasePage() {
     () => ({
       actividad: '',
       fecha: '',
-      horario_inicio: 1,
+      horario_inicio: '',
       cancha: '',
       nivel: '',
       cupos: 1,

@@ -47,12 +47,16 @@ def validar_payload_clase(payload):
             errors["fecha"] = "La fecha debe tener formato YYYY-MM-DD."
 
     # Validar horario_inicio
-    if not normalized_payload["horario_inicio"]:
+    if normalized_payload["horario_inicio"] is None or str(normalized_payload["horario_inicio"]).strip() == "":
         errors["horario_inicio"] = "El horario de inicio es obligatorio."
     else:
         try:
-            datetime.strptime(f"{normalized_payload["horario_inicio"]:02d}:00", "%H:%M").time()
-        except ValueError:
+            horario_inicio_int = int(normalized_payload["horario_inicio"])
+            if horario_inicio_int < 0 or horario_inicio_int > 23:
+                errors["horario_inicio"] = "El horario debe estar entre 00:00 y 23:00."
+            else:
+                datetime.strptime(f"{horario_inicio_int:02d}:00", "%H:%M").time()
+        except (TypeError, ValueError):
             errors["horario_inicio"] = "El horario debe tener formato HH:MM."
 
     # Validar cancha
