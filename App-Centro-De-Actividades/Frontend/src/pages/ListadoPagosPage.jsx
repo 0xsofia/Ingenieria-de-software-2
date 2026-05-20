@@ -81,7 +81,7 @@ export default function ListadoPagosPage() {
         <div className="listado-pagos-page__header-row">
           <div>
             <p className="auth-subtitle">Administración</p>
-            <h1>Pagos</h1>
+            <h1>Pagos de Clientes</h1>
           </div>
 
           <div className="listado-pagos-page__header-actions">
