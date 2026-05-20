@@ -21,6 +21,7 @@ import MisClasesPage from '../pages/MisClasesPage.jsx'
 import EscanearQRPage from '../pages/EscanearQRPage.jsx'
 import GenerarQRPage from '../pages/GenerarQRPage.jsx'
 import CrearProfesorPage from '../pages/CrearProfesorPage.jsx'
+import ListadoPagosPage from '../pages/ListadoPagosPage.jsx'
 
 
 const router = createBrowserRouter([
@@ -94,6 +95,10 @@ const router = createBrowserRouter([
       {
         path: '/mis-pagos',
         element: <MisPagosPage />,
+      },
+      {
+        path: '/pagos',
+        element: <ListadoPagosPage />,
       },
       {
         path: '/mis-clases',

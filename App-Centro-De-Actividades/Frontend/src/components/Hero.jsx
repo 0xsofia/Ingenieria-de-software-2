@@ -14,6 +14,7 @@ function Hero({ role, onLogout, isLoggingOut = false }) {
 
   if (role === 'administrador') {
     navigationItems.splice(1, 0, { to: '/usuarios', label: 'Usuarios' })
+    navigationItems.splice(2, 0, { to: '/pagos', label: 'Pagos' })  
   }
 
   if (role === 'empleado') {

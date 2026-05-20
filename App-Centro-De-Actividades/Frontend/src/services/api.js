@@ -20,4 +20,5 @@ export const endpoints = {
   misPagos: '/api/pagos/',
   EscanearQR: '/api/asistencia/escanearQR',
   GenerarQR: '/api/asistencia/generarQR/<int:reserva_id>',
+  listarPagos: '/api/pagos/lista'
 }
