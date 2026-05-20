@@ -59,11 +59,6 @@ export default function ListadoPagosPage() {
     }
   }, [canViewPayments])
 
-  const hasActiveFilters = useMemo(
-    () => Object.values(submittedFilters).some(Boolean),
-    [submittedFilters]
-  )
-
   if (!canViewPayments) {
     return <Navigate to="/inicio" replace />
   }
@@ -82,10 +77,6 @@ export default function ListadoPagosPage() {
       setIsLoading(false)
     }
   }
-
-  const emptyMessage = hasActiveFilters
-    ? 'No se encontraron pagos para el filtro aplicado.'
-    : 'No hay pagos para mostrar.'
 
   return (
     <section className="dashboard-shell">
@@ -129,7 +120,6 @@ export default function ListadoPagosPage() {
 
               <ListadoPagos
                 pagos={payments}
-                emptyMessage={emptyMessage}
               />
             </>
           )}
