@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 
 import { listarPagos } from '../api/pagos'
@@ -25,9 +25,7 @@ export default function ListadoPagosPage() {
   const canViewPayments = session?.role === 'administrador'
 
   useEffect(() => {
-    if (!canViewPayments) {
-      return
-    }
+    if (!canViewPayments) return
 
     let cancelled = false
 
@@ -53,10 +51,7 @@ export default function ListadoPagosPage() {
     }
 
     loadInitialPayments()
-
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [canViewPayments])
 
   if (!canViewPayments) {
@@ -78,16 +73,15 @@ export default function ListadoPagosPage() {
     }
   }
 
+  const emptyMessage = 'No hay pagos para mostrar.'
+
   return (
     <section className="dashboard-shell">
       <section className="dashboard-frame listado-pagos-page">
         <div className="listado-pagos-page__header-row">
           <div>
             <p className="auth-subtitle">Administración</p>
-            <h1>Pagos</h1>
-            {/* <p className="dashboard-copy">
-              Todos los pagos se muestran en una sola tabla y se pueden filtrar por cliente y fecha.
-            </p> */}
+            <h1>Pagos de Clientes</h1>
           </div>
 
           <div className="listado-pagos-page__header-actions">
@@ -104,11 +98,11 @@ export default function ListadoPagosPage() {
             isSubmitting={isLoading}
           />
 
-          {error ? (
+          {error && (
             <p className="banner banner--error" role="alert">
               {error}
             </p>
-          ) : null}
+          )}
 
           {isLoading ? (
             <p className="dashboard-copy">Cargando pagos...</p>
@@ -120,6 +114,7 @@ export default function ListadoPagosPage() {
 
               <ListadoPagos
                 pagos={payments}
+                emptyMessage={emptyMessage}
               />
             </>
           )}

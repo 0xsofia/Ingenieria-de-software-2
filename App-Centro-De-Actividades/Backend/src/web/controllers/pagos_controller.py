@@ -11,7 +11,7 @@ def get_pagos():
     body, status_code = listar_pagos_socio(filters)
     return jsonify(body), status_code
 
-@pagos_bp.route("/listar", methods=["GET"])
+@pagos_bp.route("/lista", methods=["GET"])
 def listar_pagos_controller():
     filters = {
         "dni": request.args.get("dni"),

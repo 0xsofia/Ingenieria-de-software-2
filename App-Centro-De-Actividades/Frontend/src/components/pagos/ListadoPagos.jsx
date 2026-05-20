@@ -1,56 +1,41 @@
 import SectionedTableList from '../listing/SectionedTableList'
 
 const PAYMENT_COLUMNS = [
+  { key: 'pago_id', header: 'ID Pago' },
   {
-    key: 'pago_id',
-    header: 'ID Pago',
-  },
-  {
-    key: 'socio_id',
+    key: 'nombre_completo',
     header: 'Socio',
-  },
-  {
-    key: 'monto_pagado',
-    header: 'Monto Pagado',
-    render: (pago) => (
+    render: (p) => (
       <div className="sectioned-table-list__primary-cell">
-        <strong>{pago.monto_pagado || pago.monto_bruto}</strong>
+        <strong>{p.nombre_completo}</strong>
       </div>
     ),
   },
   {
-    key: 'estado',
-    header: 'Estado',
+    key: 'monto_pagado',
+    header: 'Monto',
+    render: (p) => <strong>{p.monto_pagado || p.monto_bruto}</strong>,
   },
+  { key: 'estado', header: 'Estado' },
   {
     key: 'fecha_pago',
     header: 'Fecha',
-    render: (pago) =>
-      pago.fecha_pago
-        ? new Date(pago.fecha_pago).toLocaleDateString()
-        : '-',
+    render: (p) =>
+      p.fecha_pago ? new Date(p.fecha_pago).toLocaleDateString() : '-',
   },
-  {
-    key: 'proveedor',
-    header: 'Proveedor',
-  },
+  { key: 'proveedor', header: 'Proveedor' },
 ]
 
 export default function ListadoPagos({ pagos, emptyMessage }) {
   const sections = [
-    {
-      key: 'pagos',
-      title: 'Pagos registrados',
-      emptyMessage,
-      items: pagos,
-    },
+    { key: 'pagos', title: 'Pagos registrados', emptyMessage, items: pagos },
   ]
 
   return (
     <SectionedTableList
       sections={sections}
       columns={PAYMENT_COLUMNS}
-      getRowKey={(pago) => pago.pago_id}
+      getRowKey={(p) => p.pago_id}
       emptyMessage={emptyMessage}
     />
   )
