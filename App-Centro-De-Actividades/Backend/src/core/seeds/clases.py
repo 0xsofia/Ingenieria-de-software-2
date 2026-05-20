@@ -34,7 +34,7 @@ CLASES_TO_SEED = [
         "nivel": "Intermedio",
         "cupos": 4,
         "profesor_dni": "11223344",
-        "precio": 500
+        "precio": 500,
     },
     {
         "actividad": "Padel",
@@ -44,15 +44,25 @@ CLASES_TO_SEED = [
         "nivel": "Intermedio",
         "cupos": 1,
         "profesor_dni": "44332211",
-        "precio": 500
+        "precio": 500,
     },
     {
         "actividad": "Basquet",
-        "fecha": "2026-06-12",
-        "horario_inicio": "18:00",
+        "fecha": "2026-05-20",
+        "horario_inicio": "08:00",
         "cancha": "Cancha D",
         "nivel": "Intermedio",
         "cupos": 12,
+        "profesor_dni": "44332211",
+        "precio": 500,
+    },
+    {
+        "actividad": "Basquet",
+        "fecha": "2026-05-20",
+        "horario_inicio": "08:30",
+        "cancha": "Cancha QR",
+        "nivel": "Intermedio",
+        "cupos": 5,
         "profesor_dni": "44332211",
         "precio": 500,
     },
@@ -73,7 +83,17 @@ CLASES_TO_SEED = [
         "nivel": "Principiante",
         "cupos": 10,
         "profesor_dni": "12345678",
-        "precio": 500
+        "precio": 500,
+    },
+    {
+        "actividad": "Futbol",
+        "fecha": "2026-05-20",
+        "horario_inicio": "17:00",
+        "cancha": "futbol",
+        "nivel": "Principiante",
+        "cupos": 0,
+        "profesor_dni": "12345678",
+        "precio": 500,
     },
 ]
 
@@ -117,7 +137,7 @@ def _get_or_create_clase(clase_data):
             cupos=clase_data["cupos"],
             precio=clase_data.get("precio"),
             tipo_clase=tipo_clase,
-            profesor_id=profesor.profesor_id
+            profesor_id=profesor.profesor_id,
         )
         db.session.add(clase)
         db.session.flush()
