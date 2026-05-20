@@ -142,8 +142,8 @@ def listar_pagos(filters=None):
 
     # Filtro por rango de fechas
     if normalized_filters["fecha_desde"] and normalized_filters["fecha_hasta"]:
-        fecha_desde = datetime.strptime(normalized_filters["fecha_desde"], "%d/%m/%Y")
-        fecha_hasta = datetime.strptime(normalized_filters["fecha_hasta"], "%d/%m/%Y")
+        fecha_desde = datetime.strptime(normalized_filters["fecha_desde"], "%Y-%m-%d")
+        fecha_hasta = datetime.strptime(normalized_filters["fecha_hasta"], "%Y-%m-%d")
 
         if fecha_desde > fecha_hasta:
             return {

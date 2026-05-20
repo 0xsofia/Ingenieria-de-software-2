@@ -1,7 +1,7 @@
 import SectionedTableList from '../listing/SectionedTableList'
 
 const PAYMENT_COLUMNS = [
-  { key: 'pago_id', header: 'ID Pago' },
+  { key: 'pago_id', header: 'Número de Pago' },
   {
     key: 'nombre_completo',
     header: 'Socio',
