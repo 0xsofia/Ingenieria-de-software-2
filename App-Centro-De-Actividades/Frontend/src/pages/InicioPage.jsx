@@ -14,7 +14,7 @@ function InicioPage() {
         <div className="home-landing-grid">
           <div className="home-landing-copy">
             <p className="auth-subtitle">Centro de actividades deportivas</p>
-            <h1>Probando el cicd</h1>
+            <h1>Aguante la renga</h1>
             <p className="home-landing-lead">
               Reserva tu clase hoy, encontrá horarios disponibles y seguí de cerca las
               actividades del centro en un solo lugar.
