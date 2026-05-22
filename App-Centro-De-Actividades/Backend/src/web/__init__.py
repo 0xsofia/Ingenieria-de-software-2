@@ -52,7 +52,7 @@ def create_app(env=None, static_folder="../../static"):
 
     CORS(
         app,
-        supports_credentials=True, 
+        supports_credentials=True,  
         resources={
             r"/api/*": {
                 "origins": [
@@ -62,7 +62,8 @@ def create_app(env=None, static_folder="../../static"):
                 ],
                 "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
                 "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
-                "expose_headers": ["Set-Cookie"]
+                "expose_headers": ["Set-Cookie"],
+                "send_wildcard": False  
             }
         },
     )
