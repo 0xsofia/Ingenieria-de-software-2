@@ -36,7 +36,12 @@ class Config(object):
     FRONTEND_LOGIN_URL = environ.get('FRONTEND_LOGIN_URL', 'http://localhost:5173/login')
     
 class ProductionConfig(Config):
-    ...
+    db_url = environ.get("DATABASE_URL")
+    
+    if db_url and db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+        
+    SQLALCHEMY_DATABASE_URI = db_url
 
 class DevelopmentConfig(Config):
     ...
