@@ -53,7 +53,18 @@ def create_app(env=None, static_folder="../../static"):
     CORS(
         app,
         supports_credentials=True,
-        resources={r"/api/*": {"origins": allowed_origins}},
+        resources={
+            r"/api/*": {
+                "origins": [
+                    "http://localhost:5173",
+                    "http://127.0.0.1:5173",
+                    "https://ingenieria-de-software-2-1.onrender.com" 
+                ],
+                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
+                "expose_headers": ["Set-Cookie"]
+            }
+        },
     )
     cipher.init_app(app)
 
