@@ -1,6 +1,9 @@
-import axios from 'axios'
+import axios from 'export'
 
-const baseURL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+const envURL = import.meta.env.VITE_API_URL;
+const baseURL = (envURL && envURL.trim() !== '' ? envURL : 'https://ingenieria-de-software-2.onrender.com').replace(/\/$/, '')
+
+console.log('📡 [AXIOS] Conectando a la API en URL:', baseURL);
 
 export const http = axios.create({
   baseURL,
