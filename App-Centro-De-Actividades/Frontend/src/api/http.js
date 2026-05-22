@@ -1,4 +1,4 @@
-import axios from 'export'
+import axios from 'axios'
 
 const envURL = import.meta.env.VITE_API_URL;
 const baseURL = (envURL && envURL.trim() !== '' ? envURL : 'https://ingenieria-de-software-2.onrender.com').replace(/\/$/, '')
