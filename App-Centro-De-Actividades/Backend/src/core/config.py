@@ -35,7 +35,7 @@ class Config(object):
     MAILJET_SENDER_NAME = environ.get('MAILJET_SENDER_NAME', 'Centro de Actividades')
     FRONTEND_LOGIN_URL = environ.get('FRONTEND_LOGIN_URL', 'http://localhost:5173/login')
     FERNET_KEY = environ.get('FERNET_KEY')
-    
+
 class ProductionConfig(Config):
     db_url = environ.get("DATABASE_URL")
     
@@ -43,6 +43,8 @@ class ProductionConfig(Config):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
         
     SQLALCHEMY_DATABASE_URI = db_url
+    SESSION_COOKIE_SAMESITE = "None" 
+    SESSION_COOKIE_SECURE = True
 
 class DevelopmentConfig(Config):
     ...

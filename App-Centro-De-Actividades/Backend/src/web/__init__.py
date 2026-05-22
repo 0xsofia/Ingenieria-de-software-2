@@ -52,16 +52,16 @@ def create_app(env=None, static_folder="../../static"):
 
     CORS(
         app,
-        supports_credentials=True,
+        supports_credentials=True, 
         resources={
             r"/api/*": {
                 "origins": [
+                    "https://ingenieria-de-software-2-1.onrender.com",
                     "http://localhost:5173",
-                    "http://127.0.0.1:5173",
-                    "https://ingenieria-de-software-2-1.onrender.com" 
+                    "http://127.0.0.1:5173"
                 ],
                 "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-                "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
+                "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
                 "expose_headers": ["Set-Cookie"]
             }
         },
