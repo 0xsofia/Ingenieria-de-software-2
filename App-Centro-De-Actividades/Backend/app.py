@@ -22,8 +22,10 @@ class CORSMiddleware(object):
             headers = [
                 ('Access-Control-Allow-Origin', origin),
                 ('Access-Control-Allow-Credentials', 'true'),
-                ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'),
-                ('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept'),
+                # ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'),
+                # ('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept'),
+                # Modificá los dos lugares donde aparece 'Access-Control-Allow-Headers' para que queden así:
+                ('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, ngrok-skip-browser-warning')
                 ('Content-Length', '0')
             ]
             start_response(status, headers)
