@@ -44,8 +44,6 @@ export default function ActividadPage() {
       console.log("status que viene del backend:", result?.status)
       console.log("payment_url que viene del backend:", result?.payment_url)
 
-      throw new Error("Freno de mano para congelar la consola");
-
       if (result.status === 'no_cupo') {
         setSuccessMessage(result.message)
         setPendingWaitlistClaseId(claseId)
