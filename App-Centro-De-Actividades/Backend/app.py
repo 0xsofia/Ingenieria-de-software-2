@@ -2,13 +2,11 @@ from src.web import create_app
 
 app = create_app()
 
-# 🚀 MIDDLEWARE DE SEGURIDAD DEFINITIVO PARA CORS EN RENDER
 class CORSMiddleware(object):
     def __init__(self, app):
         self.app = app
 
     def __call__(self, environ, start_response):
-        # Detectamos el origen de la petición (tu frontend de React)
         origin = environ.get('HTTP_ORIGIN', '')
         allowed_origins = [
             "https://ingenieria-de-software-2-1.onrender.com",
@@ -16,15 +14,11 @@ class CORSMiddleware(object):
             "http://127.0.0.1:5173"
         ]
 
-        # Si el método es OPTIONS (Preflight), respondemos directo a nivel de servidor
         if environ.get('REQUEST_METHOD') == 'OPTIONS' and origin in allowed_origins:
             status = '200 OK'
             headers = [
                 ('Access-Control-Allow-Origin', origin),
                 ('Access-Control-Allow-Credentials', 'true'),
-                # ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'),
-                # ('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept'),
-                # Modificá los dos lugares donde aparece 'Access-Control-Allow-Headers' para que queden así:
                 ('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, ngrok-skip-browser-warning'),
                 ('Content-Length', '0')
             ]

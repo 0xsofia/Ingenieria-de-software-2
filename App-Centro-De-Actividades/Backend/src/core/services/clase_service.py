@@ -193,9 +193,6 @@ def obtener_clases(actividad=None, fecha=None, horario=None):
             query = query.filter(Clase.fecha == fecha_obj)
         except ValueError:
             return []
-    else : 
-        fecha_actual = datetime.now().date()
-        query = query.filter(Clase.fecha >= fecha_actual)
 
     if horario:
         try:
@@ -204,9 +201,7 @@ def obtener_clases(actividad=None, fecha=None, horario=None):
         except ValueError:
             return []
 
-    # return query.order_by(Clase.fecha, Clase.horario_inicio).all()
-    # Para que ordene de fechas más cercanas
-    return query.order_by(Clase.fecha.asc(), Clase.horario_inicio.asc()).all()
+    return query.order_by(Clase.fecha, Clase.horario_inicio).all()
 
 
 def _validation_error(field, message):
