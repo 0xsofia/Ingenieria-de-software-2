@@ -165,6 +165,7 @@ export default function ActividadesPage() {
                   {
                     key: 'fecha',
                     header: 'Fecha',
+                    render: (clase) => clase.fecha ? clase.fecha.split('-').reverse().join('/') : '',
                   },
                   {
                     key: 'horario',

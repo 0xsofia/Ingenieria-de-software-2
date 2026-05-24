@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 from src.core.database import db
 from src.core.models.persona import Persona
@@ -139,12 +140,25 @@ def listar_pagos(filters=None):
         query = query.join(Pago.socio).join(Socio.persona).filter(
             nombre_completo.contains(normalized_filters["nombre"])
         )
+    
+    fecha_desde = None
+    fecha_hasta = None
 
-    # Filtro por rango de fechas
-    if normalized_filters["fecha_desde"] and normalized_filters["fecha_hasta"]:
-        fecha_desde = datetime.strptime(normalized_filters["fecha_desde"], "%Y-%m-%d")
-        fecha_hasta = datetime.strptime(normalized_filters["fecha_hasta"], "%Y-%m-%d")
+    if normalized_filters.get("fecha_desde"):
+        try:
+            fecha_desde = datetime.strptime(normalized_filters["fecha_desde"], "%Y-%m-%d").date()
+            query = query.filter(func.date(Pago.fecha_pago) >= fecha_desde)
+        except ValueError:
+            return {"status": "error", "message": "Formato de fecha_desde inválido"}, 400
 
+    if normalized_filters.get("fecha_hasta"):
+        try:
+            fecha_hasta = datetime.strptime(normalized_filters["fecha_hasta"], "%Y-%m-%d").date()
+            query = query.filter(func.date(Pago.fecha_pago) <= fecha_hasta)
+        except ValueError:
+            return {"status": "error", "message": "Formato de fecha_hasta inválido"}, 400
+
+    if fecha_desde and fecha_hasta:
         if fecha_desde > fecha_hasta:
             return {
                 "status": "error",
@@ -152,9 +166,9 @@ def listar_pagos(filters=None):
                 "filters": normalized_filters,
             }, 400
 
-        query = query.filter(Pago.fecha_pago >= fecha_desde, Pago.fecha_pago <= fecha_hasta)
+        query = query.filter(func.date(Pago.fecha_pago) >= fecha_desde, func.date(Pago.fecha_pago) <= fecha_hasta)
 
-    pagos = query.order_by(Pago.fecha_pago.desc()).all()
+    pagos = query.filter(Pago.estado == "aprobado").order_by(func.date(Pago.fecha_pago).desc()).all()
 
     return {
         "status": "ok",
