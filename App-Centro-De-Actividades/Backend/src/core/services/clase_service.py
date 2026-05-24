@@ -176,39 +176,9 @@ def crear_clase_completa(payload):
     }, 201
 
 
-# def obtener_clases(actividad=None, fecha=None, horario=None):
-#     """Obtiene las clases con filtros opcionales por actividad, fecha y horario."""
-#     query = Clase.query
-
-#     if actividad:
-#         try:
-#             actividad_enum = ActividadEnum(actividad)
-#             query = query.filter(Clase.actividad == actividad_enum)
-#         except ValueError:
-#             return []
-
-#     if fecha:
-#         try:
-#             fecha_obj = datetime.strptime(fecha, "%Y-%m-%d").date()
-#             query = query.filter(Clase.fecha == fecha_obj)
-#         except ValueError:
-#             return []
-
-#     if horario:
-#         try:
-#             horario_obj = datetime.strptime(horario, "%H:%M").time()
-#             query = query.filter(Clase.horario_inicio == horario_obj)
-#         except ValueError:
-#             return []
-
-#     return query.order_by(Clase.fecha, Clase.horario_inicio).all()
-
 def obtener_clases(actividad=None, fecha=None, horario=None):
     """Obtiene las clases con filtros opcionales por actividad, fecha y horario."""
     query = Clase.query
-    ahora = datetime.now()
-    fecha_actual = ahora.date()
-    hora_actual = ahora.time()
 
     if actividad:
         try:
@@ -221,19 +191,8 @@ def obtener_clases(actividad=None, fecha=None, horario=None):
         try:
             fecha_obj = datetime.strptime(fecha, "%Y-%m-%d").date()
             query = query.filter(Clase.fecha == fecha_obj)
-            if fecha_obj == fecha_actual and not horario:
-                query = query.filter(Clase.horario_inicio >= hora_actual)
-
         except ValueError:
             return []
-    # else : 
-    #     fecha_actual = datetime.now().date()
-    #     query = query.filter(Clase.fecha >= fecha_actual)
-    else:
-        query = query.filter(
-            (Clase.fecha > fecha_actual) | 
-            ((Clase.fecha == fecha_actual) & (Clase.horario_inicio >= hora_actual))
-        )
 
     if horario:
         try:
@@ -242,9 +201,50 @@ def obtener_clases(actividad=None, fecha=None, horario=None):
         except ValueError:
             return []
 
-    # return query.order_by(Clase.fecha, Clase.horario_inicio).all()
-    # Para que ordene de fechas más cercanas
-    return query.order_by(Clase.fecha.asc(), Clase.horario_inicio.asc()).all()
+    return query.order_by(Clase.fecha, Clase.horario_inicio).all()
+
+# def obtener_clases(actividad=None, fecha=None, horario=None):
+#     """Obtiene las clases con filtros opcionales por actividad, fecha y horario."""
+#     query = Clase.query
+#     ahora = datetime.now()
+#     fecha_actual = ahora.date()
+#     hora_actual = ahora.time()
+
+#     if actividad:
+#         try:
+#             actividad_enum = ActividadEnum(actividad)
+#             query = query.filter(Clase.actividad == actividad_enum)
+#         except ValueError:
+#             return []
+
+#     if fecha:
+#         try:
+#             fecha_obj = datetime.strptime(fecha, "%Y-%m-%d").date()
+#             query = query.filter(Clase.fecha == fecha_obj)
+#             if fecha_obj == fecha_actual and not horario:
+#                 query = query.filter(Clase.horario_inicio >= hora_actual)
+
+#         except ValueError:
+#             return []
+#     # else : 
+#     #     fecha_actual = datetime.now().date()
+#     #     query = query.filter(Clase.fecha >= fecha_actual)
+#     else:
+#         query = query.filter(
+#             (Clase.fecha > fecha_actual) | 
+#             ((Clase.fecha == fecha_actual) & (Clase.horario_inicio >= hora_actual))
+#         )
+
+#     if horario:
+#         try:
+#             horario_obj = datetime.strptime(horario, "%H:%M").time()
+#             query = query.filter(Clase.horario_inicio == horario_obj)
+#         except ValueError:
+#             return []
+
+#     # return query.order_by(Clase.fecha, Clase.horario_inicio).all()
+#     # Para que ordene de fechas más cercanas
+#     return query.order_by(Clase.fecha.asc(), Clase.horario_inicio.asc()).all()
 
 
 def _validation_error(field, message):
