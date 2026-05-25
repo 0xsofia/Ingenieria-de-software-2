@@ -161,8 +161,8 @@ function MisClasesPage() {
                   reservas.map((reserva) => (
                     <tr key={reserva.reserva_id}>
                       <td data-label="Actividad">{reserva.actividad || 'Actividad'}</td>
-                      <td data-label="Fecha">{reserva.fecha || '-'}</td>
-                      <td data-label="Horario">
+                      <td data-label="Fecha">{reserva.fecha ? reserva.fecha.split('-').reverse().join('/') : ''}</td>
+                      <td data-label="Horario" style={{ whiteSpace: 'nowrap' }}>
                         {reserva.horario_inicio || '--:--'} - {reserva.horario_fin || '--:--'}
                       </td>
                       <td data-label="Cancha">{reserva.cancha || '-'}</td>

@@ -28,7 +28,7 @@ export default function ClaseCard({
       <div className="clase-card__meta-grid">
         <div className="clase-card__meta-item">
           <span className="clase-card__label">Fecha</span>
-          <span className="clase-card__value">{clase.fecha}</span>
+          <span className="clase-card__value">{clase.fecha ? clase.fecha.split('-').reverse().join('/') : ''}</span>
         </div>
         <div className="clase-card__meta-item">
           <span className="clase-card__label">Horario</span>
