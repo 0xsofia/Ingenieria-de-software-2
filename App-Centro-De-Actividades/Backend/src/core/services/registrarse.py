@@ -1,6 +1,4 @@
-import json
 import re
-from pathlib import Path
 
 from sqlalchemy.exc import IntegrityError
 
@@ -20,29 +18,12 @@ PHONE_INVALID_CHARS_MESSAGE = (
     "Ingrese un telefono valido sin caracteres especiales, letras o espacios. "
     "Ejemplo 2214446633"
 )
-PHONE_AREA_CODE_MESSAGE = (
-    "Debe ingresar un código de área válido en territorio argentino. Ejemplo: 221"
+PHONE_START_DIGIT_MESSAGE = (
+    "Debe ingresar un telefono que comience con 1, 2 ó 3. Ejemplo: 2214446633"
 )
 PHONE_TOTAL_DIGITS_MESSAGE = (
-    'El teléfono debe alcanzar los 10 dígitos totales incluyendo el código de área. '
-    "Ejemplo: 2214446633"
+    "El teléfono debe alcanzar los 10 dígitos totales. Ejemplo: 2214446633"
 )
-AREA_CODES_JSON_PATH = (
-    Path(__file__).resolve().parents[3] / "assets" / "cod_area_arg.json"
-)
-VALID_AREA_CODES = frozenset()
-
-
-def _load_valid_area_codes():
-    payload = json.loads(AREA_CODES_JSON_PATH.read_text(encoding="utf-8"))
-    return frozenset(
-        str(item["codigo_area"]).strip()
-        for item in payload.get("codigos_area", [])
-        if str(item.get("codigo_area", "")).strip()
-    )
-
-
-VALID_AREA_CODES = _load_valid_area_codes()
 
 
 def validar_payload_registro(payload):
@@ -89,7 +70,7 @@ def _validar_payload_persona(payload, require_password_fields):
     if not normalized_payload["telefono"]:
         errors["telefono"] = "El teléfono es obligatorio."
     else:
-        telefono_normalizado, telefono_error = validar_telefono_registro(
+        telefono_normalizado, telefono_error = validar_telefono(
             normalized_payload["telefono"]
         )
         if telefono_error is not None:
@@ -256,7 +237,7 @@ def normalizar_email(email):
     return email.strip().lower()
 
 
-def validar_telefono_registro(telefono):
+def validar_telefono(telefono):
     if not telefono.isdigit():
         return None, PHONE_INVALID_CHARS_MESSAGE
 
@@ -265,20 +246,10 @@ def validar_telefono_registro(telefono):
 
     telefono_normalizado = telefono.strip()
 
-    if not _codigo_area_valido(telefono_normalizado):
-        return None, PHONE_AREA_CODE_MESSAGE
+    if not telefono_normalizado.startswith(("1", "2", "3")):
+        return None, PHONE_START_DIGIT_MESSAGE
 
     return telefono_normalizado, None
-
-
-def _codigo_area_valido(telefono):
-    for area_length in range(4, 1, -1):
-        candidate_code = telefono[:area_length]
-        if candidate_code in VALID_AREA_CODES:
-            subscriber_length = len(telefono[area_length:])
-            return 6 <= subscriber_length <= 8
-
-    return False
 
 
 def _validation_error(field, message):
