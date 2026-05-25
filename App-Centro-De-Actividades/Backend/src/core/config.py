@@ -36,6 +36,11 @@ class Config(object):
     FRONTEND_LOGIN_URL = environ.get('FRONTEND_LOGIN_URL', 'http://localhost:5173/login')
     FERNET_KEY = environ.get('FERNET_KEY')
 
+    TELEGRAM_BOT_TOKEN = environ.get('TELEGRAM_BOT_TOKEN', '')
+    TELEGRAM_CHAT_ID = environ.get('TELEGRAM_CHAT_ID', '')
+    FRONTEND_BASE_URL = environ.get('FRONTEND_BASE_URL', 'http://localhost:5173')
+    TOKEN_EXPIRY_MINUTES = _get_int_env('TOKEN_EXPIRY_MINUTES', 15)
+    
 class ProductionConfig(Config):
     db_url = environ.get("DATABASE_URL")
     

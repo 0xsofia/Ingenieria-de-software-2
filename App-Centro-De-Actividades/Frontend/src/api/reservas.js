@@ -25,3 +25,15 @@ export async function cancelarReservaEspontanea(payload) {
   const { data } = await http.post(endpoints.reservaEspontaneaCancelar, payload)
   return data
 }
+
+export async function obtenerOfertasActivas() {
+  const { data } = await http.get(endpoints.ofertasActivas)
+  console.log("obtenerofertas activas:", data);
+  
+  return data
+}
+
+export async function confirmarTurno(payload) {
+  const { data } = await http.post(endpoints.confirmarTurno, payload)
+  return data
+}

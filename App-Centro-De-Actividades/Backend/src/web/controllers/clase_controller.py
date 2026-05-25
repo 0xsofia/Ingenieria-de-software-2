@@ -7,6 +7,7 @@ from src.core.services.clase_service import (
     validar_payload_clase,
     crear_clase_completa,
     obtener_clases,
+    obtener_detalle_clase_con_socios,
 )
 
 clase_bp = Blueprint("clase", __name__, url_prefix="/api/clase")
@@ -68,3 +69,16 @@ def _obtener_cupos_ocupados(clases):
     )
 
     return {clase_id: int(total) for clase_id, total in rows}
+
+
+@clase_bp.get("/<int:clase_id>/detalle")
+def obtener_detalle_clase(clase_id):
+    """Obtiene el detalle de una clase con los socios registrados y su estado de asistencia."""
+    dni = (request.args.get("dni") or "").strip()
+    dni_filter = dni if dni else None
+    clase_data, status_code = obtener_detalle_clase_con_socios(clase_id, dni_filter)
+
+    if status_code == 404:
+        return jsonify({"status": "error", "message": "La clase no fue encontrada."}), 404
+
+    return jsonify(clase_data), status_code

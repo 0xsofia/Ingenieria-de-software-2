@@ -3,6 +3,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import AuthenticatedLayout from '../components/AuthenticatedLayout.jsx'
 import InicioPage from '../pages/InicioPage.jsx'
 import ListadoClasesPage from '../pages/ListadoClasesPage.jsx'
+import DetalleClasePage from '../pages/DetalleClasePage.jsx'
 import LoginPage from '../pages/LoginPage.jsx'
 import PagoRetornoPage from '../pages/PagoRetornoPage.jsx'
 import PerfilPage from '../pages/PerfilPage.jsx'
@@ -22,6 +23,7 @@ import EscanearQRPage from '../pages/EscanearQRPage.jsx'
 import GenerarQRPage from '../pages/GenerarQRPage.jsx'
 import CrearProfesorPage from '../pages/CrearProfesorPage.jsx'
 import ListadoPagosPage from '../pages/ListadoPagosPage.jsx'
+import ConfirmarTurnoPage from '../pages/ConfirmarTurnoPage.jsx'
 
 
 const router = createBrowserRouter([
@@ -38,6 +40,10 @@ const router = createBrowserRouter([
     element: <RegistrarsePage />,
   },
   {
+    path: '/confirmar-turno/:token',
+    element: <ConfirmarTurnoPage />,
+  },
+  {
     element: <AuthenticatedLayout />,
     children: [
       {
@@ -47,6 +53,10 @@ const router = createBrowserRouter([
       {
         path: '/clases',
         element: <ListadoClasesPage />,
+      },
+      {
+        path: '/clases/:claseId/detalle',
+        element: <DetalleClasePage />,
       },
       {
         path: '/clases/crear',

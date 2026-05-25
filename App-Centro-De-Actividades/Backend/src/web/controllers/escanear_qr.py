@@ -6,6 +6,7 @@ from src.core.services.gestion_asistencias import (
     QRInvalidoException,
     ReservaNoEncontradaException,
     registrar_asistencia,
+    registrar_asistencia_manual,
 )
 
 escanearQR_bp = Blueprint('scanQR', __name__, url_prefix='/api/asistencia')
@@ -110,6 +111,44 @@ def endpoint_escanear_qr():
     except AsistenciaYaRegistradaException as e:
         return jsonify({
             "error": "Ya escaneado",
+            "message": str(e)
+        }), 409
+        
+    except Exception as e:
+        return jsonify({"error": "Error interno del servidor", "message": str(e)}), 500
+
+
+@escanearQR_bp.post('/registrar-manual/<int:reserva_id>')
+def endpoint_registrar_asistencia_manual(reserva_id):
+    """Endpoint para que los empleados registren asistencia manualmente."""
+    try:
+        mensaje_exito = registrar_asistencia_manual(reserva_id)
+        return jsonify({
+            "status": "success",
+            "message": mensaje_exito
+        }), 200
+
+    except AutenticacionRequeridaException as e:
+        return jsonify({
+            "error": "No autenticado",
+            "message": str(e)
+        }), 401
+
+    except AccesoQRDenegadoException as e:
+        return jsonify({
+            "error": "Acceso denegado",
+            "message": str(e)
+        }), 403
+
+    except ReservaNoEncontradaException as e:
+        return jsonify({
+            "error": "No encontrado",
+            "message": str(e)
+        }), 404
+
+    except AsistenciaYaRegistradaException as e:
+        return jsonify({
+            "error": "Ya registrado",
             "message": str(e)
         }), 409
         

@@ -4,7 +4,7 @@ import { z } from 'zod'
 import DynamicForm2 from '../components/forms/DynamicForm2'
 import { crearProfesor } from '../api/profesor'
 import { useAuth } from '../hooks/useAuth'
-import { getPhoneValidationMessage } from '../utils/phoneValidation'
+import { getPhoneValidationMessage, PHONE_HINT } from '../utils/phoneValidation'
 import { redirectTo } from '../services/redirectTo'
 import './ActividadPage.css'
 
@@ -66,7 +66,11 @@ export default function CrearProfesorPage() {
         label: 'Teléfono',
         type: 'tel',
         required: true,
-        placeholder: 'Ingrese el teléfono',
+        inputMode: 'numeric',
+        pattern: '[0-9]*',
+        digitsOnly: true,
+        placeholder: '2214446633',
+        hint: PHONE_HINT,
       },
     ],
     []
