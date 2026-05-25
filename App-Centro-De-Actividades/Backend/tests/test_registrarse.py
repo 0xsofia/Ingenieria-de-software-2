@@ -38,7 +38,7 @@ class RegistrarseTestCase(unittest.TestCase):
             ).first()
         )
 
-    def test_registro_exitoso_con_codigo_de_area_enacom_de_cuatro_digitos(self):
+    def test_registro_exitoso_con_telefono_que_comienza_con_dos(self):
         self._crear_rol("socio")
 
         response = self.client.post(
@@ -132,19 +132,19 @@ class RegistrarseTestCase(unittest.TestCase):
             "Ingrese un telefono valido sin caracteres especiales, letras o espacios. Ejemplo 2214446633",
         )
 
-    def test_registro_falla_si_codigo_de_area_no_es_valido(self):
+    def test_registro_falla_si_telefono_no_comienza_con_uno_dos_o_tres(self):
         self._crear_rol("socio")
 
         response = self.client.post(
             "/api/registrarse",
-            json=self._payload(telefono="1221446633"),
+            json=self._payload(telefono="4221446633"),
         )
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json["status"], "validation_error")
         self.assertEqual(
             response.json["errors"]["telefono"],
-            "Debe ingresar un código de área válido en territorio argentino. Ejemplo: 221",
+            "Debe ingresar un telefono que comience con 1, 2 ó 3. Ejemplo: 2214446633",
         )
 
     def test_registro_falla_si_telefono_no_alcanza_los_diez_digitos(self):
@@ -159,7 +159,7 @@ class RegistrarseTestCase(unittest.TestCase):
         self.assertEqual(response.json["status"], "validation_error")
         self.assertEqual(
             response.json["errors"]["telefono"],
-            "El teléfono debe alcanzar los 10 dígitos totales incluyendo el código de área. Ejemplo: 2214446633",
+            "El teléfono debe alcanzar los 10 dígitos totales. Ejemplo: 2214446633",
         )
 
     def test_registro_falla_si_falta_rol_socio(self):

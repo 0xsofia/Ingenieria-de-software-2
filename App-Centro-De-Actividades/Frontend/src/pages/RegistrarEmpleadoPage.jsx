@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { registrarEmpleado } from '../api/usuarios'
 import DynamicForm from '../components/forms/DynamicForm.jsx'
 import { useAuth } from '../hooks/useAuth'
-import { getPhoneValidationMessage } from '../utils/phoneValidation'
+import { getPhoneValidationMessage, PHONE_HINT } from '../utils/phoneValidation'
 import './RegistrarsePage.css'
 import './RegistrarEmpleadoPage.css'
 
@@ -46,7 +46,7 @@ const EMPLOYEE_FIELDS = [
     autoComplete: 'tel',
     inputMode: 'tel',
     placeholder: '2214446633',
-    hint: 'Ingresá un teléfono de 10 dígitos. Ejemplo: 2214446633.',
+    hint: PHONE_HINT,
     fullWidth: true,
   },
   {
