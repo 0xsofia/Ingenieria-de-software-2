@@ -7,6 +7,7 @@ def run_seeds(app):
         from .clases import seed_clases
         from .pagos import seed_pagos
         from .reservas import seed_reservas
+        from .reintegros_escenarios import seed_reintegros_escenarios
 
         seed_actividades()
         seed_usuarios()
@@ -15,3 +16,4 @@ def run_seeds(app):
         seed_clases()
         seed_pagos()
         seed_reservas()
+        seed_reintegros_escenarios()
