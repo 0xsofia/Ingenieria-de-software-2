@@ -645,13 +645,13 @@ def listar_reservas_socio():
         puede_cancelar = _puede_cancelar_reserva(reserva, clase_inicio, ahora)
         pago = pagos_por_reserva.get(reserva.reserva_id)
 
-        print("puede cancelar "+ str(puede_cancelar))
+        # print("puede cancelar "+ str(puede_cancelar))
 
         if pago and pago.estado == "pendiente":
             puede_cancelar = False
             print("ASDFSDFASDFASDFASDFASDFASDFASDFASDFASDFASD: ", reserva.reserva_id, pago.pago_id, pago.estado)
 
-        print("puede cancelar "+ str(puede_cancelar))
+        # print("puede cancelar "+ str(puede_cancelar))
 
         reintegro_estimado = _calcular_reintegro_estimada(pago, clase_inicio, ahora)
         reintegro_aplica = reintegro_estimado is not None
@@ -949,7 +949,7 @@ def _puede_cancelar_reserva(reserva, clase_inicio, ahora):
         print("2")
         return False
 
-    print("clase_inicio > ahora: "+ str(clase_inicio > ahora))
+    # print("clase_inicio > ahora: "+ str(clase_inicio > ahora))
     return clase_inicio > ahora
 
 
