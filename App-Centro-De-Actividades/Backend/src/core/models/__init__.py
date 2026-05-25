@@ -1,4 +1,4 @@
-c# Import model modules here so Alembic autogenerate can see them.
+# Import model modules here so Alembic autogenerate can see them.
 
 from src.core.models.abono_mensual import AbonoMensual
 from src.core.models.credito import Credito
