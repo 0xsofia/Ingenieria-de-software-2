@@ -308,13 +308,13 @@ function MisClasesPage() {
                       </td>
                       <td data-label="Acciones">
                         <div className="mis-clases-table__actions">
-                          <button
+                          {/*<button
                             type="button"
                             className="secondary-action"
                             onClick={() => handleAbandonarListaEspera(reserva)}
                           >
                             Abandonar lista de espera
-                          </button>
+                          </button>*/}
 
                           <button
                             type="button"
