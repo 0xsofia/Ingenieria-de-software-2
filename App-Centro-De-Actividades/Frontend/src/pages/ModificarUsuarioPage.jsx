@@ -6,7 +6,7 @@ import { modificarUsuario, obtenerUsuarioModificable } from '../api/usuarios'
 import DynamicForm from '../components/forms/DynamicForm.jsx'
 import { useAuth } from '../hooks/useAuth'
 import { storeFlashMessage } from '../utils/navigationFlash'
-import { getPhoneValidationMessage } from '../utils/phoneValidation'
+import { getPhoneValidationMessage, PHONE_HINT } from '../utils/phoneValidation'
 import './RegistrarsePage.css'
 import './ModificarUsuarioPage.css'
 
@@ -47,9 +47,11 @@ const EDITABLE_USER_FIELDS = [
     label: 'Teléfono',
     type: 'text',
     autoComplete: 'tel',
-    inputMode: 'tel',
+    inputMode: 'numeric',
+    pattern: '[0-9]*',
+    digitsOnly: true,
     placeholder: '2214446633',
-    hint: 'Ingresá un teléfono de 10 dígitos. Ejemplo: 2214446633.',
+    hint: PHONE_HINT,
     fullWidth: true,
   },
   {

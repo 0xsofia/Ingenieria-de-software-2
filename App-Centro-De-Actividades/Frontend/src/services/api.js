@@ -17,8 +17,14 @@ export const endpoints = {
   reservaEspontaneaPagoRetorno: '/api/reservas/espontanea/pago-retorno',
   misClases: '/api/reservas/mis-clases',
   reservaEspontaneaCancelar: '/api/reservas/espontanea/cancelar',
+  ofertasActivas: '/api/reservas/ofertas-activas',
+  confirmarTurno: '/api/reservas/confirmar',
   misPagos: '/api/pagos/',
   EscanearQR: '/api/asistencia/escanearQR',
   GenerarQR: '/api/asistencia/generarQR/<int:reserva_id>',
   listarPagos: '/api/pagos/lista'
 }
+
+endpoints.confirmacionTurno = (token) => `/api/confirmaciones/turno/${token}`
+endpoints.confirmarTurnoToken = (token) => `/api/confirmaciones/turno/${token}/confirmar`
+

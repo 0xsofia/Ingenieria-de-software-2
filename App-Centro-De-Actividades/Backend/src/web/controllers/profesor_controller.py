@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 
 from src.core.database import db
 from src.core.models.profesor import Profesor
-from src.core.services.registrarse import validar_telefono_registro
+from src.core.services.registrarse import validar_telefono
 
 profesor_bp = Blueprint("profesor_bp", __name__, url_prefix="/api/profesor")
 
@@ -50,7 +50,7 @@ def crear_profesor():
     if not telefono:
         errors["telefono"] = "El teléfono es obligatorio."
     else:
-        telefono_normalizado, telefono_error = validar_telefono_registro(telefono)
+        telefono_normalizado, telefono_error = validar_telefono(telefono)
         if telefono_error is not None:
             errors["telefono"] = telefono_error
         else:
