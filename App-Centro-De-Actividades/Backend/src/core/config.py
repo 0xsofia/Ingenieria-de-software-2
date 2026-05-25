@@ -34,6 +34,10 @@ class Config(object):
     MAILJET_SENDER_EMAIL = environ.get('MAILJET_SENDER_EMAIL', '')
     MAILJET_SENDER_NAME = environ.get('MAILJET_SENDER_NAME', 'Centro de Actividades')
     FRONTEND_LOGIN_URL = environ.get('FRONTEND_LOGIN_URL', 'http://localhost:5173/login')
+    TELEGRAM_BOT_TOKEN = environ.get('TELEGRAM_BOT_TOKEN', '')
+    TELEGRAM_CHAT_ID = environ.get('TELEGRAM_CHAT_ID', '')
+    FRONTEND_BASE_URL = environ.get('FRONTEND_BASE_URL', 'http://localhost:5173')
+    TOKEN_EXPIRY_MINUTES = _get_int_env('TOKEN_EXPIRY_MINUTES', 15)
     
 class ProductionConfig(Config):
     ...

@@ -4,16 +4,21 @@ import { useNavigate } from 'react-router-dom'
 import {
   cancelarReservaEspontanea,
   listarMisClases,
+  obtenerOfertasActivas,
+  confirmarTurno,
 } from '../api/reservas'
 import './MisClasesPage.css'
 
 function MisClasesPage() {
   const navigate = useNavigate()
   const [reservas, setReservas] = useState([])
+  const [listaEspera, setListaEspera] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [feedback, setFeedback] = useState('')
   const [cancelingId, setCancelingId] = useState(null)
+  const [ofertas, setOfertas] = useState([])
+  const [confirmingId, setConfirmingId] = useState(null)
 
   const currencyFormatter = useMemo(
     () =>
@@ -42,6 +47,7 @@ function MisClasesPage() {
 
   useEffect(() => {
     fetchReservas()
+    fetchOfertas()
   }, [])
 
   async function fetchReservas() {
@@ -51,10 +57,20 @@ function MisClasesPage() {
     try {
       const data = await listarMisClases()
       setReservas(data.reservas || [])
+      setListaEspera(data.lista_espera || [])
     } catch (err) {
       setError(err.data?.message || 'No se pudieron cargar las reservas.')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  async function fetchOfertas() {
+    try {
+      const result = await obtenerOfertasActivas()
+      setOfertas(result.ofertas || [])
+    } catch (err) {
+      console.warn('No se pudieron cargar ofertas', err)
     }
   }
 
@@ -94,10 +110,51 @@ function MisClasesPage() {
 
       setFeedback(message)
       await fetchReservas()
+      await fetchOfertas()
     } catch (err) {
       setError(err.data?.message || 'No se pudo cancelar la reserva.')
     } finally {
       setCancelingId(null)
+    }
+  }
+
+  async function handleConfirmarTurno(oferta) {
+    if (!oferta?.lista_espera_id) return
+
+    setConfirmingId(oferta.lista_espera_id)
+    setError('')
+    setFeedback('')
+
+    try {
+      const result = await confirmarTurno({ lista_espera_id: oferta.lista_espera_id })
+
+      if (result.status === 'expired') {
+        setError(result.message || 'El tiempo de 15 minutos para confirmar el turno ha expirado, no puede acceder al cupo')
+      } else if (result.status === 'conflict') {
+        setError(result.message || 'No puede confirmar el turno, ya posee una inscripción en ese horario')
+      } else if (result.status === 'confirmed') {
+        setFeedback(result.message || 'Turno asegurado. Completá la reserva.')
+        await fetchOfertas()
+        const actividadSlug = getSlug(oferta.actividad || result.actividad || 'actividad')
+        navigate(`/actividad/${actividadSlug}`, {
+          state: {
+            clase: {
+              clase_id: result.clase_id || oferta.clase_id,
+              actividad: result.actividad || oferta.actividad,
+              fecha: result.fecha || oferta.fecha,
+              horario_inicio: result.horario_inicio || oferta.horario_inicio,
+              horario_fin: result.horario_fin || oferta.horario_fin,
+              cancha: result.cancha || oferta.cancha,
+            },
+          },
+        })
+      } else {
+        setError(result.message || 'No se pudo confirmar el turno.')
+      }
+    } catch (err) {
+      setError(err.data?.message || 'No se pudo confirmar el turno.')
+    } finally {
+      setConfirmingId(null)
     }
   }
 
@@ -110,6 +167,13 @@ function MisClasesPage() {
     return currencyFormatter.format(numeric)
   }
 
+  function getSlug(text) {
+    return String(text || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+  }
+
   return (
     <main className="dashboard-shell mis-clases-shell">
       <section className="dashboard-frame mis-clases-frame">
@@ -119,7 +183,7 @@ function MisClasesPage() {
             Gestiona tus reservas y consulta si aplica reintegro.
           </p> */}
         </header>
-
+        
         {error ? (
           <p className="banner banner--error" role="alert">
             {error}
@@ -135,7 +199,76 @@ function MisClasesPage() {
         {isLoading ? (
           <p className="dashboard-copy">Cargando reservas...</p>
         ) : (
-          <div className="mis-clases-table-wrapper">
+          <div>
+            {ofertas.length > 0 ? (
+              <div className="ofertas-list">
+                {ofertas.map((oferta) => {
+                  const notificadoEn = oferta.notificado_en ? new Date(oferta.notificado_en) : null
+                  const fechaHoraOferta = notificadoEn
+                    ? `${notificadoEn.toLocaleDateString('es-AR')} a las ${notificadoEn.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`
+                    : '-'
+
+                  return (
+                    <div key={oferta.lista_espera_id} className="banner banner--info">
+                      <div>
+                        <strong>
+                          Turno disponible para {oferta.actividad || 'Actividad'} el {oferta.fecha || '-'} de {oferta.horario_inicio || '--:--'} a {oferta.horario_fin || '--:--'}
+                        </strong>
+                        <div>Cancha: {oferta.cancha || '-'}</div>
+                        <div>Ofertado el: {fechaHoraOferta}</div>
+                      </div>
+                      <div>
+                        <button
+                          type="button"
+                          className="primary-action"
+                          onClick={() => handleConfirmarTurno(oferta)}
+                          disabled={confirmingId === oferta.lista_espera_id}
+                        >
+                          {confirmingId === oferta.lista_espera_id ? 'Confirmando...' : 'Confirmar turno'}
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : null}
+
+            {listaEspera.length > 0 ? (
+              <div className="mis-clases-table-wrapper">
+                <table className="mis-clases-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Actividad</th>
+                      <th scope="col">Fecha</th>
+                      <th scope="col">Horario</th>
+                      <th scope="col">Cancha</th>
+                      <th scope="col">Estado</th>
+                      <th scope="col">Posición</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {listaEspera.map((item) => (
+                      <tr key={`waitlist-${item.lista_espera_id}`}>
+                        <td data-label="Actividad">{item.actividad || 'Actividad'}</td>
+                        <td data-label="Fecha">{item.fecha || '-'}</td>
+                        <td data-label="Horario">
+                          {item.horario_inicio || '--:--'} - {item.horario_fin || '--:--'}
+                        </td>
+                        <td data-label="Cancha">{item.cancha || '-'}</td>
+                        <td data-label="Estado">
+                          <span className="badge badge--warning">
+                            {item.estado === 'notificado' ? 'Turno disponible' : 'En espera'}
+                          </span>
+                        </td>
+                        <td data-label="Posición">{item.posicion ?? '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+
+            <div className="mis-clases-table-wrapper">
             <table className="mis-clases-table">
               <thead>
                 <tr>
@@ -161,8 +294,8 @@ function MisClasesPage() {
                   reservas.map((reserva) => (
                     <tr key={reserva.reserva_id}>
                       <td data-label="Actividad">{reserva.actividad || 'Actividad'}</td>
-                      <td data-label="Fecha">{reserva.fecha || '-'}</td>
-                      <td data-label="Horario">
+                      <td data-label="Fecha">{reserva.fecha ? reserva.fecha.split('-').reverse().join('/') : ''}</td>
+                      <td data-label="Horario" style={{ whiteSpace: 'nowrap' }}>
                         {reserva.horario_inicio || '--:--'} - {reserva.horario_fin || '--:--'}
                       </td>
                       <td data-label="Cancha">{reserva.cancha || '-'}</td>
@@ -175,13 +308,13 @@ function MisClasesPage() {
                       </td>
                       <td data-label="Acciones">
                         <div className="mis-clases-table__actions">
-                          <button
+                          {/*<button
                             type="button"
                             className="secondary-action"
                             onClick={() => handleAbandonarListaEspera(reserva)}
                           >
                             Abandonar lista de espera
-                          </button>
+                          </button>*/}
 
                           <button
                             type="button"
@@ -210,14 +343,18 @@ function MisClasesPage() {
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
+                  )
+                )
+              )}
               </tbody>
             </table>
-          </div>
+            </div>
+        </div>
         )}
+      
       </section>
-    </main>
+     </main>
+     
   )
 }
 

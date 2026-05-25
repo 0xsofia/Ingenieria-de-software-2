@@ -93,8 +93,8 @@ export default function ListadoClasesPage() {
     return <Navigate to="/inicio" replace />
   }
 
-  function handleViewClass() {
-    return '#'
+  function handleViewClass(clase) {
+    navigate(`/clases/${clase.clase_id}/detalle`)
   }
 
   function handleEditClass() {

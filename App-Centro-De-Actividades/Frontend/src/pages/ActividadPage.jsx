@@ -120,7 +120,7 @@ export default function ActividadPage() {
             <dl className="actividad-placeholder-page__details">
               <div>
                 <dt>Fecha</dt>
-                <dd>{clase.fecha}</dd>
+                <dd>{clase.fecha ? clase.fecha.split('-').reverse().join('/') : ''}</dd>
               </div>
               <div>
                 <dt>Horario</dt>

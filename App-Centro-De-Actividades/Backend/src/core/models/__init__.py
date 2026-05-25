@@ -17,11 +17,15 @@ from src.core.models.persona import (
     Socio,
 )
 from src.core.models.reserva import Reserva
+from src.core.models.asistencia import Asistencia
+from src.core.models.qr_asistencia import QrAsistencia
 
 __all__ = [
     "ListaEspera",
     "AbonoMensual",
     "Reserva",
+    "Asistencia",
+    "QrAsistencia",
     "Pago",
     "Credito",
     "Persona",
