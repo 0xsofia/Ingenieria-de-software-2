@@ -26,3 +26,5 @@ typing-extensions==4.15.0 ; python_version >= "3.12" and python_version < "4.0"
 werkzeug==3.1.8 ; python_version >= "3.12" and python_version < "4.0"
 wtforms==3.2.2 ; python_version >= "3.12" and python_version < "4.0"
 gunicorn==21.2.0
+requests==2.31.0
+
