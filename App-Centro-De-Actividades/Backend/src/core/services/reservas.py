@@ -67,7 +67,7 @@ def iniciar_reserva_espontanea(clase_id):
     if not existing_pending and _cupo_disponible(clase) <= 0:
         return {
             "status": "no_cupo",
-            "message": "No hay más cupo en la clase seleccionada.",
+            "message": "La clase se encuentra llena.",
             "clase_id": clase.clase_id,
             "puede_entrar_lista_espera": True,
         }, 409
