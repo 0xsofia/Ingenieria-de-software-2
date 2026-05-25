@@ -53,3 +53,5 @@ class Reserva(db.Model):
     cancelada_en = db.Column(db.DateTime(timezone=True), nullable=True)
 
     clase = db.relationship("Clase", back_populates="reservas")
+    asistencia = db.relationship("Asistencia", back_populates="reserva", uselist=False, cascade="all, delete-orphan")
+    qr_asistencias = db.relationship("QrAsistencia", back_populates="reserva", cascade="all, delete-orphan")

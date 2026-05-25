@@ -25,6 +25,16 @@ export async function listarClases(filters = {}) {
   return data
 }
 
+export async function obtenerDetalleClase(claseId, dni) {
+  const params = {}
+  if (dni) {
+    params.dni = dni
+  }
+
+  const { data } = await http.get(`/api/clase/${claseId}/detalle`, { params })
+  return data
+}
+
 export async function obtenerProfesores() {
   const response = await http.get(endpoints.obtenerProfesores)
 
