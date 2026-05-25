@@ -132,10 +132,22 @@ function MisClasesPage() {
         setError(result.message || 'El tiempo de 15 minutos para confirmar el turno ha expirado, no puede acceder al cupo')
       } else if (result.status === 'conflict') {
         setError(result.message || 'No puede confirmar el turno, ya posee una inscripción en ese horario')
-      } else if (result.status === 'reserved' || result.status === 'payment_required') {
-        setFeedback(result.message || 'Turno confirmado.')
-        await fetchReservas()
+      } else if (result.status === 'confirmed') {
+        setFeedback(result.message || 'Turno asegurado. Completá la reserva.')
         await fetchOfertas()
+        const actividadSlug = getSlug(oferta.actividad || result.actividad || 'actividad')
+        navigate(`/actividad/${actividadSlug}`, {
+          state: {
+            clase: {
+              clase_id: result.clase_id || oferta.clase_id,
+              actividad: result.actividad || oferta.actividad,
+              fecha: result.fecha || oferta.fecha,
+              horario_inicio: result.horario_inicio || oferta.horario_inicio,
+              horario_fin: result.horario_fin || oferta.horario_fin,
+              cancha: result.cancha || oferta.cancha,
+            },
+          },
+        })
       } else {
         setError(result.message || 'No se pudo confirmar el turno.')
       }
@@ -153,6 +165,13 @@ function MisClasesPage() {
     if (Number.isNaN(numeric)) return value
 
     return currencyFormatter.format(numeric)
+  }
+
+  function getSlug(text) {
+    return String(text || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
   }
 
   return (

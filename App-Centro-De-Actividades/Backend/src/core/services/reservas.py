@@ -19,6 +19,7 @@ from src.core.models.lista_espera import ListaEspera
 from src.core.models.pago import Pago
 from src.core.models.persona import Socio
 from src.core.models.reserva import Reserva
+from src.core.services import telegram
 
 
 RESERVA_ESTADOS_OCUPAN_CUPO = {"pendiente_pago", "confirmada"}
@@ -259,6 +260,26 @@ def _ofrecer_cupo_a_primero(clase):
     entry.vence_confirmacion_en = _now() + timedelta(minutes=15)
     db.session.flush()
 
+    # Generar token y enviar notificación Telegram
+    token = telegram.crear_confirmacion_turno(
+        lista_espera_id=entry.lista_espera_id,
+        socio_id=entry.socio_id,
+        duracion_minutos=15,
+    )
+
+    if token:
+        clase_data = {
+            "actividad": _clase_actividad_label(clase),
+            "fecha": clase.fecha.strftime("%Y-%m-%d") if clase.fecha else "",
+            "horario_inicio": clase.horario_inicio.strftime("%H:%M") if clase.horario_inicio else "",
+            "horario_fin": clase.horario_fin.strftime("%H:%M") if clase.horario_fin else "",
+            "cancha": clase.cancha or "",
+        }
+        # Enviar mensaje (sin romper el flujo si falla)
+        telegram.enviar_mensaje_telegram(entry.socio_id, entry.lista_espera_id, clase_data, token)
+    else:
+        print(f"WARNING: No se pudo generar token para lista_espera_id {entry.lista_espera_id}")
+
     return entry
 
 
@@ -371,66 +392,128 @@ def confirmar_turno(lista_espera_id):
             "message": "No puede confirmar el turno, ya posee una inscripción en ese horario",
         }, 409
 
-    reserva, credito, requiere_pago, precio = _build_espontanea_reserva(clase, socio_id)
-    reserva.lista_espera_origen_id = entry.lista_espera_id
     entry.estado = "confirmada"
     entry.confirmada_en = _now()
-    db.session.flush()
-
-    if credito:
-        credito.reserva_que_consume_id = reserva.reserva_id
-        credito.consumido_en = _now()
-        credito.estado = "consumido"
-        db.session.commit()
-
-        return {
-            "status": "reserved",
-            "message": "Usted tiene crédito a favor, se omitió el cobro.",
-            "reserva_id": reserva.reserva_id,
-            "payment_required": False,
-        }, 200
-
-    if not requiere_pago:
-        db.session.commit()
-
-        return {
-            "status": "reserved",
-            "message": "Reserva confirmada.",
-            "reserva_id": reserva.reserva_id,
-            "payment_required": False,
-        }, 200
-
-    pago = Pago(
-        socio_id=socio_id,
-        reserva_id=reserva.reserva_id,
-        proveedor="mercadopago",
-        external_ref=str(uuid.uuid4()),
-        monto_bruto=precio,
-        descuento_pct=0,
-        estado="pendiente",
-    )
-    db.session.add(pago)
+    entry.vence_confirmacion_en = None
     db.session.commit()
 
-    payment_url = _crear_checkout_mercadopago(pago=pago, reserva=reserva, clase=clase)
-    if payment_url is None:
-        pago.estado = "error"
-        db.session.commit()
+    return {
+        "status": "confirmed",
+        "message": "Turno asegurado. Completá la reserva en la página de la actividad.",
+        "clase_id": clase.clase_id,
+        "actividad": _clase_actividad_label(clase),
+        "fecha": clase.fecha.strftime("%Y-%m-%d"),
+        "horario_inicio": clase.horario_inicio.strftime("%H:%M"),
+        "horario_fin": clase.horario_fin.strftime("%H:%M"),
+        "cancha": clase.cancha,
+    }, 200
 
+
+def obtener_oferta_desde_token(token):
+    """
+    Obtiene la información de la oferta asociada a un token.
+    
+    Returns:
+        tuple (oferta_dict, status_code)
+    """
+    confirmacion, error = telegram.validar_token(token)
+    
+    if error is not None:
+        return error, 400
+    
+    entry = db.session.get(ListaEspera, confirmacion.lista_espera_id)
+    if entry is None:
         return {
             "status": "error",
-            "message": "No pudimos iniciar el pago en Mercado Pago. Verificá el MP_ACCESS_TOKEN y la conexión.",
-            "reserva_id": reserva.reserva_id,
-            "pago_id": pago.pago_id,
-        }, 502
-
+            "message": "Oferta no encontrada.",
+        }, 404
+    
+    clase = db.session.get(Clase, entry.clase_id)
+    if clase is None:
+        return {
+            "status": "error",
+            "message": "La clase asociada no existe.",
+        }, 404
+    
     return {
-        "status": "payment_required",
-        "message": "Redirigiendo a Mercado Pago para completar el pago.",
-        "reserva_id": reserva.reserva_id,
-        "pago_id": pago.pago_id,
-        "payment_required": True,
-        "payment_url": payment_url,
+        "status": "ok",
+        "lista_espera_id": entry.lista_espera_id,
+        "clase_id": clase.clase_id,
+        "actividad": _clase_actividad_label(clase),
+        "fecha": clase.fecha.strftime("%Y-%m-%d") if clase.fecha else "",
+        "horario_inicio": clase.horario_inicio.strftime("%H:%M") if clase.horario_inicio else "",
+        "horario_fin": clase.horario_fin.strftime("%H:%M") if clase.horario_fin else "",
+        "cancha": clase.cancha or "",
+        "notificado_en": entry.notificado_en.isoformat() if entry.notificado_en else None,
+    }, 200
+
+
+def confirmar_turno_desde_token(token):
+    """
+    Confirma un turno desde el link de Telegram (token).
+    Similar a confirmar_turno pero sin require_socio, ya que el token identifica al socio.
+    
+    Returns:
+        tuple (response_dict, status_code)
+    """
+    confirmacion, error = telegram.validar_token(token)
+    
+    if error is not None:
+        return error, 400
+    
+    socio_id = confirmacion.socio_id
+    _expire_offers_and_promote()
+    
+    entry = db.session.get(ListaEspera, confirmacion.lista_espera_id)
+    if entry is None:
+        return {
+            "status": "error",
+            "message": "La oferta no existe.",
+        }, 404
+    
+    if entry.estado != "notificado":
+        return {
+            "status": "error",
+            "message": "La oferta ya no es válida.",
+        }, 409
+    
+    clase = db.session.get(Clase, entry.clase_id)
+    if clase is None:
+        return {
+            "status": "error",
+            "message": "La clase no existe.",
+        }, 404
+    
+    if clase.fecha is None or clase.horario_inicio is None:
+        return {
+            "status": "error",
+            "message": "La clase tiene datos incompletos.",
+        }, 409
+    
+    if _schedule_conflict_exists(socio_id, clase):
+        return {
+            "status": "conflict",
+            "message": "Ya posee una inscripción en ese horario.",
+        }, 409
+    
+    # Marcar confirmación y entrada de lista_espera como confirmada
+    entry.estado = "confirmada"
+    entry.confirmada_en = _now()
+    entry.vence_confirmacion_en = None
+    
+    telegram.marcar_confirmacion_como_confirmada(token)
+    
+    db.session.commit()
+    
+    return {
+        "status": "confirmed",
+        "message": "Turno asegurado. Completá la reserva en la página de la actividad.",
+        "clase_id": clase.clase_id,
+        "actividad": _clase_actividad_label(clase),
+        "fecha": clase.fecha.strftime("%Y-%m-%d"),
+        "horario_inicio": clase.horario_inicio.strftime("%H:%M"),
+        "horario_fin": clase.horario_fin.strftime("%H:%M"),
+        "cancha": clase.cancha,
     }, 200
 
 

@@ -22,6 +22,7 @@ import EscanearQRPage from '../pages/EscanearQRPage.jsx'
 import GenerarQRPage from '../pages/GenerarQRPage.jsx'
 import CrearProfesorPage from '../pages/CrearProfesorPage.jsx'
 import ListadoPagosPage from '../pages/ListadoPagosPage.jsx'
+import ConfirmarTurnoPage from '../pages/ConfirmarTurnoPage.jsx'
 
 
 const router = createBrowserRouter([
@@ -36,6 +37,10 @@ const router = createBrowserRouter([
   {
     path: '/registrarse',
     element: <RegistrarsePage />,
+  },
+  {
+    path: '/confirmar-turno/:token',
+    element: <ConfirmarTurnoPage />,
   },
   {
     element: <AuthenticatedLayout />,
