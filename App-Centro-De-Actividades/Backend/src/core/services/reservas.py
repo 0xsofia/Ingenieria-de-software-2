@@ -586,7 +586,7 @@ def procesar_retorno_pago(reserva_id, pago_status):
 
         return {
             "status": "reserved",
-            "message": "Pago aprobado. Te inscribimos en la clase.",
+            "message": "Reserva confirmada.",
             "reserva_id": reserva.reserva_id,
         }, 200
 
