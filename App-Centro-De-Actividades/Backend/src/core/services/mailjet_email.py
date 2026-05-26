@@ -2,6 +2,7 @@ import html
 import secrets
 import smtplib
 import ssl
+import socket
 from email.message import EmailMessage
 from email.utils import formataddr
 
@@ -58,12 +59,112 @@ def send_employee_access_email(*, recipient_email, recipient_name, temporary_pas
             smtp.login(mail_settings['api_key'], mail_settings['secret_key'])
             smtp.send_message(message)
     except (OSError, smtplib.SMTPException) as error:
+        debug_summary = _format_mail_delivery_failure(
+            error=error,
+            host=mail_settings.get('host'),
+            port=mail_settings.get('port'),
+            timeout=mail_settings.get('timeout'),
+            sender_email=mail_settings.get('sender_email'),
+            recipient_email=recipient_email,
+        )
         current_app.logger.exception(
-            'Mailjet SMTP delivery failed for employee access email.'
+            'Mailjet SMTP delivery failed for employee access email. %s',
+            debug_summary,
         )
         raise EmailDeliveryError(
             'No se pudo enviar el email con la contraseña temporal del empleado.'
         ) from error
+
+
+def _format_mail_delivery_failure(
+    *,
+    error,
+    host,
+    port,
+    timeout,
+    sender_email,
+    recipient_email,
+):
+    """Return a readable summary for logs without leaking secrets."""
+
+    error_type = type(error).__name__
+    base = (
+        f'type={error_type} '
+        f'host={host!s} port={port!s} timeout={timeout!s} '
+        f'sender={sender_email!s} recipient={recipient_email!s}'
+    )
+
+    if isinstance(error, smtplib.SMTPAuthenticationError):
+        smtp_code = getattr(error, 'smtp_code', None)
+        smtp_error = getattr(error, 'smtp_error', None)
+        return (
+            f'{base} reason=SMTPAuthenticationError '
+            f'smtp_code={smtp_code!s} smtp_error={_safe_smtp_error_text(smtp_error)} '
+            'hint=Credenciales SMTP inválidas o cuenta Mailjet no habilitada para SMTP.'
+        )
+
+    if isinstance(error, (smtplib.SMTPConnectError, smtplib.SMTPServerDisconnected)):
+        smtp_code = getattr(error, 'smtp_code', None)
+        smtp_error = getattr(error, 'smtp_error', None)
+        return (
+            f'{base} reason=SMTPConnect/Disconnected '
+            f'smtp_code={smtp_code!s} smtp_error={_safe_smtp_error_text(smtp_error)} '
+            'hint=Conexión rechazada/cortada (red, DNS, firewall, host/puerto incorrecto).'
+        )
+
+    if isinstance(error, smtplib.SMTPSenderRefused):
+        return (
+            f'{base} reason=SMTPSenderRefused '
+            f'smtp_code={getattr(error, "smtp_code", None)!s} '
+            f'smtp_error={_safe_smtp_error_text(getattr(error, "smtp_error", None))} '
+            f'refused_sender={getattr(error, "sender", None)!s} '
+            'hint=El sender no está permitido/verificado en Mailjet.'
+        )
+
+    if isinstance(error, smtplib.SMTPRecipientsRefused):
+        refused = getattr(error, 'recipients', None)
+        refused_keys = []
+        if isinstance(refused, dict):
+            refused_keys = list(refused.keys())
+        return (
+            f'{base} reason=SMTPRecipientsRefused '
+            f'refused_recipients={refused_keys!s} '
+            'hint=Email destinatario inválido/bloqueado o política del proveedor.'
+        )
+
+    if isinstance(error, (smtplib.SMTPDataError, smtplib.SMTPResponseException)):
+        smtp_code = getattr(error, 'smtp_code', None)
+        smtp_error = getattr(error, 'smtp_error', None)
+        return (
+            f'{base} reason=SMTPResponse '
+            f'smtp_code={smtp_code!s} smtp_error={_safe_smtp_error_text(smtp_error)} '
+            'hint=El servidor SMTP rechazó la operación (revisar respuesta SMTP).'
+        )
+
+    if isinstance(error, (TimeoutError, socket.timeout)):
+        return (
+            f'{base} reason=timeout '
+            'hint=El servidor SMTP no respondió a tiempo (revisar conectividad o MAILJET_SMTP_TIMEOUT).'
+        )
+
+    if isinstance(error, OSError):
+        errno = getattr(error, 'errno', None)
+        strerror = getattr(error, 'strerror', None)
+        return (
+            f'{base} reason=OSError errno={errno!s} strerror={strerror!s} '
+            f'os_message={str(error)!s} '
+            'hint=Problema de red/DNS/certificados/timeout.'
+        )
+
+    return f'{base} reason=unknown message={str(error)!s}'
+
+
+def _safe_smtp_error_text(value):
+    if value is None:
+        return ''
+    if isinstance(value, bytes):
+        return value.decode('utf-8', errors='replace')
+    return str(value)
 
 
 def _load_mailjet_settings():
