@@ -12,7 +12,7 @@
 
 version: "2"
 
-authtoken: "2dWjG9e9Vf8wlq6hcl4vxA9MQQ3_jwWMe7u8qmH84DguxsnH"
+authtoken: ""
 
 tunnels:
   frontend:

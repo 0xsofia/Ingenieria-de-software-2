@@ -68,7 +68,7 @@ def iniciar_reserva_espontanea(clase_id):
     if not existing_pending and _cupo_disponible(clase) <= 0:
         return {
             "status": "no_cupo",
-            "message": "No hay más cupo en la clase seleccionada.",
+            "message": "La clase se encuentra llena.",
             "clase_id": clase.clase_id,
             "puede_entrar_lista_espera": True,
         }, 409
@@ -586,7 +586,7 @@ def procesar_retorno_pago(reserva_id, pago_status):
 
         return {
             "status": "reserved",
-            "message": "Pago aprobado. Te inscribimos en la clase.",
+            "message": "Reserva confirmada.",
             "reserva_id": reserva.reserva_id,
         }, 200
 
@@ -805,20 +805,20 @@ def cancelar_reserva_espontanea(reserva_id):
     reintegro_aplica = reintegro_info["aplica"]
     if reintegro_aplica and not sancion_aplicada:
         scenario_code = "escenario_1"
-        scenario_message = "Escenario 1: cancelacion con devolucion del 50% y sin sancion."
+        scenario_message = "Se reembolso el 50% del valor de la clase."
     elif not reintegro_aplica and not sancion_aplicada:
         scenario_code = "escenario_2"
-        scenario_message = "Escenario 2: cancelacion sin devolucion del 50% y sin sancion."
+        scenario_message = ""
     elif reintegro_aplica and sancion_aplicada:
         scenario_code = "escenario_3"
-        scenario_message = "Escenario 3: cancelacion con devolucion del 50% y con sancion."
+        scenario_message =  "Se reembolso el 50% del valor de la clase. Se aplico una sancion por cancelar 3 o más clases en el mes"
     else:
         scenario_code = "escenario_4"
-        scenario_message = "Escenario 4: cancelacion sin devolucion del 50% y con sancion."
+        scenario_message = "Se aplico una sancion por cancelar 3 o más clases en el mes"
 
     return {
         "status": "cancelled",
-        "message": "La reserva fue cancelada correctamente.",
+        "message": "Cancelacion correcta.",
         "scenario": scenario_code,
         "scenario_message": scenario_message,
         "reserva_id": reserva.reserva_id,
