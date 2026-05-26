@@ -58,9 +58,9 @@ def send_employee_access_email(*, recipient_email, recipient_name, temporary_pas
             smtp.login(mail_settings['api_key'], mail_settings['secret_key'])
             smtp.send_message(message)
     except (OSError, smtplib.SMTPException) as error:
-      current_app.logger.exception(
-        'Mailjet SMTP delivery failed for employee access email.'
-      )
+        current_app.logger.exception(
+            'Mailjet SMTP delivery failed for employee access email.'
+        )
         raise EmailDeliveryError(
             'No se pudo enviar el email con la contraseña temporal del empleado.'
         ) from error
