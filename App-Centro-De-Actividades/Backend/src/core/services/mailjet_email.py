@@ -47,17 +47,18 @@ def send_employee_access_email(*, recipient_email, recipient_name, temporary_pas
     message.add_alternative(html_part, subtype='html')
 
     try:
-        with smtplib.SMTP(
+        # 🚀 CAMBIO: Usamos SMTP_SSL para conectar de forma segura por el puerto 465
+        with smtplib.SMTP_SSL(
             mail_settings['host'],
             mail_settings['port'],
             timeout=mail_settings['timeout'],
+            context=ssl.create_default_context()
         ) as smtp:
-            smtp.ehlo()
-            smtp.starttls(context=ssl.create_default_context())
             smtp.ehlo()
             smtp.login(mail_settings['api_key'], mail_settings['secret_key'])
             smtp.send_message(message)
     except (OSError, smtplib.SMTPException) as error:
+        # Podés agregar un print(f"Error real: {error}") temporalmente en tus logs de Render para trackearlo mejor
         raise EmailDeliveryError(
             'No se pudo enviar el email con la contraseña temporal del empleado.'
         ) from error
