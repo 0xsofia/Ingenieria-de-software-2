@@ -199,7 +199,7 @@ function MisClasesPage() {
         {isLoading ? (
           <p className="dashboard-copy">Cargando reservas...</p>
         ) : (
-          <div>
+          <div>{/*
             {ofertas.length > 0 ? (
               <div className="ofertas-list">
                 {ofertas.map((oferta) => {
@@ -232,9 +232,10 @@ function MisClasesPage() {
                 })}
               </div>
             ) : null}
-
-            {listaEspera.length > 0 ? (
-              <div className="mis-clases-table-wrapper">
+             */}
+           
+             <div className="mis-clases-table-wrapper">
+                <h2> En lista de espera </h2>
                 <table className="mis-clases-table">
                   <thead>
                     <tr>
@@ -243,11 +244,18 @@ function MisClasesPage() {
                       <th scope="col">Horario</th>
                       <th scope="col">Cancha</th>
                       <th scope="col">Estado</th>
-                      <th scope="col">Posición</th>
+                      {/*<th scope="col">Posición</th>*/}
                     </tr>
                   </thead>
-                  <tbody>
-                    {listaEspera.map((item) => (
+                <tbody>
+                  {listaEspera.length === 0 ? (
+                    <tr>
+                      <td className="mis-clases-table__empty" colSpan={8}>
+                        Aún no hay clases en lista de espera.
+                      </td>
+                    </tr>   
+                    ):(
+                    listaEspera.map((item) => (
                       <tr key={`waitlist-${item.lista_espera_id}`}>
                         <td data-label="Actividad">{item.actividad || 'Actividad'}</td>
                         <td data-label="Fecha">{item.fecha || '-'}</td>
@@ -260,15 +268,17 @@ function MisClasesPage() {
                             {item.estado === 'notificado' ? 'Turno disponible' : 'En espera'}
                           </span>
                         </td>
-                        <td data-label="Posición">{item.posicion ?? '-'}</td>
+                        {/*<td data-label="Posición">{item.posicion ?? '-'}</td>*/}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : null}
+                    ))
+                  )} 
+                </tbody>
+              </table>
+              </div>                
+                   
 
             <div className="mis-clases-table-wrapper">
+            <h2>Reservadas</h2>  
             <table className="mis-clases-table">
               <thead>
                 <tr>

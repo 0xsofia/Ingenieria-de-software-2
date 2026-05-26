@@ -77,7 +77,7 @@ def enviar_mensaje_telegram(socio_id, lista_espera_id, clase_data, token):
         horario_fin = clase_data.get('horario_fin', '--:--')
         cancha = clase_data.get('cancha', '')
         
-        confirmacion_url = f"{frontend_base_url}/confirmar-turno/{token}"
+        confirmacion_url = f"{frontend_base_url}confirmar-turno/{token}"
         
         mensaje = (
             f"🎉 ¡Cupo disponible!\n\n"
@@ -144,7 +144,7 @@ def validar_token(token):
     if confirmacion.expira_en <= ahora:
         confirmacion.estado = "expirado"
         db.session.flush()
-        return None, {"status": "error", "message": "El token ha expirado."}
+        return None, {"status": "error", "message": "El tiempo de 15 minutos para confirmar el turno ha expirado, no puede acceder al cupo"}
     
     return confirmacion, None
 

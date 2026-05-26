@@ -493,7 +493,7 @@ def confirmar_turno_desde_token(token):
     if _schedule_conflict_exists(socio_id, clase):
         return {
             "status": "conflict",
-            "message": "Ya posee una inscripción en ese horario.",
+            "message": "No puede confirmar el turno, ya posee una inscripción en ese horario",
         }, 409
     
     # Marcar confirmación y entrada de lista_espera como confirmada
