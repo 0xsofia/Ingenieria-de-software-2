@@ -1,7 +1,7 @@
 import re
-
+import requests
 from sqlalchemy.exc import IntegrityError
-
+import os
 from src.core.bcrypt_and_session import bcrypt
 from src.core.database import db
 from src.core.models.persona import Empleado, Persona, PersonaRolPuente, Rol, Socio
@@ -114,6 +114,63 @@ def registrar_socio(payload):
         redirect_to="/login",
     )
 
+def enviar_correo_bienvenida(email, nombre):
+    # 1. Traemos las credenciales de tus variables de entorno de Render
+    api_key = os.environ.get("MAILJET_API_KEY")
+    api_secret = os.environ.get("MAILJET_API_SECRET")
+    
+    # Si no están configuradas, salimos antes de que rompa por seguridad
+    if not api_key or not api_secret:
+        print("Error: Las credenciales de Mailjet no están configuradas en el entorno.")
+        return False
+
+    # 2. Armamos el payload estructurado para la API v3.1 de Mailjet
+    payload_datos = {
+        "Messages": [
+            {
+                "From": {
+                    "Email": "tu_correo_verificado@gimnasio.com",  # Debe ser tu mail verificado en Mailjet
+                    "Name": "Carpintech"
+                },
+                "To": [
+                    {
+                        "Email": email,
+                        "Name": nombre
+                    }
+                ],
+                "Subject": "¡Bienvenido al equipo de Carpintech! 🎉",
+                "TextPart": f"Hola {nombre}, tu cuenta de empleado ha sido creada con éxito.",
+                "HTMLPart": f"""
+                    <h3>¡Hola {nombre}!</h3>
+                    <p>Te damos la bienvenida formal a <strong>Carpintech</strong>.</p>
+                    <p>Tu cuenta de empleado ya está activa en el sistema. Ya podés iniciar sesión para gestionar las actividades y las reservas de los socios.</p>
+                    <br/>
+                    <p>Saludos,<br/>El equipo de administración.</p>
+                """
+            }
+        ]
+    }
+
+    try:
+        # 3. Realizamos la petición POST con el timeout de resguardo
+        response = requests.post(
+            "https://api.mailjet.com/v3.1/send",
+            json=payload_datos,
+            auth=(api_key, api_secret),
+            timeout=4  # Si en 4 segundos Mailjet no responde, salta al except y no congela Flask
+        )
+        
+        # Un código 200 significa que Mailjet aceptó procesar el correo
+        if response.status_code == 200:
+            return True
+        else:
+            print(f"Mailjet rechazó el envío con código {response.status_code}: {response.text}")
+            return False
+            
+    except Exception as e:
+        # Si da Timeout o hay error de red, el log avisa pero la app NO se cae
+        print(f"Error al enviar email con Mailjet: {str(e)}")
+        return False
 
 def registrar_empleado(payload):
     credenciales = provisionar_acceso_empleado(payload)
