@@ -1,10 +1,7 @@
-import threading
-
 from flask import Blueprint, jsonify, request
 from flask_login import current_user
 
 from src.core.services.registrarse import (
-    enviar_correo_bienvenida,
     registrar_empleado,
     validar_payload_registro_empleado,
 )
@@ -30,17 +27,7 @@ def registrar_empleado_controller():
         return jsonify({"status": "validation_error", "errors": errors}), 400
 
     body, status_code = registrar_empleado(normalized_payload)
-    # Creamos un hilo independiente para el mail
-    hilo_mail = threading.Thread(
-        target=enviar_correo_bienvenida, 
-        args=(normalized_payload.email, normalized_payload.nombre)
-    )
-    # Lo inicializamos en segundo plano
-    hilo_mail.start() 
-
-    # Flask responde INMEDIATAMENTE al frontend mientras el mail se envía de fondo
-    return {"status": "success", "message": "Empleado creado con éxito"}, 201
-    # return jsonify(body), status_code
+    return jsonify(body), status_code
 
 
 @usuarios_bp.get("")
