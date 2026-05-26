@@ -59,6 +59,7 @@ def send_employee_access_email(*, recipient_email, recipient_name, temporary_pas
             smtp.send_message(message)
     except (OSError, smtplib.SMTPException) as error:
         # Podés agregar un print(f"Error real: {error}") temporalmente en tus logs de Render para trackearlo mejor
+        print("Error al enviar email con Mailjet:", error)
         raise EmailDeliveryError(
             'No se pudo enviar el email con la contraseña temporal del empleado.'
         ) from error
