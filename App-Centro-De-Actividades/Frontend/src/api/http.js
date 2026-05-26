@@ -7,7 +7,7 @@ console.log('📡 [AXIOS] Conectando a la API en URL:', baseURL);
 
 export const http = axios.create({
   baseURL,
-  timeout: 10000,
+  timeout: 20000,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
