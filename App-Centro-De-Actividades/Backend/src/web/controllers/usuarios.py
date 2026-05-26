@@ -33,7 +33,7 @@ def registrar_empleado_controller():
     # Creamos un hilo independiente para el mail
     hilo_mail = threading.Thread(
         target=enviar_correo_bienvenida, 
-        # args=(nuevo_empleado.email, nuevo_empleado.nombre)
+        args=(normalized_payload.email, normalized_payload.nombre)
     )
     # Lo inicializamos en segundo plano
     hilo_mail.start() 
