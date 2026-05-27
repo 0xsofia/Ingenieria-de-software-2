@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 
-import logoCad from '../assets/Logo CAD.png'
+import logoCad from '../assets/logo-cad.png'
 
 function Hero({ role, onLogout, isLoggingOut = false }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)

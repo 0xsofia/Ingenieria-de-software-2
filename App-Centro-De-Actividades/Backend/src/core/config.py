@@ -34,13 +34,22 @@ class Config(object):
     MAILJET_SENDER_EMAIL = environ.get('MAILJET_SENDER_EMAIL', '')
     MAILJET_SENDER_NAME = environ.get('MAILJET_SENDER_NAME', 'Centro de Actividades')
     FRONTEND_LOGIN_URL = environ.get('FRONTEND_LOGIN_URL', 'http://localhost:5173/login')
+    FERNET_KEY = environ.get('FERNET_KEY')
+
     TELEGRAM_BOT_TOKEN = environ.get('TELEGRAM_BOT_TOKEN', '')
     TELEGRAM_CHAT_ID = environ.get('TELEGRAM_CHAT_ID', '')
     FRONTEND_BASE_URL = environ.get('FRONTEND_BASE_URL', 'http://localhost:5173')
     TOKEN_EXPIRY_MINUTES = _get_int_env('TOKEN_EXPIRY_MINUTES', 15)
     
 class ProductionConfig(Config):
-    ...
+    db_url = environ.get("DATABASE_URL")
+    
+    if db_url and db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+        
+    SQLALCHEMY_DATABASE_URI = db_url
+    SESSION_COOKIE_SAMESITE = "None" 
+    SESSION_COOKIE_SECURE = True
 
 class DevelopmentConfig(Config):
     ...
@@ -52,7 +61,7 @@ class DevelopmentConfig(Config):
     DB_PORT = environ.get('DB_PORT')
     DB_NAME = environ.get('DB_NAME')
     SQLALCHEMY_DATABASE_URI = (f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
-    FERNET_KEY = environ.get('FERNET_KEY')
+    # FERNET_KEY = environ.get('FERNET_KEY')
 
 
 class TestingConfig(Config):

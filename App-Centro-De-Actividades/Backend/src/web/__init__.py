@@ -24,14 +24,22 @@ from src.web.controllers.confirmaciones import confirmaciones_bp
 from src.core.bcrypt_and_session import bcrypt, cipher, login_manager
 
 
-def create_app(env="development", static_folder="../../static"):
+def create_app(env=None, static_folder="../../static"):
     app = Flask(__name__, static_folder=static_folder)
 
+    # 🚀 LEER ENTORNO DINÁMICO: Prioriza el argumento, luego busca en Render/OS, y por último usa local
+    if env is None:
+        env = os.environ.get("FLASK_ENV", "development")
+
+    # Nos aseguramos de que lo que levante coincida con las claves de tu config.py
+    print(f"📦 [CONFIG] Cargando la aplicación en modo: {env.upper()}", flush=True)
+    
     app.config.from_object(config[env])
     database.init_app(app)
 
     bcrypt.init_app(app)
     login_manager.init_app(app)
+    
     frontend_origin = (os.environ.get("FRONTEND_BASE_URL") or "").rstrip("/")
     allowed_origins = [
         origin
@@ -45,8 +53,20 @@ def create_app(env="development", static_folder="../../static"):
 
     CORS(
         app,
-        supports_credentials=True,
-        resources={r"/api/*": {"origins": allowed_origins}},
+        supports_credentials=True,  
+        resources={
+            r"/api/*": {
+                "origins": [
+                    "https://ingenieria-de-software-2-1.onrender.com",
+                    "http://localhost:5173",
+                    "http://127.0.0.1:5173"
+                ],
+                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+                "expose_headers": ["Set-Cookie"],
+                "send_wildcard": False  
+            }
+        },
     )
     cipher.init_app(app)
 
