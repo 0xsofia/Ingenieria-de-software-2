@@ -7,7 +7,6 @@ def run_seeds(app):
         from .clases import get_seed_reference_datetime, seed_clases
         from .pagos import seed_pagos
         from .reservas import seed_reservas
-        from .reintegros_escenarios import seed_reintegros_escenarios
 
         seed_datetime = get_seed_reference_datetime()
 
@@ -18,4 +17,3 @@ def run_seeds(app):
         seed_clases(seed_datetime)
         seed_pagos()
         seed_reservas(seed_datetime)
-        seed_reintegros_escenarios()

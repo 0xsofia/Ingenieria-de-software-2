@@ -44,13 +44,35 @@ CLASES_BASE_TEMPLATE = [
         "actividad": "Futbol",
         "cancha": "Cancha A",
         "nivel": "Avanzado",
-        "cupos": 6,
+        "cupos": 1,
         "profesor_dni": "44332211",
         "precio": 500,
     },
 ]
 
 CLASES_OFFSET_MINUTES = (0, 15, 30, 60)
+CLASES_FUTURAS_TEMPLATE = [
+    {
+        "actividad": "Basquet",
+        "cancha": "Cancha D",
+        "nivel": "Intermedio",
+        "cupos": 10,
+        "profesor_dni": "11223344",
+        "precio": 500,
+        "dias_despues": 2,
+        "offset_minutos": 0,
+    },
+    {
+        "actividad": "Voley",
+        "cancha": "Voley",
+        "nivel": "Avanzado",
+        "cupos": 6,
+        "profesor_dni": "12345678",
+        "precio": 500,
+        "dias_despues": 3,
+        "offset_minutos": 15,
+    },
+]
 SEED_TIMEZONE = ZoneInfo("America/Argentina/Buenos_Aires")
 
 
@@ -90,6 +112,23 @@ def _build_dynamic_clases_to_seed(seed_datetime=None):
         clases_to_seed.append(
             {
                 **clase_template,
+                "fecha": clase_datetime.strftime("%Y-%m-%d"),
+                "horario_inicio": clase_datetime.strftime("%H:%M"),
+            }
+        )
+
+    for clase_template in CLASES_FUTURAS_TEMPLATE:
+        clase_datetime = base_datetime + timedelta(
+            days=clase_template["dias_despues"],
+            minutes=clase_template["offset_minutos"],
+        )
+        clases_to_seed.append(
+            {
+                key: value
+                for key, value in clase_template.items()
+                if key not in {"dias_despues", "offset_minutos"}
+            }
+            | {
                 "fecha": clase_datetime.strftime("%Y-%m-%d"),
                 "horario_inicio": clase_datetime.strftime("%H:%M"),
             }

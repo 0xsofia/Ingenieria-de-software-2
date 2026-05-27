@@ -140,38 +140,38 @@ RESERVAS_TO_SEED = [
 # ===========================================================================
 # FUNCIÓN PRINCIPAL EJECUTABLE
 # ===========================================================================
-def seed_reservas(seed_datetime=None):
+def seed_reservas(seed_datetime=None, include_fixture_reservas=False):
     print("🌱 [SEED] Iniciando base de datos unificada de Carpintech...")
 
     # 1. Creamos / actualizamos los profesores
     for prof_data in PROFESORES_TO_SEED:
         _ensure_profesor_exists(prof_data)
 
-    # 2. Procesamos socios, clases y reservas
-    for r_data in RESERVAS_TO_SEED:
-        socio_id = _ensure_socio_exists(r_data)
-        clase_id = _ensure_clase_exists(r_data)
+    if include_fixture_reservas:
+        for r_data in RESERVAS_TO_SEED:
+            socio_id = _ensure_socio_exists(r_data)
+            clase_id = _ensure_clase_exists(r_data)
 
-        reserva = Reserva.query.get(r_data["reserva_id"])
-        if reserva is None:
-            reserva = Reserva(
-                reserva_id=r_data["reserva_id"],
-                clase_id=clase_id,
-                socio_id=socio_id,  # Asigna la FK limpia a la tabla Socio
-                tipo_reserva=r_data["tipo_reserva"],
-                estado=r_data["estado"],
-                creada_en=datetime.now(),
-            )
-            if r_data["estado"] in ["confirmada", "asistio"]:
-                reserva.confirmada_en = datetime.now()
-            db.session.add(reserva)
-        else:
-            reserva.clase_id = clase_id
-            reserva.socio_id = socio_id
-            reserva.tipo_reserva = r_data["tipo_reserva"]
-            reserva.estado = r_data["estado"]
+            reserva = Reserva.query.get(r_data["reserva_id"])
+            if reserva is None:
+                reserva = Reserva(
+                    reserva_id=r_data["reserva_id"],
+                    clase_id=clase_id,
+                    socio_id=socio_id,
+                    tipo_reserva=r_data["tipo_reserva"],
+                    estado=r_data["estado"],
+                    creada_en=datetime.now(),
+                )
+                if r_data["estado"] in ["confirmada", "asistio"]:
+                    reserva.confirmada_en = datetime.now()
+                db.session.add(reserva)
+            else:
+                reserva.clase_id = clase_id
+                reserva.socio_id = socio_id
+                reserva.tipo_reserva = r_data["tipo_reserva"]
+                reserva.estado = r_data["estado"]
 
-        db.session.flush()
+            db.session.flush()
 
     _ensure_seed_reservas_for_socio_centro(seed_datetime)
 

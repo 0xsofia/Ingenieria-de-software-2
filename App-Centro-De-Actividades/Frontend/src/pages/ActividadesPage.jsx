@@ -20,6 +20,17 @@ export default function ActividadesPage() {
   const [submittedFilters, setSubmittedFilters] = useState(INITIAL_FILTERS)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [currentTime, setCurrentTime] = useState(() => Date.now())
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentTime(Date.now())
+    }, 60_000)
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -51,9 +62,14 @@ export default function ActividadesPage() {
     }
   }, [])
 
+  const clasesDisponibles = useMemo(
+    () => clases.filter((clase) => isClaseDisponible(clase, currentTime)),
+    [clases, currentTime]
+  )
+
   const horarioOptions = useMemo(
-    () => Array.from(new Set(clases.map((clase) => clase.horario_inicio))).sort(),
-    [clases]
+    () => Array.from(new Set(clasesDisponibles.map((clase) => clase.horario_inicio))).sort(),
+    [clasesDisponibles]
   )
 
   const filterFields = useMemo(
@@ -85,7 +101,7 @@ export default function ActividadesPage() {
   )
 
   const filteredClases = useMemo(() => {
-    return clases.filter((clase) => {
+    return clasesDisponibles.filter((clase) => {
       if (submittedFilters.actividad && clase.actividad !== submittedFilters.actividad) {
         return false
       }
@@ -100,7 +116,7 @@ export default function ActividadesPage() {
 
       return true
     })
-  }, [clases, submittedFilters])
+  }, [clasesDisponibles, submittedFilters])
 
   const hasActiveFilters = Object.values(submittedFilters).some(Boolean)
   const canReserve = session?.role === 'socio'
@@ -218,4 +234,17 @@ function getSlug(nombre) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
+}
+
+function isClaseDisponible(clase, currentTime) {
+  if (!clase?.fecha || !clase?.horario_inicio) {
+    return true
+  }
+
+  const inicioClase = new Date(`${clase.fecha}T${clase.horario_inicio}:00`)
+  if (Number.isNaN(inicioClase.getTime())) {
+    return true
+  }
+
+  return inicioClase.getTime() > currentTime
 }

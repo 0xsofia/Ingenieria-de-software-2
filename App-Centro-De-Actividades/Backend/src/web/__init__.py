@@ -6,6 +6,7 @@ from src.web.handlers import error
 from src.core import database
 from src.core.config import config
 from src.core.seeds import run_seeds
+from src.core.seeds.reintegros_escenarios import seed_reintegros_escenarios
 from src.web.controllers.iniciar_sesion import login_bp
 from src.web.controllers.registrarse import registrarse_bp
 from src.web.controllers.usuarios import usuarios_bp
@@ -98,5 +99,11 @@ def create_app(env=None, static_folder="../../static"):
     def seed_db():
         database.ensure_seed_prerequisites()
         run_seeds(app)
+
+    @app.cli.command(name="seed_reintegros_db")
+    def seed_reintegros_db():
+        database.ensure_seed_prerequisites()
+        with app.app_context():
+            seed_reintegros_escenarios()
 
     return app
