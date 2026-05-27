@@ -168,7 +168,7 @@ export default function ActividadPage() {
               <div className="section-heading">
                 <h3>Sin cupo</h3>
                 <p>
-                  No hay más cupo en la clase seleccionada.
+                  La clase se encuentra llena.
                   ¿Querés entrar a la lista de espera?
                 </p>
               </div>
