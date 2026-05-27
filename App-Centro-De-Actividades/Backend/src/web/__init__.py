@@ -58,6 +58,8 @@ def create_app(env=None, static_folder="../../static"):
             r"/api/*": {
                 "origins": [
                     "https://ingenieria-de-software-2-1.onrender.com",
+                    "https://inge2-front2.ngrok.app",
+                    "https://inge2-back2.ngrok.app",
                     "http://localhost:5173",
                     "http://127.0.0.1:5173"
                 ],

@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const envURL = import.meta.env.VITE_API_URL;
-const baseURL = (envURL && envURL.trim() !== '' ? envURL : 'https://ingenieria-de-software-2.onrender.com').replace(/\/$/, '')
+const baseURL = (envURL && envURL.trim() !== '' ? envURL : '"https://inge2-back2.ngrok.app"').replace(/\/$/, '')
 
 console.log('📡 [AXIOS] Conectando a la API en URL:', baseURL);
 
