@@ -17,3 +17,8 @@ export async function generarQR(idReserva) {
   const { data } = await http.post(`/api/asistencia/generarQR/${idReserva}`)
   return data
 }
+
+export async function registrarAsistenciaManual(reservaId) {
+  const { data } = await http.post(`/api/asistencia/registrar-manual/${reservaId}`)
+  return data
+}

@@ -25,12 +25,13 @@ function DynamicForm2({
   const dismissedServerErrors = hasFreshErrors ? {} : dismissedErrorState.serverFields
   const dismissedGeneralError = hasFreshErrors ? false : dismissedErrorState.general
 
-  function handleChange(event) {
+  function handleChange(event, field) {
     const { name, value } = event.target
+    const nextValue = normalizeFieldValue(field, value)
 
     setValues((currentValues) => ({
       ...currentValues,
-      [name]: value,
+      [name]: nextValue,
     }))
 
     if (clientErrors[name]) {
@@ -98,7 +99,7 @@ function DynamicForm2({
                 <textarea
                   name={field.name}
                   value={values[field.name] || ''}
-                  onChange={handleChange}
+                  onChange={(event) => handleChange(event, field)}
                   autoComplete={field.autoComplete}
                   placeholder={field.placeholder}
                   rows={field.rows || 4}
@@ -108,7 +109,7 @@ function DynamicForm2({
                 <select
                   name={field.name}
                   value={values[field.name] || ''}
-                  onChange={handleChange}
+                  onChange={(event) => handleChange(event, field)}
                   aria-invalid={fieldError ? 'true' : 'false'}
                 >
                   <option value="">Seleccionar {field.label.toLowerCase()}</option>
@@ -123,12 +124,14 @@ function DynamicForm2({
                   name={field.name}
                   type={field.type}
                   value={values[field.name] || ''}
-                  onChange={handleChange}
+                  onChange={(event) => handleChange(event, field)}
                   autoComplete={field.autoComplete}
                   inputMode={field.inputMode}
                   placeholder={field.placeholder}
                   min={field.min}
                   max={field.max}
+                  maxLength={field.maxLength}
+                  pattern={field.pattern}
                   step={field.step}
                   aria-invalid={fieldError ? 'true' : 'false'}
                 />
@@ -163,6 +166,24 @@ function mapZodErrors(issues) {
   }
 
   return errors
+}
+
+function normalizeFieldValue(field, value) {
+  if (!field) {
+    return value
+  }
+
+  let nextValue = value
+
+  if (field.digitsOnly) {
+    nextValue = nextValue.replace(/\D+/g, '')
+  }
+
+  if (typeof field.maxLength === 'number') {
+    nextValue = nextValue.slice(0, field.maxLength)
+  }
+
+  return nextValue
 }
 
 export default DynamicForm2
