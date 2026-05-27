@@ -136,8 +136,8 @@ def registrar_asistencia(dni, id_reserva, id_clase):
 
     if id_clase is not None:
         if int(reserva.clase_id) != int(id_clase):
-            raise AccesoQRDenegadoException(
-                "El QR escaneado no corresponde a la clase seleccionada."
+            raise QRInvalidoException(
+                "El QR es inválido."
             )
 
     # 3. Validación: Impedir duplicados controlando el estado string de tu modelo
