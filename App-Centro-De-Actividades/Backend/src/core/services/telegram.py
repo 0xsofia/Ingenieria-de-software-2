@@ -144,7 +144,7 @@ def validar_token(token):
     if confirmacion.expira_en <= ahora:
         confirmacion.estado = "expirado"
         db.session.flush()
-        return None, {"status": "error", "message": "El token ha expirado."}
+        return None, {"status": "error", "message": "El tiempo de 15 minutos para confirmar el turno ha expirado, no puede acceder al cupo"}
     
     return confirmacion, None
 
