@@ -26,7 +26,13 @@ def seed_reintegros_escenarios(seed_datetime=None):
     Nota: Para escenario_3/4 se precargan 3 cancelaciones en el mes.
     """
 
-    now = datetime.now(timezone.utc)
+    if seed_datetime is None:
+        now = datetime.now(timezone.utc)
+    elif seed_datetime.tzinfo is None:
+        now = seed_datetime.replace(tzinfo=timezone.utc)
+    else:
+        now = seed_datetime.astimezone(timezone.utc)
+
     target_classes = _resolve_target_classes(now)
     if target_classes is None:
         print("⚠️  [SEED] No hay clases base suficientes; se omiten seeds de reintegros.")

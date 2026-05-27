@@ -55,17 +55,19 @@ class SeedClasesTestCase(unittest.TestCase):
                 "2026-05-26",
                 "2026-05-26",
                 "2026-05-26",
+                "2026-05-27",
                 "2026-05-28",
-                "2026-05-29",
             ],
         )
+        self.assertEqual(clases[6].horario_inicio, time(8, 30))
+        self.assertEqual(clases[7].horario_inicio, time(20, 0))
 
     def test_seed_clases_toma_horario_argentina_aunque_el_servidor_este_en_utc(self):
         clases = _build_dynamic_clases_to_seed(UTC_EQUIVALENT_SEED_TIME)
 
         self.assertEqual(
             [clase_data["horario_inicio"] for clase_data in clases],
-            ["20:00", "21:00", "21:15", "21:30", "21:45", "22:00", "21:00", "21:15"],
+            ["20:00", "21:00", "21:15", "21:30", "21:45", "22:00", "21:30", "09:00"],
         )
         self.assertEqual(
             [clase_data["fecha"] for clase_data in clases],
@@ -76,7 +78,7 @@ class SeedClasesTestCase(unittest.TestCase):
                 "2026-05-26",
                 "2026-05-26",
                 "2026-05-26",
-                "2026-05-28",
+                "2026-05-27",
                 "2026-05-29",
             ],
         )
@@ -99,7 +101,7 @@ class SeedClasesTestCase(unittest.TestCase):
         self.assertEqual(len(reservas), 8)
         self.assertEqual(
             [reserva.clase.horario_inicio for reserva in reservas],
-            [time(7, 0), time(8, 0), time(8, 15), time(8, 30), time(8, 45), time(9, 0), time(8, 0), time(8, 15)],
+            [time(7, 0), time(8, 0), time(8, 15), time(8, 30), time(8, 45), time(9, 0), time(8, 30), time(20, 0)],
         )
         self.assertTrue(all(reserva.estado == "confirmada" for reserva in reservas))
         self.assertTrue(all(reserva.tipo_reserva == "estandar" for reserva in reservas))

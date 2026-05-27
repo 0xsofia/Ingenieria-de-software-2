@@ -67,8 +67,9 @@ CLASES_FUTURAS_TEMPLATE = [
         "cupos": 10,
         "profesor_dni": "11223344",
         "precio": 500,
-        "dias_despues": 2,
-        "offset_minutos": 0,
+        "dias_despues": 1,
+        "offset_horas": 0,
+        "offset_minutos": 30,
     },
     {
         "actividad": "Voley",
@@ -77,8 +78,9 @@ CLASES_FUTURAS_TEMPLATE = [
         "cupos": 6,
         "profesor_dni": "12345678",
         "precio": 500,
-        "dias_despues": 3,
-        "offset_minutos": 15,
+        "dias_despues": 2,
+        "offset_horas": 12,
+        "offset_minutos": 0,
     },
 ]
 SEED_TIMEZONE = ZoneInfo("America/Argentina/Buenos_Aires")
@@ -128,13 +130,14 @@ def _build_dynamic_clases_to_seed(seed_datetime=None):
     for clase_template in CLASES_FUTURAS_TEMPLATE:
         clase_datetime = base_datetime + timedelta(
             days=clase_template["dias_despues"],
+            hours=clase_template.get("offset_horas", 0),
             minutes=clase_template["offset_minutos"],
         )
         clases_to_seed.append(
             {
                 key: value
                 for key, value in clase_template.items()
-                if key not in {"dias_despues", "offset_minutos"}
+                if key not in {"dias_despues", "offset_horas", "offset_minutos"}
             }
             | {
                 "fecha": clase_datetime.strftime("%Y-%m-%d"),
