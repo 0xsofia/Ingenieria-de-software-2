@@ -16,6 +16,12 @@ services:
       timeout: 5s
       retries: 10
 
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: inge2-mailpit
+    ports:
+      - "2525:1025"
+
   backend:
     build:
       context: ./App-Centro-De-Actividades/Backend
