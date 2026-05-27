@@ -2,6 +2,8 @@ import unittest
 
 from src.core.bcrypt_and_session import bcrypt
 from src.core.database import db
+from src.core.models.credito import Credito
+from src.core.models.pago import Pago
 from src.core.models.persona import (
     Empleado,
     Permiso,
@@ -11,6 +13,7 @@ from src.core.models.persona import (
     RolPermisoPuente,
     Socio,
 )
+from src.core.models.reserva import Reserva
 from src.core.seeds.usuarios import DEFAULT_PASSWORD, seed_usuarios
 from src.web import create_app
 
@@ -306,6 +309,31 @@ class IniciarSesionTestCase(unittest.TestCase):
         self.assertTrue(Persona.query.filter_by(email="admin@centro.test").first())
         self.assertTrue(Persona.query.filter_by(email="empleado@centro.test").first())
         self.assertTrue(Persona.query.filter_by(email="socio@centro.test").first())
+        credito_persona = Persona.query.filter_by(email="credito@gmail.com").first()
+        self.assertIsNotNone(credito_persona)
+        self.assertEqual(
+            Credito.query.filter_by(socio_id=credito_persona.persona_id, estado="disponible")
+            .filter(Credito.reserva_que_consume_id.is_(None))
+            .filter(Credito.consumido_en.is_(None))
+            .count(),
+            1,
+        )
+        for email, reserva_id in [
+            ("reintegro1@centro.test", 9101),
+            ("reintegro2@centro.test", 9102),
+            ("reintegro3@centro.test", 9103),
+            ("reintegro4@centro.test", 9104),
+        ]:
+            persona = Persona.query.filter_by(email=email).first()
+            self.assertIsNotNone(persona)
+            self.assertIsNotNone(persona.socio)
+            reserva = Reserva.query.get(reserva_id)
+            self.assertIsNotNone(reserva)
+            self.assertEqual(reserva.socio_id, persona.persona_id)
+            self.assertEqual(reserva.estado, "confirmada")
+            pago = Pago.query.filter_by(reserva_id=reserva_id).first()
+            self.assertIsNotNone(pago)
+            self.assertEqual(pago.socio_id, persona.persona_id)
 
         response = self.client.post(
             "/api/login",

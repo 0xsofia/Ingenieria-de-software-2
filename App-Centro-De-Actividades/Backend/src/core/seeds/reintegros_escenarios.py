@@ -6,17 +6,15 @@ import uuid
 
 from src.core.bcrypt_and_session import bcrypt
 from src.core.database import db
-from src.core.enums.clase_enum import ActividadEnum, NivelEnum, TipoClaseEnum
 from src.core.models.clase import Clase
 from src.core.models.pago import Pago
 from src.core.models.persona import Persona, PersonaRolPuente, Rol, Socio
-from src.core.models.profesor import Profesor
 from src.core.models.reserva import Reserva
 
 DEFAULT_PASSWORD = "123456."
 
 
-def seed_reintegros_escenarios():
+def seed_reintegros_escenarios(seed_datetime=None):
     """Crea datos semilla para probar los 4 escenarios de reintegro.
 
     Escenarios (ver src.core.services.reservas.cancelar_reserva_espontanea):
@@ -29,10 +27,9 @@ def seed_reintegros_escenarios():
     """
 
     now = datetime.now(timezone.utc)
-
-    profesor = Profesor.query.order_by(Profesor.profesor_id.asc()).first()
-    if profesor is None:
-        print("⚠️  [SEED] No hay profesores; se omiten seeds de reintegros.")
+    target_classes = _resolve_target_classes(now)
+    if target_classes is None:
+        print("⚠️  [SEED] No hay clases base suficientes; se omiten seeds de reintegros.")
         return
 
     rol_socio = _get_or_create_role("socio")
@@ -45,7 +42,7 @@ def seed_reintegros_escenarios():
             "nombre": "Reintegro",
             "apellido": "Escenario1",
             "target_reserva_id": 9101,
-            "start_delta": timedelta(days=7),
+            "target_clase": target_classes["refund"],
             "needs_sancion": False,
         },
         {
@@ -55,7 +52,7 @@ def seed_reintegros_escenarios():
             "nombre": "Reintegro",
             "apellido": "Escenario2",
             "target_reserva_id": 9102,
-            "start_delta": timedelta(hours=6),
+            "target_clase": target_classes["no_refund"],
             "needs_sancion": False,
         },
         {
@@ -65,7 +62,7 @@ def seed_reintegros_escenarios():
             "nombre": "Reintegro",
             "apellido": "Escenario3",
             "target_reserva_id": 9103,
-            "start_delta": timedelta(days=7),
+            "target_clase": target_classes["refund"],
             "needs_sancion": True,
             "cancelled_base_id": 9200,
         },
@@ -76,7 +73,7 @@ def seed_reintegros_escenarios():
             "nombre": "Reintegro",
             "apellido": "Escenario4",
             "target_reserva_id": 9104,
-            "start_delta": timedelta(hours=6),
+            "target_clase": target_classes["no_refund"],
             "needs_sancion": True,
             "cancelled_base_id": 9300,
         },
@@ -94,22 +91,14 @@ def seed_reintegros_escenarios():
         if case.get("needs_sancion"):
             _ensure_cancelled_reservas_in_month(
                 socio_id=socio_id,
-                profesor_id=profesor.profesor_id,
                 base_reserva_id=int(case["cancelled_base_id"]),
                 now=now,
+                clases=target_classes["cancelled"],
             )
-
-        start_dt = now + case["start_delta"]
-        clase = _ensure_clase(
-            profesor_id=profesor.profesor_id,
-            start_dt=start_dt,
-            cancha=f"Seed {case['scenario']}",
-            precio=Decimal("1000.00"),
-        )
 
         _ensure_reserva_confirmada(
             reserva_id=int(case["target_reserva_id"]),
-            clase_id=clase.clase_id,
+            clase_id=case["target_clase"].clase_id,
             socio_id=socio_id,
             confirmada_en=now,
         )
@@ -190,50 +179,51 @@ def _ensure_socio_user(*, email: str, dni: str, nombre: str, apellido: str, rol:
     return persona.persona_id
 
 
-def _ensure_clase(*, profesor_id: int, start_dt: datetime, cancha: str, precio: Decimal) -> Clase:
-    start_dt = start_dt.astimezone(timezone.utc)
+def _resolve_target_classes(now: datetime):
+    all_classes = Clase.query.order_by(Clase.fecha.asc(), Clase.horario_inicio.asc()).all()
+    future_classes = [
+        clase
+        for clase in all_classes
+        if _clase_inicio(clase) > now
+    ]
 
-    fecha = start_dt.date()
-    horario_inicio = start_dt.time().replace(second=0, microsecond=0)
-    horario_fin = (start_dt + timedelta(hours=1)).time().replace(second=0, microsecond=0)
-
-    clase = (
-        Clase.query.filter_by(
-            actividad=ActividadEnum.FUTBOL,
-            fecha=fecha,
-            horario_inicio=horario_inicio,
-            cancha=cancha,
-        )
-        .order_by(Clase.clase_id.asc())
-        .first()
+    refund_class = next(
+        (
+            clase
+            for clase in future_classes
+            if _clase_inicio(clase) - now > timedelta(hours=48)
+        ),
+        None,
+    )
+    no_refund_class = next(
+        (
+            clase
+            for clase in future_classes
+            if timedelta(0) < _clase_inicio(clase) - now <= timedelta(hours=48)
+        ),
+        None,
     )
 
-    if clase is None:
-        clase = Clase(
-            actividad=ActividadEnum.FUTBOL,
-            fecha=fecha,
-            horario_inicio=horario_inicio,
-            horario_fin=horario_fin,
-            cancha=cancha,
-            nivel=NivelEnum.PRINCIPIANTE,
-            cupos=10,
-            precio=precio,
-            tipo_clase=TipoClaseEnum.GRUPAL,
-            profesor_id=profesor_id,
-        )
-        db.session.add(clase)
-        db.session.flush()
-        return clase
+    if refund_class is None or no_refund_class is None:
+        return None
 
-    clase.horario_fin = horario_fin
-    clase.nivel = NivelEnum.PRINCIPIANTE
-    clase.cupos = 10
-    clase.precio = precio
-    clase.tipo_clase = TipoClaseEnum.GRUPAL
-    clase.profesor_id = profesor_id
-    db.session.flush()
+    excluded_ids = {refund_class.clase_id, no_refund_class.clase_id}
+    cancelled_classes = [
+        clase for clase in all_classes if clase.clase_id not in excluded_ids
+    ][:3]
 
-    return clase
+    if len(cancelled_classes) < 3:
+        return None
+
+    return {
+        "refund": refund_class,
+        "no_refund": no_refund_class,
+        "cancelled": cancelled_classes,
+    }
+
+
+def _clase_inicio(clase: Clase) -> datetime:
+    return datetime.combine(clase.fecha, clase.horario_inicio).replace(tzinfo=timezone.utc)
 
 
 def _ensure_reserva_confirmada(*, reserva_id: int, clase_id: int, socio_id: int, confirmada_en: datetime):
@@ -297,18 +287,11 @@ def _ensure_pago_aprobado(*, socio_id: int, reserva_id: int, monto: Decimal):
     db.session.flush()
 
 
-def _ensure_cancelled_reservas_in_month(*, socio_id: int, profesor_id: int, base_reserva_id: int, now: datetime):
+def _ensure_cancelled_reservas_in_month(*, socio_id: int, base_reserva_id: int, now: datetime, clases: list[Clase]):
     inicio_mes = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-    for offset in range(1, 4):
+    for offset, clase in enumerate(clases, start=1):
         reserva_id = base_reserva_id + offset
-        start_dt = now + timedelta(days=10 + offset)
-        clase = _ensure_clase(
-            profesor_id=profesor_id,
-            start_dt=start_dt,
-            cancha=f"Seed sancion {base_reserva_id}-{offset}",
-            precio=Decimal("500.00"),
-        )
 
         reserva = Reserva.query.get(reserva_id)
         if reserva is None:
