@@ -1,5 +1,7 @@
 from datetime import datetime, date, time
+
 from src.core.database import db
+from src.core.seeds.clases import _build_dynamic_clases_to_seed
 from src.core.models.reserva import Reserva
 from src.core.models.clase import Clase
 from src.core.models.persona import Persona, Socio
@@ -138,7 +140,7 @@ RESERVAS_TO_SEED = [
 # ===========================================================================
 # FUNCIÓN PRINCIPAL EJECUTABLE
 # ===========================================================================
-def seed_reservas():
+def seed_reservas(seed_datetime=None):
     print("🌱 [SEED] Iniciando base de datos unificada de Carpintech...")
 
     # 1. Creamos / actualizamos los profesores
@@ -170,6 +172,8 @@ def seed_reservas():
             reserva.estado = r_data["estado"]
 
         db.session.flush()
+
+    _ensure_seed_reservas_for_socio_centro(seed_datetime)
 
     db.session.commit()
     print("🚀 [SEED] ¡Profesores, Socios, Clases y Reservas sincronizados con éxito!")
@@ -275,3 +279,50 @@ def _ensure_clase_exists(data):
         db.session.flush()
 
     return clase.clase_id
+
+
+def _ensure_seed_reservas_for_socio_centro(seed_datetime=None):
+    persona = Persona.query.filter_by(email="socio@centro.test").first()
+    if persona is None or persona.socio is None:
+        return
+
+    for clase_data in _build_dynamic_clases_to_seed(seed_datetime):
+        profesor = Profesor.query.filter_by(dni=clase_data["profesor_dni"]).first()
+        if profesor is None:
+            continue
+
+        fecha_obj = date.fromisoformat(clase_data["fecha"])
+        horario_inicio_obj = datetime.strptime(
+            clase_data["horario_inicio"], "%H:%M"
+        ).time()
+        clase = Clase.query.filter_by(
+            profesor_id=profesor.profesor_id,
+            fecha=fecha_obj,
+            horario_inicio=horario_inicio_obj,
+            actividad=ActividadEnum(clase_data["actividad"]),
+        ).first()
+        if clase is None:
+            continue
+
+        reserva = Reserva.query.filter_by(
+            clase_id=clase.clase_id,
+            socio_id=persona.persona_id,
+        ).first()
+
+        if reserva is None:
+            reserva = Reserva(
+                clase_id=clase.clase_id,
+                socio_id=persona.persona_id,
+                tipo_reserva="estandar",
+                estado="confirmada",
+                creada_en=datetime.now(),
+                confirmada_en=datetime.now(),
+            )
+            db.session.add(reserva)
+            db.session.flush()
+            continue
+
+        reserva.tipo_reserva = "estandar"
+        reserva.estado = "confirmada"
+        reserva.confirmada_en = reserva.confirmada_en or datetime.now()
+        db.session.flush()
