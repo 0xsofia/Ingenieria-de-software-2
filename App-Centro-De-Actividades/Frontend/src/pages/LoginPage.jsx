@@ -303,8 +303,6 @@ function validateForm(form) {
 
   if (!form.password) {
     errors.password = 'La contraseña es obligatoria.'
-  } else if (form.password.length < 4) {
-    errors.password = 'La contraseña debe tener al menos 4 caracteres.'
   } else if (form.password.length > 128) {
     errors.password = 'La contraseña debe tener como máximo 128 caracteres.'
   }

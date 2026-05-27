@@ -14,6 +14,18 @@ const INITIAL_FILTERS = Object.freeze({
   horario: '',
 })
 
+const ARGENTINA_TIMEZONE = 'America/Argentina/Buenos_Aires'
+const argentinaDateTimeFormatter = new Intl.DateTimeFormat('sv-SE', {
+  timeZone: ARGENTINA_TIMEZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false,
+})
+
 export default function ActividadesPage() {
   const { session } = useAuth()
   const [clases, setClases] = useState([])
@@ -241,10 +253,30 @@ function isClaseDisponible(clase, currentTime) {
     return true
   }
 
-  const inicioClase = new Date(`${clase.fecha}T${clase.horario_inicio}:00`)
-  if (Number.isNaN(inicioClase.getTime())) {
+  const currentDateTimeKey = getArgentinaDateTimeKey(currentTime)
+  if (!currentDateTimeKey) {
     return true
   }
 
-  return inicioClase.getTime() > currentTime
+  return `${clase.fecha}T${clase.horario_inicio}:00` > currentDateTimeKey
+}
+
+function getArgentinaDateTimeKey(currentTime) {
+  const date = new Date(currentTime)
+  if (Number.isNaN(date.getTime())) {
+    return null
+  }
+
+  const parts = Object.fromEntries(
+    argentinaDateTimeFormatter
+      .formatToParts(date)
+      .filter((part) => part.type !== 'literal')
+      .map((part) => [part.type, part.value])
+  )
+
+  if (!parts.year || !parts.month || !parts.day || !parts.hour || !parts.minute || !parts.second) {
+    return null
+  }
+
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`
 }

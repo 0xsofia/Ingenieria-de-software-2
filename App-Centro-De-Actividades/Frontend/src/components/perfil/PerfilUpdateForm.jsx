@@ -34,23 +34,39 @@ function PerfilUpdateForm() {
     setMessage(null)
     setErrors({})
 
+    let data
+
     try {
-      const data = await actualizarPerfil({
+      data = await actualizarPerfil({
         email: emailValue,
         intereses: interesesValue,
       })
-      const updatedProfile = data.profile
-      setAuthenticatedSession({ ...session, ...updatedProfile })
-      navigate('/verperfil')
     } catch (error) {
       const responseErrors = error.data?.errors
       if (responseErrors) {
         setErrors(responseErrors)
       } else {
+        console.error('Fallo la request de actualizar perfil', error)
         setMessage(
           error.data?.message || 'No fue posible actualizar el perfil. Intentalo nuevamente.',
         )
       }
+
+      setIsSaving(false)
+      return
+    }
+
+    try {
+      const updatedProfile = data?.profile || {
+        email: emailValue,
+        intereses: interesesValue,
+      }
+
+      setAuthenticatedSession({ ...session, ...updatedProfile })
+      navigate('/verperfil')
+    } catch (error) {
+      console.error('La API devolvio 200 pero fallo el frontend al aplicar el perfil', error)
+      setMessage('El perfil se actualizo, pero hubo un problema al refrescar la pantalla.')
     } finally {
       setIsSaving(false)
     }
