@@ -30,25 +30,26 @@ class SeedClasesTestCase(unittest.TestCase):
         db.drop_all()
         self.ctx.pop()
 
-    def test_seed_clases_crea_cuatro_clases_dinamicas_para_la_hora_actual(self):
+    def test_seed_clases_crea_cinco_clases_dinamicas_para_la_hora_actual(self):
         seed_profesores()
         seed_clases(SEED_TIME)
 
         clases = Clase.query.order_by(Clase.fecha, Clase.horario_inicio).all()
 
-        self.assertEqual(len(clases), 7)
+        self.assertEqual(len(clases), 8)
         self.assertEqual(
-            [clase.horario_inicio for clase in clases[:5]],
-            [time(7, 0), time(8, 0), time(8, 15), time(8, 30), time(9, 0)],
+            [clase.horario_inicio for clase in clases[:6]],
+            [time(7, 0), time(8, 0), time(8, 15), time(8, 30), time(8, 45), time(9, 0)],
         )
         self.assertEqual(clases[0].actividad.value, "Voley")
         self.assertEqual(clases[0].cupos, 1)
         self.assertEqual(clases[1].actividad.value, "Voley")
         self.assertEqual(clases[1].cupos, 8)
-        self.assertEqual(clases[4].cupos, 1)
+        self.assertEqual(clases[5].cupos, 1)
         self.assertEqual(
             [clase.fecha.isoformat() for clase in clases],
             [
+                "2026-05-26",
                 "2026-05-26",
                 "2026-05-26",
                 "2026-05-26",
@@ -64,11 +65,12 @@ class SeedClasesTestCase(unittest.TestCase):
 
         self.assertEqual(
             [clase_data["horario_inicio"] for clase_data in clases],
-            ["20:00", "21:00", "21:15", "21:30", "22:00", "21:00", "21:15"],
+            ["20:00", "21:00", "21:15", "21:30", "21:45", "22:00", "21:00", "21:15"],
         )
         self.assertEqual(
             [clase_data["fecha"] for clase_data in clases],
             [
+                "2026-05-26",
                 "2026-05-26",
                 "2026-05-26",
                 "2026-05-26",
@@ -94,10 +96,10 @@ class SeedClasesTestCase(unittest.TestCase):
         )
 
         self.assertIsNotNone(persona)
-        self.assertEqual(len(reservas), 7)
+        self.assertEqual(len(reservas), 8)
         self.assertEqual(
             [reserva.clase.horario_inicio for reserva in reservas],
-            [time(7, 0), time(8, 0), time(8, 15), time(8, 30), time(9, 0), time(8, 0), time(8, 15)],
+            [time(7, 0), time(8, 0), time(8, 15), time(8, 30), time(8, 45), time(9, 0), time(8, 0), time(8, 15)],
         )
         self.assertTrue(all(reserva.estado == "confirmada" for reserva in reservas))
         self.assertTrue(all(reserva.tipo_reserva == "estandar" for reserva in reservas))
@@ -107,4 +109,4 @@ class SeedClasesTestCase(unittest.TestCase):
 
         clases = Clase.query.order_by(Clase.fecha, Clase.horario_inicio).all()
 
-        self.assertEqual(len(clases), 7)
+        self.assertEqual(len(clases), 8)

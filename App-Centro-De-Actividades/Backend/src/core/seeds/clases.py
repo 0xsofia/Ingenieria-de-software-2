@@ -42,6 +42,14 @@ CLASES_BASE_TEMPLATE = [
     },
     {
         "actividad": "Futbol",
+        "cancha": "Cancha C",
+        "nivel": "Intermedio",
+        "cupos": 10,
+        "profesor_dni": "87654321",
+        "precio": 500,
+    },
+    {
+        "actividad": "Futbol",
         "cancha": "Cancha A",
         "nivel": "Avanzado",
         "cupos": 1,
@@ -50,7 +58,7 @@ CLASES_BASE_TEMPLATE = [
     },
 ]
 
-CLASES_OFFSET_MINUTES = (0, 15, 30, 60)
+CLASES_OFFSET_MINUTES = (0, 15, 30, 45, 60)
 CLASES_FUTURAS_TEMPLATE = [
     {
         "actividad": "Basquet",

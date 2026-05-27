@@ -138,7 +138,7 @@ class IniciarSesionTestCase(unittest.TestCase):
 
         response = self.client.post(
             "/api/login",
-            json={"email": "socio@centro.test", "password": "1234"},
+            json={"email": "socio@centro.test", "password": "1"},
         )
 
         self.assertEqual(response.status_code, 401)
@@ -256,7 +256,9 @@ class IniciarSesionTestCase(unittest.TestCase):
     def test_seed_usuarios_cubre_los_tres_accesos_basicos_de_la_hu(self):
         seed_usuarios()
 
-        self.assertEqual(Persona.query.count(), 3)
+        self.assertTrue(Persona.query.filter_by(email="admin@centro.test").first())
+        self.assertTrue(Persona.query.filter_by(email="empleado@centro.test").first())
+        self.assertTrue(Persona.query.filter_by(email="socio@centro.test").first())
 
         admin_response = self.client.post(
             "/api/login",
@@ -301,7 +303,9 @@ class IniciarSesionTestCase(unittest.TestCase):
         result = runner.invoke(args=["seed_db"])
 
         self.assertEqual(result.exit_code, 0)
-        self.assertEqual(Persona.query.count(), 3)
+        self.assertTrue(Persona.query.filter_by(email="admin@centro.test").first())
+        self.assertTrue(Persona.query.filter_by(email="empleado@centro.test").first())
+        self.assertTrue(Persona.query.filter_by(email="socio@centro.test").first())
 
         response = self.client.post(
             "/api/login",

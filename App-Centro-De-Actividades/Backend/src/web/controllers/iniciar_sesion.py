@@ -85,8 +85,6 @@ def _validate_login_payload(payload):
 
     if not password:
         errors["password"] = "La contraseña es obligatoria."
-    elif len(password) < 4:
-        errors["password"] = "La contraseña debe tener al menos 4 caracteres."
     elif len(password) > 128:
         errors["password"] = "La contraseña debe tener como máximo 128 caracteres."
 
