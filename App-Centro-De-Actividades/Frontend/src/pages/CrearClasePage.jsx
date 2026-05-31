@@ -9,6 +9,10 @@ import { ACTIVIDADES } from '../constants/actividades'
 import './ActividadPage.css'
 
 const NIVELES = ['Principiante', 'Intermedio', 'Avanzado']
+const HORARIOS = Array.from({ length: 24 }, (_, hour) => ({
+  value: String(hour),
+  label: `${String(hour).padStart(2, '0')}:00`,
+}))
 
 const hoy = new Date().toISOString().split('T')[0]
 
@@ -71,11 +75,11 @@ export default function ClasePage() {
             },
             'La fecha no puede ser en el pasado.'
           ),
-        horario_inicio: z.coerce
-          .number()
-          .int()
+        horario_inicio: z
+          .string()
+          .trim()
           .min(1, 'El horario de inicio es obligatorio.')
-          .max(24),
+          .regex(/^(?:[01]?\d|2[0-3])$/, 'El horario de inicio debe estar entre 00:00 y 23:00.'),
         cancha: z
           .string()
           .trim()
@@ -93,6 +97,10 @@ export default function ClasePage() {
           .coerce.number()
           .int('Los cupos deben ser un número entero.')
           .min(1, 'Los cupos deben ser al menos 1.'),
+        precio: z
+          .coerce.number()
+          .positive('El precio debe ser mayor a 0.')
+          .refine((value) => !Number.isNaN(value), 'El precio debe ser un número válido.'),
         profesor_id: z
           .coerce.number()
           .min(1, 'El profesor es obligatorio.'),
@@ -122,10 +130,9 @@ export default function ClasePage() {
       {
         name: 'horario_inicio',
         label: 'Horario de inicio',
-        type: 'number',
+        type: 'select',
         required: true,
-        min:1,
-        max:24,
+        options: HORARIOS,
       },
       {
         name: 'cancha',
@@ -152,6 +159,15 @@ export default function ClasePage() {
         min: '1',
       },
       {
+        name: 'precio',
+        label: 'Precio',
+        type: 'number',
+        required: true,
+        min: '0.01',
+        step: '0.01',
+        placeholder: 'Ingrese el precio en pesos',
+      },
+      {
         name: 'profesor_id',
         label: 'Profesor',
         type: 'select',
@@ -169,10 +185,11 @@ export default function ClasePage() {
     () => ({
       actividad: '',
       fecha: '',
-      horario_inicio: 1,
+      horario_inicio: '',
       cancha: '',
       nivel: '',
       cupos: 1,
+      precio: 1,
       profesor_id: '',
     }),
     []
@@ -189,6 +206,7 @@ export default function ClasePage() {
         ...values,
         horario_inicio: Number(values.horario_inicio),
         cupos: Number(values.cupos),
+        precio: Number(values.precio),
         profesor_id: Number(values.profesor_id),
       })
 

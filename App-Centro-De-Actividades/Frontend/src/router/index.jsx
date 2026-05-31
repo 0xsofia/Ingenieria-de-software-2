@@ -3,6 +3,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import AuthenticatedLayout from '../components/AuthenticatedLayout.jsx'
 import InicioPage from '../pages/InicioPage.jsx'
 import ListadoClasesPage from '../pages/ListadoClasesPage.jsx'
+import DetalleClasePage from '../pages/DetalleClasePage.jsx'
 import LoginPage from '../pages/LoginPage.jsx'
 import PagoRetornoPage from '../pages/PagoRetornoPage.jsx'
 import PerfilPage from '../pages/PerfilPage.jsx'
@@ -17,9 +18,12 @@ import MisPagosPage from '../pages/MisPagosPage.jsx'
 import ModificarClasePage from '../pages/ModificarClasePage.jsx'
 import ModificarUsuarioPage from '../pages/ModificarUsuarioPage.jsx'
 import RegistrarEmpleadoPage from '../pages/RegistrarEmpleadoPage.jsx'
+import MisClasesPage from '../pages/MisClasesPage.jsx'
 import EscanearQRPage from '../pages/EscanearQRPage.jsx'
 import GenerarQRPage from '../pages/GenerarQRPage.jsx'
-import MisClasesPage from '../pages/MisClasesPage.jsx'
+import CrearProfesorPage from '../pages/CrearProfesorPage.jsx'
+import ListadoPagosPage from '../pages/ListadoPagosPage.jsx'
+import ConfirmarTurnoPage from '../pages/ConfirmarTurnoPage.jsx'
 
 
 const router = createBrowserRouter([
@@ -36,6 +40,10 @@ const router = createBrowserRouter([
     element: <RegistrarsePage />,
   },
   {
+    path: '/confirmar-turno/:token',
+    element: <ConfirmarTurnoPage />,
+  },
+  {
     element: <AuthenticatedLayout />,
     children: [
       {
@@ -47,8 +55,16 @@ const router = createBrowserRouter([
         element: <ListadoClasesPage />,
       },
       {
+        path: '/clases/:claseId/detalle',
+        element: <DetalleClasePage />,
+      },
+      {
         path: '/clases/crear',
         element: <CrearClasePage />,
+      },
+      {
+        path: '/profesor/crear',
+        element: <CrearProfesorPage />,
       },
       {
         path: '/clases/:claseId/modificar',
@@ -89,6 +105,10 @@ const router = createBrowserRouter([
       {
         path: '/mis-pagos',
         element: <MisPagosPage />,
+      },
+      {
+        path: '/pagos',
+        element: <ListadoPagosPage />,
       },
       {
         path: '/mis-clases',

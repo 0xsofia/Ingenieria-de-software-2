@@ -1,13 +1,4 @@
-import { useRef } from 'react'
-
 import './FilterForm.css'
-
-function buildFormValues(fields, initialValues = {}) {
-  return fields.reduce((accumulator, field) => {
-    accumulator[field.name] = initialValues[field.name] ?? ''
-    return accumulator
-  }, {})
-}
 
 function normalizeValues(values, fields) {
   return fields.reduce((accumulator, field) => {
@@ -32,11 +23,8 @@ export default function FilterForm({
   initialValues,
   onSubmit,
   submitLabel = 'Filtrar',
-  resetLabel = 'Limpiar',
   isSubmitting = false,
-  submitOnReset = true,
 }) {
-  const formRef = useRef(null)
   const formKey = JSON.stringify([fields.map(({ name }) => name), initialValues])
 
   function handleSubmit(event) {
@@ -51,16 +39,6 @@ export default function FilterForm({
     onSubmit(normalizeValues(values, fields))
   }
 
-  function handleReset() {
-    formRef.current?.reset()
-
-    const nextValues = buildFormValues(fields, {})
-
-    if (submitOnReset) {
-      onSubmit(normalizeValues(nextValues, fields))
-    }
-  }
-
   return (
     <section className="filter-form-card">
       <div className="filter-form-card__title">
@@ -69,7 +47,7 @@ export default function FilterForm({
         {description ? <p className="dashboard-copy">{description}</p> : null}
       </div>
 
-      <form key={formKey} ref={formRef} className="filter-form" onSubmit={handleSubmit}>
+      <form key={formKey} className="filter-form" onSubmit={handleSubmit}>
         <div className="filter-form__grid">
           {fields.map((field) => {
             const commonProps = {
@@ -110,14 +88,6 @@ export default function FilterForm({
         <div className="filter-form__actions">
           <button type="submit" className="primary-action" disabled={isSubmitting}>
             {isSubmitting ? 'Buscando...' : submitLabel}
-          </button>
-          <button
-            type="button"
-            className="secondary-action"
-            onClick={handleReset}
-            disabled={isSubmitting}
-          >
-            {resetLabel}
           </button>
         </div>
       </form>

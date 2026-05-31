@@ -19,3 +19,18 @@
 
 - Código de verificación: 257991
 
+#### tarjeta: 
+
+- nro: 5031 7557 3453 0604 
+
+- codigo: 123
+
+- vto: 11/30
+
+- nombre del titular: 
+    - (para pago rechazado con error general): OTHE
+
+- DNI: 12345678
+
+
+> el saldo de la cuenta se usa para realizar el pago exitoso , y el pago con tarjeta se usa para el pago rechazado

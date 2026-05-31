@@ -28,6 +28,7 @@ class UsuariosTestCase(unittest.TestCase):
     ):
         mock_generate_temporary_password.return_value = "Temp42#Pwd"
         empleado_role = self._crear_rol("empleado")
+        socio_role = self._crear_rol("socio")
         self._crear_usuario_con_roles(
             email="admin@centro.test",
             dni="30000001",
@@ -40,18 +41,24 @@ class UsuariosTestCase(unittest.TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json["status"], "registered")
-        self.assertEqual(response.json["redirect_to"], "/inicio")
+        self.assertEqual(response.json["redirect_to"], "/usuarios")
         self.assertIn("email", response.json["message"])
 
         persona = Persona.query.filter_by(email="jorge.petri@example.com").first()
         self.assertIsNotNone(persona)
         self.assertIsNotNone(db.session.get(Empleado, persona.persona_id))
+        self.assertIsNotNone(db.session.get(Socio, persona.persona_id))
         self.assertTrue(
             bcrypt.check_password_hash(persona.password_hash, "Temp42#Pwd")
         )
         self.assertIsNotNone(
             PersonaRolPuente.query.filter_by(
                 persona_id=persona.persona_id, rol_id=empleado_role.rol_id
+            ).first()
+        )
+        self.assertIsNotNone(
+            PersonaRolPuente.query.filter_by(
+                persona_id=persona.persona_id, rol_id=socio_role.rol_id
             ).first()
         )
         mock_send_employee_access_email.assert_called_once_with(
@@ -70,6 +77,7 @@ class UsuariosTestCase(unittest.TestCase):
             "No se pudo enviar el email con la contraseña temporal del empleado."
         )
         self._crear_rol("empleado")
+        self._crear_rol("socio")
         self._crear_usuario_con_roles(
             email="admin@centro.test",
             dni="30000001",
@@ -116,6 +124,7 @@ class UsuariosTestCase(unittest.TestCase):
 
     def test_registro_de_empleado_reutiliza_validacion_de_dni_y_telefono(self):
         self._crear_rol("empleado")
+        self._crear_rol("socio")
         self._crear_usuario_con_roles(
             email="admin@centro.test",
             dni="30000001",
@@ -401,7 +410,7 @@ class UsuariosTestCase(unittest.TestCase):
             "Ingrese un telefono valido sin caracteres especiales, letras o espacios. Ejemplo 2214446633",
         )
 
-    def test_modificacion_de_usuario_falla_si_codigo_de_area_no_es_valido(self):
+    def test_modificacion_de_usuario_falla_si_telefono_no_comienza_con_uno_dos_o_tres(self):
         self._crear_usuario_con_roles(
             email="admin@centro.test",
             dni="30000001",
@@ -418,14 +427,14 @@ class UsuariosTestCase(unittest.TestCase):
 
         response = self.client.put(
             f"/api/usuarios/{persona.persona_id}",
-            json=self._payload_empleado(telefono="1221446633"),
+            json=self._payload_empleado(telefono="4221446633"),
         )
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json["status"], "validation_error")
         self.assertEqual(
             response.json["errors"]["telefono"],
-            "Debe ingresar un código de área válido en territorio argentino. Ejemplo: 221",
+            "Debe ingresar un telefono que comience con 1, 2 ó 3. Ejemplo: 2214446633",
         )
 
     def test_modificacion_de_usuario_falla_si_telefono_no_alcanza_diez_digitos(self):
@@ -452,7 +461,7 @@ class UsuariosTestCase(unittest.TestCase):
         self.assertEqual(response.json["status"], "validation_error")
         self.assertEqual(
             response.json["errors"]["telefono"],
-            "El teléfono debe alcanzar los 10 dígitos totales incluyendo el código de área. Ejemplo: 2214446633",
+            "El teléfono debe alcanzar los 10 dígitos totales. Ejemplo: 2214446633",
         )
 
     def _payload_empleado(self, **overrides):

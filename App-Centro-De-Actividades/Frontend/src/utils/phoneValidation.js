@@ -1,11 +1,14 @@
 export const PHONE_INVALID_CHARS_MESSAGE =
   'Ingrese un telefono valido sin caracteres especiales, letras o espacios. Ejemplo 2214446633'
 
-export const PHONE_AREA_CODE_MESSAGE =
-  'Debe ingresar un código de área válido en territorio argentino. Ejemplo: 221'
+export const PHONE_START_DIGIT_MESSAGE =
+  'Debe ingresar un telefono que comience con 1, 2 ó 3. Ejemplo: 2214446633'
 
 export const PHONE_TOTAL_DIGITS_MESSAGE =
-  'El teléfono debe alcanzar los 10 dígitos totales incluyendo el código de área. Ejemplo: 2214446633'
+  'El teléfono debe alcanzar los 10 dígitos totales. Ejemplo: 2214446633'
+
+export const PHONE_HINT =
+  'Ingresá solo números en un teléfono de 10 dígitos que comience con 1, 2 o 3. Ejemplo: 2214446633.'
 
 export function getPhoneValidationMessage(value) {
   if (!/^\d+$/.test(value)) {
@@ -16,24 +19,9 @@ export function getPhoneValidationMessage(value) {
     return PHONE_TOTAL_DIGITS_MESSAGE
   }
 
-  if (!hasValidAreaCode(value)) {
-    return PHONE_AREA_CODE_MESSAGE
+  if (!value.startsWith('1') && !value.startsWith('2') && !value.startsWith('3')) {
+    return PHONE_START_DIGIT_MESSAGE
   }
 
   return ''
-}
-
-function hasValidAreaCode(value) {
-  if (value.startsWith('0')) {
-    return false
-  }
-
-  if (value.startsWith('1') && !value.startsWith('11')) {
-    return false
-  }
-
-  return [2, 3, 4].some((areaLength) => {
-    const subscriberLength = value.length - areaLength
-    return subscriberLength >= 6 && subscriberLength <= 8
-  })
 }

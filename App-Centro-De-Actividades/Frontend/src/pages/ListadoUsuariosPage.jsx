@@ -42,7 +42,7 @@ export default function ListadoUsuariosPage() {
         }
       } catch (requestError) {
         if (!cancelled) {
-          setError(requestError?.data?.message || 'No se pudo cargar el listado de usuarios.')
+          setError(requestError?.data?.message || "No se encontraron usuarios registrados.")
         }
       } finally {
         if (!cancelled) {
@@ -84,7 +84,7 @@ export default function ListadoUsuariosPage() {
 
   const emptyMessage = hasActiveFilters
     ? 'No se encontraron usuarios para el filtro aplicado.'
-    : 'No hay usuarios para mostrar.'
+    : 'No se encontraron usuarios registrados.'
 
   return (
     <section className="dashboard-shell">
@@ -93,9 +93,9 @@ export default function ListadoUsuariosPage() {
           <div>
             <p className="auth-subtitle">Administración</p>
             <h1>Usuarios</h1>
-            <p className="dashboard-copy">
+            {/* <p className="dashboard-copy">
               Todos los usuarios se muestran en una sola tabla y el rol indica si es socio o empleado.
-            </p>
+            </p> */}
           </div>
 
           <div className="listado-usuarios-page__header-actions">

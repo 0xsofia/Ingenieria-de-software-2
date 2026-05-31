@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { Clock, AlertTriangle, Loader2, CheckCircle2 } from 'lucide-react';
 import { generarQR } from '../api/asistencias'; // Tu función http.post
+import { useAuth } from '../hooks/useAuth';
 
 const GenerarQR = () => {
     const { idReserva } = useParams(); 
+    const { session } = useAuth();
     
     const [payloadQR, setPayloadQR] = useState(null);
     const [cargando, setCargando] = useState(true);
@@ -41,6 +43,10 @@ const GenerarQR = () => {
         cargarCodigoQR();
     }, [idReserva]);
 
+    if (session?.role !== 'socio') {
+        return <Navigate to="/inicio" replace />;
+    }
+
     // 1. Pantalla de Carga
     if (cargando) {
         return (
@@ -61,12 +67,12 @@ const GenerarQR = () => {
                     <p className="text-red-700 text-sm whitespace-pre-line leading-relaxed mb-6">
                         {errorMsg}
                     </p>
-                    <button 
+                    {/* <button 
                         onClick={() => window.location.reload()}
                         className="bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2.5 px-6 rounded-xl text-sm transition-all"
                     >
                         Volver a intentar
-                    </button>
+                    </button> */}
                 </div>
             </div>
         );

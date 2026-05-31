@@ -6,6 +6,7 @@ from src.web.handlers import error
 from src.core import database
 from src.core.config import config
 from src.core.seeds import run_seeds
+from src.core.seeds.reintegros_escenarios import seed_reintegros_escenarios
 from src.web.controllers.iniciar_sesion import login_bp
 from src.web.controllers.registrarse import registrarse_bp
 from src.web.controllers.usuarios import usuarios_bp
@@ -19,18 +20,27 @@ from src.web.controllers.clase_controller import clase_bp
 from src.web.controllers.profesor_controller import profesor_bp
 from src.web.controllers.reservas import reservas_bp
 from src.web.controllers.pagos_controller import pagos_bp
+from src.web.controllers.confirmaciones import confirmaciones_bp
 
 from src.core.bcrypt_and_session import bcrypt, cipher, login_manager
 
 
-def create_app(env="development", static_folder="../../static"):
+def create_app(env=None, static_folder="../../static"):
     app = Flask(__name__, static_folder=static_folder)
 
+    # 🚀 LEER ENTORNO DINÁMICO: Prioriza el argumento, luego busca en Render/OS, y por último usa local
+    if env is None:
+        env = os.environ.get("FLASK_ENV", "development")
+
+    # Nos aseguramos de que lo que levante coincida con las claves de tu config.py
+    print(f"📦 [CONFIG] Cargando la aplicación en modo: {env.upper()}", flush=True)
+    
     app.config.from_object(config[env])
     database.init_app(app)
 
     bcrypt.init_app(app)
     login_manager.init_app(app)
+    
     frontend_origin = (os.environ.get("FRONTEND_BASE_URL") or "").rstrip("/")
     allowed_origins = [
         origin
@@ -44,8 +54,20 @@ def create_app(env="development", static_folder="../../static"):
 
     CORS(
         app,
-        supports_credentials=True,
-        resources={r"/api/*": {"origins": allowed_origins}},
+        supports_credentials=True,  
+        resources={
+            r"/api/*": {
+                "origins": [
+                    "https://ingenieria-de-software-2-1.onrender.com",
+                    "http://localhost:5173",
+                    "http://127.0.0.1:5173"
+                ],
+                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+                "expose_headers": ["Set-Cookie"],
+                "send_wildcard": False  
+            }
+        },
     )
     cipher.init_app(app)
 
@@ -64,10 +86,11 @@ def create_app(env="development", static_folder="../../static"):
     app.register_blueprint(clase_bp)
     app.register_blueprint(profesor_bp)
     app.register_blueprint(reservas_bp)
+    app.register_blueprint(pagos_bp)
     app.register_blueprint(escanearQR_bp)
     app.register_blueprint(generar_token_asistencia_bp) 
-    app.register_blueprint(pagos_bp)
-
+    app.register_blueprint(confirmaciones_bp)
+    
     @app.cli.command(name="reset_db")
     def reset_db():
         database.reset()
@@ -76,5 +99,11 @@ def create_app(env="development", static_folder="../../static"):
     def seed_db():
         database.ensure_seed_prerequisites()
         run_seeds(app)
+
+    @app.cli.command(name="seed_reintegros_db")
+    def seed_reintegros_db():
+        database.ensure_seed_prerequisites()
+        with app.app_context():
+            seed_reintegros_escenarios()
 
     return app

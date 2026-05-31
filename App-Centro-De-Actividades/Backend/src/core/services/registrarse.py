@@ -1,6 +1,4 @@
-import json
 import re
-from pathlib import Path
 
 from sqlalchemy.exc import IntegrityError
 
@@ -20,29 +18,12 @@ PHONE_INVALID_CHARS_MESSAGE = (
     "Ingrese un telefono valido sin caracteres especiales, letras o espacios. "
     "Ejemplo 2214446633"
 )
-PHONE_AREA_CODE_MESSAGE = (
-    "Debe ingresar un código de área válido en territorio argentino. Ejemplo: 221"
+PHONE_START_DIGIT_MESSAGE = (
+    "Debe ingresar un telefono que comience con 1, 2 ó 3. Ejemplo: 2214446633"
 )
 PHONE_TOTAL_DIGITS_MESSAGE = (
-    'El teléfono debe alcanzar los 10 dígitos totales incluyendo el código de área. '
-    "Ejemplo: 2214446633"
+    "El teléfono debe alcanzar los 10 dígitos totales. Ejemplo: 2214446633"
 )
-AREA_CODES_JSON_PATH = (
-    Path(__file__).resolve().parents[3] / "assets" / "cod_area_arg.json"
-)
-VALID_AREA_CODES = frozenset()
-
-
-def _load_valid_area_codes():
-    payload = json.loads(AREA_CODES_JSON_PATH.read_text(encoding="utf-8"))
-    return frozenset(
-        str(item["codigo_area"]).strip()
-        for item in payload.get("codigos_area", [])
-        if str(item.get("codigo_area", "")).strip()
-    )
-
-
-VALID_AREA_CODES = _load_valid_area_codes()
 
 
 def validar_payload_registro(payload):
@@ -89,7 +70,7 @@ def _validar_payload_persona(payload, require_password_fields):
     if not normalized_payload["telefono"]:
         errors["telefono"] = "El teléfono es obligatorio."
     else:
-        telefono_normalizado, telefono_error = validar_telefono_registro(
+        telefono_normalizado, telefono_error = validar_telefono(
             normalized_payload["telefono"]
         )
         if telefono_error is not None:
@@ -121,10 +102,10 @@ def _validar_payload_persona(payload, require_password_fields):
 
 
 def registrar_socio(payload):
-    return _registrar_persona_con_rol(
+    return _registrar_persona_con_roles(
         payload=payload,
-        role_name="socio",
-        entity_factory=Socio,
+        role_names=("socio",),
+        entity_factories=(Socio,),
         password=payload["password"],
         missing_role_message=(
             "El registro no está disponible porque falta la configuración del rol socio."
@@ -137,16 +118,16 @@ def registrar_socio(payload):
 def registrar_empleado(payload):
     credenciales = provisionar_acceso_empleado(payload)
 
-    return _registrar_persona_con_rol(
+    return _registrar_persona_con_roles(
         payload=payload,
-        role_name="empleado",
-        entity_factory=Empleado,
+        role_names=("empleado", "socio"),
+        entity_factories=(Empleado, Socio),
         password=credenciales["temporary_password"],
         missing_role_message=(
-            "El registro no está disponible porque falta la configuración del rol empleado."
+            "El registro no está disponible porque falta la configuración de los roles empleado o socio."
         ),
         success_message="El empleado fue registrado correctamente y se envió por email la contraseña temporal.",
-        redirect_to="/inicio",
+        redirect_to="/usuarios",
         post_flush_action=lambda persona: _entregar_acceso_empleado(
             payload=payload,
             persona=persona,
@@ -173,11 +154,11 @@ def _entregar_acceso_empleado(*, payload, persona, credenciales):
     )
 
 
-def _registrar_persona_con_rol(
+def _registrar_persona_con_roles(
     *,
     payload,
-    role_name,
-    entity_factory,
+    role_names,
+    entity_factories,
     password,
     missing_role_message,
     success_message,
@@ -200,8 +181,13 @@ def _registrar_persona_con_rol(
             400,
         )
 
-    role = Rol.query.filter(db.func.lower(Rol.nombre) == role_name).first()
-    if role is None:
+    normalized_role_names = tuple(normalizar_email(role_name) for role_name in role_names)
+    roles = (
+        Rol.query.filter(db.func.lower(Rol.nombre).in_(normalized_role_names)).all()
+    )
+    roles_by_name = {normalizar_email(role.nombre): role for role in roles}
+
+    if any(role_name not in roles_by_name for role_name in normalized_role_names):
         return {"status": "error", "message": missing_role_message}, 503
 
     persona = Persona(
@@ -220,10 +206,16 @@ def _registrar_persona_con_rol(
     try:
         db.session.add(persona)
         db.session.flush()
-        db.session.add(entity_factory(persona_id=persona.persona_id))
-        db.session.add(
-            PersonaRolPuente(persona_id=persona.persona_id, rol_id=role.rol_id)
-        )
+        for entity_factory in entity_factories:
+            db.session.add(entity_factory(persona_id=persona.persona_id))
+
+        for role_name in normalized_role_names:
+            db.session.add(
+                PersonaRolPuente(
+                    persona_id=persona.persona_id,
+                    rol_id=roles_by_name[role_name].rol_id,
+                )
+            )
         if post_flush_action is not None:
             post_flush_action(persona)
         db.session.commit()
@@ -245,7 +237,7 @@ def normalizar_email(email):
     return email.strip().lower()
 
 
-def validar_telefono_registro(telefono):
+def validar_telefono(telefono):
     if not telefono.isdigit():
         return None, PHONE_INVALID_CHARS_MESSAGE
 
@@ -254,20 +246,10 @@ def validar_telefono_registro(telefono):
 
     telefono_normalizado = telefono.strip()
 
-    if not _codigo_area_valido(telefono_normalizado):
-        return None, PHONE_AREA_CODE_MESSAGE
+    if not telefono_normalizado.startswith(("1", "2", "3")):
+        return None, PHONE_START_DIGIT_MESSAGE
 
     return telefono_normalizado, None
-
-
-def _codigo_area_valido(telefono):
-    for area_length in range(4, 1, -1):
-        candidate_code = telefono[:area_length]
-        if candidate_code in VALID_AREA_CODES:
-            subscriber_length = len(telefono[area_length:])
-            return 6 <= subscriber_length <= 8
-
-    return False
 
 
 def _validation_error(field, message):

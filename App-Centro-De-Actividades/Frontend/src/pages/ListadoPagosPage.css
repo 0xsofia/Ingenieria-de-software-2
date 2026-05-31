@@ -1,0 +1,49 @@
+.listado-pagos-page {
+  display: grid;
+  gap: 28px;
+}
+
+.listado-pagos-page__header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.listado-pagos-page__header-row h1,
+.listado-pagos-page__status-row p {
+  margin: 0;
+}
+
+.listado-pagos-page__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.listado-pagos-page__header-actions .primary-action {
+  margin-top: 0;
+}
+
+.listado-pagos-page__content {
+  display: grid;
+  gap: 22px;
+}
+
+.listado-pagos-page__status-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .listado-pagos-page__header-actions {
+    width: 100%;
+  }
+
+  .listado-pagos-page__header-actions > * {
+    width: 100%;
+  }
+}

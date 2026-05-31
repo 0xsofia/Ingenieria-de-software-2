@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom'; 
+import { Navigate, useParams } from 'react-router-dom'; 
 import { Html5Qrcode } from "html5-qrcode"; 
 import { AlertTriangle, Loader2, CheckCircle2, RefreshCw } from 'lucide-react';
 import { escanearQR } from '../api/asistencias'; 
+import { useAuth } from '../hooks/useAuth';
 import './EscanearQRPage.css';
 
 const EscanearQR = () => {
@@ -10,6 +11,7 @@ const EscanearQR = () => {
     const [errorLog, setErrorLog] = useState(null);
     const [cargando, setCargando] = useState(false);
     const { idClase } = useParams(); 
+    const { session } = useAuth();
     const html5QrCodeRef = useRef(null);
     
     useEffect(() => {
@@ -76,7 +78,7 @@ const EscanearQR = () => {
             try {
                 payload = JSON.parse(decodedText);
             } catch (err) {
-                throw new Error("Formato del QR inválido. El código escaneado no pertenece al sistema del gimnasio.");
+                throw new Error("El QR es inválido.");
             }
 
             if (!payload.dni || !payload.id_reserva) {
@@ -111,6 +113,10 @@ const EscanearQR = () => {
         // Omisión de ruidos de lectura
     };
 
+    if (session?.role !== 'empleado') {
+        return <Navigate to="/inicio" replace />;
+    }
+
     return (
         <div className="max-w-md mx-auto p-6 bg-white rounded-3xl border border-gray-100 shadow-xl mt-8 font-sans">
             <h2 className="text-xl font-extrabold text-gray-800 text-center mb-1">Escanear QR de Asistencia</h2>
@@ -138,12 +144,12 @@ const EscanearQR = () => {
                     <CheckCircle2 className="mx-auto text-green-600 mb-3" size={48} />
                     <h3 className="text-lg font-bold text-green-800">¡Ingreso Autorizado!</h3>
                     <p className="text-green-700 text-sm mt-2">{resultadoEscaneo}</p>
-                    <button 
+                    {/* <button 
                         onClick={iniciarCamaraDirecta}
                         className="mt-6 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-xl text-sm transition-all shadow-md shadow-green-100"
                     >
                         Escanear Siguiente
-                    </button>
+                    </button> */}
                 </div>
             )}
 
@@ -153,12 +159,12 @@ const EscanearQR = () => {
                     <AlertTriangle className="mx-auto text-red-500 mb-3" size={48} />
                     <h3 className="text-lg font-bold text-red-800">Acceso Denegado</h3>
                     <p className="text-red-700 text-sm mt-2">{errorLog}</p>
-                    <button 
+                    {/* <button 
                         onClick={iniciarCamaraDirecta}
                         className="mt-6 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-xl text-sm transition-all shadow-md shadow-red-100"
                     >
                         Reintentar Escaneo
-                    </button>
+                    </button> */}
                 </div>
             )}
         </div>

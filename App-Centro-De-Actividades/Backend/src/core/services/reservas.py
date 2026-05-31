@@ -19,6 +19,7 @@ from src.core.models.lista_espera import ListaEspera
 from src.core.models.pago import Pago
 from src.core.models.persona import Socio
 from src.core.models.reserva import Reserva
+from src.core.services import telegram
 
 
 RESERVA_ESTADOS_OCUPAN_CUPO = {"pendiente_pago", "confirmada"}
@@ -48,7 +49,15 @@ def iniciar_reserva_espontanea(clase_id):
         .order_by(Reserva.reserva_id.desc())
         .first()
     )
+
+    existing_pending = existing is not None and existing.estado == "pendiente_pago"
+
     if existing is not None:
+        print(f"existing.estado={existing.estado}")
+    print(existing is not None and not existing_pending)
+
+    # Si ya tengo una reserva activa que no esté pendiente de pago, no dejo reservar de nuevo. Si la reserva está pendiente de pago, dejo continuar para intentar cobrar o usar crédito.
+    if existing is not None and not existing_pending:
         return {
             "status": "already_reserved",
             "message": "Ya estás reservado en esta clase.",
@@ -56,10 +65,10 @@ def iniciar_reserva_espontanea(clase_id):
             "clase_id": clase.clase_id,
         }, 409
 
-    if _cupo_disponible(clase) <= 0:
+    if not existing_pending and _cupo_disponible(clase) <= 0:
         return {
             "status": "no_cupo",
-            "message": "No hay más cupo en la clase seleccionada.",
+            "message": "La clase se encuentra llena.",
             "clase_id": clase.clase_id,
             "puede_entrar_lista_espera": True,
         }, 409
@@ -68,7 +77,7 @@ def iniciar_reserva_espontanea(clase_id):
     precio = _clase_precio(clase)
     requiere_pago = credito is None and precio is not None and precio > 0
 
-    reserva = Reserva(
+    reserva = existing if existing_pending else Reserva(
         clase_id=clase.clase_id,
         socio_id=socio_id,
         tipo_reserva="espontanea",
@@ -76,7 +85,19 @@ def iniciar_reserva_espontanea(clase_id):
         confirmada_en=None if requiere_pago else _now(),
     )
 
-    db.session.add(reserva)
+    # hago que si reserva ya existe pero está pendiente de pago, se intente actualizar esa reserva en lugar de crear una nueva. Esto es para evitar que si el usuario tiene un pago pendiente y vuelve a intentar reservar, se le cree una nueva reserva en lugar de usar la existente.
+    if existing_pending:
+        if requiere_pago:
+            reserva.estado = "pendiente_pago"
+            reserva.confirmada_en = None
+        else:
+            reserva.estado = "confirmada"
+            reserva.confirmada_en = _now()
+    else:
+        db.session.add(reserva)
+    
+    
+
     try:
         db.session.flush()
     except IntegrityError:
@@ -103,7 +124,7 @@ def iniciar_reserva_espontanea(clase_id):
 
         return {
             "status": "reserved",
-            "message": "Usted tiene credito a favor, se omitio el cobro.",
+            "message": "Usted tiene credito a favor, se omitio el cobro, reserva confirmada",
             "reserva_id": reserva.reserva_id,
             "payment_required": False,
         }, 200
@@ -218,6 +239,313 @@ def entrar_lista_espera(clase_id):
     }, 200
 
 
+def _get_next_waitlist_entry(clase_id):
+    return (
+        ListaEspera.query.filter_by(clase_id=clase_id, estado="pendiente")
+        .order_by(ListaEspera.posicion.asc(), ListaEspera.creada_en.asc())
+        .first()
+    )
+
+
+def _ofrecer_cupo_a_primero(clase):
+    if clase is None or _cupo_disponible(clase) <= 0:
+        return None
+
+    entry = _get_next_waitlist_entry(clase.clase_id)
+    if entry is None:
+        return None
+
+    entry.estado = "notificado"
+    entry.notificado_en = _now()
+    entry.vence_confirmacion_en = _now() + timedelta(minutes=15)
+    db.session.flush()
+
+    # Generar token y enviar notificación Telegram
+    token = telegram.crear_confirmacion_turno(
+        lista_espera_id=entry.lista_espera_id,
+        socio_id=entry.socio_id,
+        duracion_minutos=15,
+    )
+
+    if token:
+        clase_data = {
+            "actividad": _clase_actividad_label(clase),
+            "fecha": clase.fecha.strftime("%Y-%m-%d") if clase.fecha else "",
+            "horario_inicio": clase.horario_inicio.strftime("%H:%M") if clase.horario_inicio else "",
+            "horario_fin": clase.horario_fin.strftime("%H:%M") if clase.horario_fin else "",
+            "cancha": clase.cancha or "",
+        }
+        # Enviar mensaje (sin romper el flujo si falla)
+        telegram.enviar_mensaje_telegram(entry.socio_id, entry.lista_espera_id, clase_data, token)
+    else:
+        print(f"WARNING: No se pudo generar token para lista_espera_id {entry.lista_espera_id}")
+
+    return entry
+
+
+def _expire_offers_and_promote():
+    ahora = _now()
+    expired_entries = (
+        ListaEspera.query.filter_by(estado="notificado")
+        .filter(ListaEspera.vence_confirmacion_en <= ahora)
+        .order_by(ListaEspera.lista_espera_id.asc())
+        .all()
+    )
+
+    for expired in expired_entries:
+        clase = db.session.get(Clase, expired.clase_id)
+        expired.estado = "cancelada"
+        expired.notificado_en = None
+        expired.vence_confirmacion_en = None
+        db.session.flush()
+
+        if clase is not None:
+            _ofrecer_cupo_a_primero(clase)
+
+
+def obtener_ofertas_activas():
+    socio_id, error = _require_socio()
+    if error is not None:
+        return error
+
+    _expire_offers_and_promote()
+
+    offers = (
+        ListaEspera.query.filter(ListaEspera.socio_id == socio_id)
+        .filter(ListaEspera.estado == "notificado")
+        .order_by(ListaEspera.notificado_en.asc())
+        .all()
+    )
+
+    ofertas_data = []
+    for offer in offers:
+        clase = db.session.get(Clase, offer.clase_id)
+        ofertas_data.append(
+            {
+                "lista_espera_id": offer.lista_espera_id,
+                "clase_id": offer.clase_id,
+                "actividad": _clase_actividad_label(clase) if clase else None,
+                "fecha": clase.fecha.strftime("%Y-%m-%d") if clase else None,
+                "horario_inicio": clase.horario_inicio.strftime("%H:%M") if clase else None,
+                "horario_fin": clase.horario_fin.strftime("%H:%M") if clase else None,
+                "cancha": clase.cancha if clase else None,
+                "notificado_en": offer.notificado_en.isoformat() if offer.notificado_en else None,
+                "vence_confirmacion_en": offer.vence_confirmacion_en.isoformat() if offer.vence_confirmacion_en else None,
+            }
+        )
+
+    return {"status": "ok", "ofertas": ofertas_data}, 200
+
+
+def confirmar_turno(lista_espera_id):
+    socio_id, error = _require_socio()
+    if error is not None:
+        return error
+
+    _expire_offers_and_promote()
+
+    entry = db.session.get(ListaEspera, lista_espera_id)
+    if entry is None or entry.socio_id != socio_id:
+        return {
+            "status": "error",
+            "message": "La oferta de turno no existe o no te pertenece.",
+        }, 404
+
+    if entry.estado != "notificado":
+        return {
+            "status": "error",
+            "message": "No hay una oferta activa para confirmar.",
+        }, 409
+
+    ahora = _now()
+    if entry.vence_confirmacion_en is None or entry.vence_confirmacion_en <= ahora:
+        entry.estado = "cancelada"
+        entry.notificado_en = None
+        entry.vence_confirmacion_en = None
+        db.session.flush()
+
+        clase = db.session.get(Clase, entry.clase_id)
+        if clase is not None:
+            _ofrecer_cupo_a_primero(clase)
+
+        return {
+            "status": "expired",
+            "message": "El tiempo de 15 minutos para confirmar el turno ha expirado, no puede acceder al cupo",
+        }, 409
+
+    clase = db.session.get(Clase, entry.clase_id)
+    if clase is None:
+        return {
+            "status": "error",
+            "message": "No se encontró la clase asociada a la oferta.",
+        }, 404
+
+    if clase.fecha is None or clase.horario_inicio is None:
+        return {
+            "status": "error",
+            "message": "La clase asociada a la oferta tiene datos incompletos.",
+        }, 409
+
+    if _schedule_conflict_exists(socio_id, clase):
+        return {
+            "status": "conflict",
+            "message": "No puede confirmar el turno, ya posee una inscripción en ese horario",
+        }, 409
+
+    entry.estado = "confirmada"
+    entry.confirmada_en = _now()
+    entry.vence_confirmacion_en = None
+    db.session.commit()
+
+    return {
+        "status": "confirmed",
+        "message": "Turno asegurado. Completá la reserva en la página de la actividad.",
+        "clase_id": clase.clase_id,
+        "actividad": _clase_actividad_label(clase),
+        "fecha": clase.fecha.strftime("%Y-%m-%d"),
+        "horario_inicio": clase.horario_inicio.strftime("%H:%M"),
+        "horario_fin": clase.horario_fin.strftime("%H:%M"),
+        "cancha": clase.cancha,
+    }, 200
+
+
+def obtener_oferta_desde_token(token):
+    """
+    Obtiene la información de la oferta asociada a un token.
+    
+    Returns:
+        tuple (oferta_dict, status_code)
+    """
+    confirmacion, error = telegram.validar_token(token)
+    
+    if error is not None:
+        return error, 400
+    
+    entry = db.session.get(ListaEspera, confirmacion.lista_espera_id)
+    if entry is None:
+        return {
+            "status": "error",
+            "message": "Oferta no encontrada.",
+        }, 404
+    
+    clase = db.session.get(Clase, entry.clase_id)
+    if clase is None:
+        return {
+            "status": "error",
+            "message": "La clase asociada no existe.",
+        }, 404
+    
+    return {
+        "status": "ok",
+        "lista_espera_id": entry.lista_espera_id,
+        "clase_id": clase.clase_id,
+        "actividad": _clase_actividad_label(clase),
+        "fecha": clase.fecha.strftime("%Y-%m-%d") if clase.fecha else "",
+        "horario_inicio": clase.horario_inicio.strftime("%H:%M") if clase.horario_inicio else "",
+        "horario_fin": clase.horario_fin.strftime("%H:%M") if clase.horario_fin else "",
+        "cancha": clase.cancha or "",
+        "notificado_en": entry.notificado_en.isoformat() if entry.notificado_en else None,
+    }, 200
+
+
+def confirmar_turno_desde_token(token):
+    """
+    Confirma un turno desde el link de Telegram (token).
+    Similar a confirmar_turno pero sin require_socio, ya que el token identifica al socio.
+    
+    Returns:
+        tuple (response_dict, status_code)
+    """
+    confirmacion, error = telegram.validar_token(token)
+    
+    if error is not None:
+        return error, 400
+    
+    socio_id = confirmacion.socio_id
+    _expire_offers_and_promote()
+    
+    entry = db.session.get(ListaEspera, confirmacion.lista_espera_id)
+    if entry is None:
+        return {
+            "status": "error",
+            "message": "La oferta no existe.",
+        }, 404
+    
+    if entry.estado != "notificado":
+        return {
+            "status": "error",
+            "message": "La oferta ya no es válida.",
+        }, 409
+    
+    clase = db.session.get(Clase, entry.clase_id)
+    if clase is None:
+        return {
+            "status": "error",
+            "message": "La clase no existe.",
+        }, 404
+    
+    if clase.fecha is None or clase.horario_inicio is None:
+        return {
+            "status": "error",
+            "message": "La clase tiene datos incompletos.",
+        }, 409
+    
+    if _schedule_conflict_exists(socio_id, clase):
+        return {
+            "status": "conflict",
+            "message": "No puede confirmar el turno, ya posee una inscripción en ese horario",
+        }, 409
+    
+    # Marcar confirmación y entrada de lista_espera como confirmada
+    entry.estado = "confirmada"
+    entry.confirmada_en = _now()
+    entry.vence_confirmacion_en = None
+    
+    telegram.marcar_confirmacion_como_confirmada(token)
+    
+    db.session.commit()
+    
+    return {
+        "status": "confirmed",
+        "message": "Turno asegurado. Completá la reserva en la página de la actividad.",
+        "clase_id": clase.clase_id,
+        "actividad": _clase_actividad_label(clase),
+        "fecha": clase.fecha.strftime("%Y-%m-%d"),
+        "horario_inicio": clase.horario_inicio.strftime("%H:%M"),
+        "horario_fin": clase.horario_fin.strftime("%H:%M"),
+        "cancha": clase.cancha,
+    }, 200
+
+
+def _schedule_conflict_exists(socio_id, clase):
+    return (
+        Reserva.query.join(Clase)
+        .filter(Reserva.socio_id == socio_id)
+        .filter(Reserva.estado.in_(sorted(RESERVA_ESTADOS_OCUPAN_CUPO)))
+        .filter(Clase.fecha == clase.fecha)
+        .filter(Clase.horario_inicio == clase.horario_inicio)
+        .first()
+        is not None
+    )
+
+
+def _build_espontanea_reserva(clase, socio_id):
+    credito = _buscar_credito_disponible(socio_id)
+    precio = _clase_precio(clase)
+    requiere_pago = credito is None and precio is not None and precio > 0
+
+    reserva = Reserva(
+        clase_id=clase.clase_id,
+        socio_id=socio_id,
+        tipo_reserva="espontanea",
+        estado="pendiente_pago" if requiere_pago else "confirmada",
+        confirmada_en=None if requiere_pago else _now(),
+    )
+    db.session.add(reserva)
+    db.session.flush()
+    return reserva, credito, requiere_pago, precio
+
+
 def procesar_retorno_pago(reserva_id, pago_status):
     socio_id, error = _require_socio()
     if error is not None:
@@ -258,7 +586,7 @@ def procesar_retorno_pago(reserva_id, pago_status):
 
         return {
             "status": "reserved",
-            "message": "Pago aprobado. Te inscribimos en la clase.",
+            "message": "Reserva confirmada.",
             "reserva_id": reserva.reserva_id,
         }, 200
 
@@ -284,6 +612,8 @@ def listar_reservas_socio():
     socio_id, error = _require_socio()
     if error is not None:
         return error
+    
+    lista_espera_data = _listar_lista_espera_socio(socio_id)
 
     reservas = (
         Reserva.query.options(joinedload(Reserva.clase))
@@ -294,7 +624,7 @@ def listar_reservas_socio():
     )
 
     if not reservas:
-        return {"status": "ok", "reservas": []}, 200
+        return {"status": "ok", "reservas": [], "lista_espera":lista_espera_data}, 200
 
     reserva_ids = [reserva.reserva_id for reserva in reservas]
     pagos = (
@@ -314,6 +644,15 @@ def listar_reservas_socio():
         clase_inicio = _clase_inicio(clase)
         puede_cancelar = _puede_cancelar_reserva(reserva, clase_inicio, ahora)
         pago = pagos_por_reserva.get(reserva.reserva_id)
+
+        # print("puede cancelar "+ str(puede_cancelar))
+
+        if pago and pago.estado == "pendiente":
+            puede_cancelar = False
+            print("ASDFSDFASDFASDFASDFASDFASDFASDFASDFASDFASD: ", reserva.reserva_id, pago.pago_id, pago.estado)
+
+        # print("puede cancelar "+ str(puede_cancelar))
+
         reintegro_estimado = _calcular_reintegro_estimada(pago, clase_inicio, ahora)
         reintegro_aplica = reintegro_estimado is not None
 
@@ -337,7 +676,38 @@ def listar_reservas_socio():
             }
         )
 
-    return {"status": "ok", "reservas": reservas_data}, 200
+    
+    return {"status": "ok", "reservas": reservas_data, "lista_espera": lista_espera_data}, 200
+
+
+def _listar_lista_espera_socio(socio_id):
+    entries = (
+        ListaEspera.query.filter(ListaEspera.socio_id == socio_id)
+        .filter(ListaEspera.estado.in_(["pendiente", "notificado"]))
+        .order_by(ListaEspera.creada_en.desc())
+        .all()
+    )
+
+    lista_espera_data = []
+    for entry in entries:
+        clase = db.session.get(Clase, entry.clase_id)
+        lista_espera_data.append(
+            {
+                "lista_espera_id": entry.lista_espera_id,
+                "clase_id": entry.clase_id,
+                "actividad": _clase_actividad_label(clase) if clase else None,
+                "fecha": clase.fecha.strftime("%Y-%m-%d") if clase else None,
+                "horario_inicio": clase.horario_inicio.strftime("%H:%M") if clase else None,
+                "horario_fin": clase.horario_fin.strftime("%H:%M") if clase else None,
+                "cancha": clase.cancha if clase else None,
+                "estado": entry.estado,
+                "posicion": entry.posicion,
+                "notificado_en": entry.notificado_en.isoformat() if entry.notificado_en else None,
+                "vence_confirmacion_en": entry.vence_confirmacion_en.isoformat() if entry.vence_confirmacion_en else None,
+            }
+        )
+
+    return lista_espera_data
 
 
 def cancelar_reserva_espontanea(reserva_id):
@@ -417,6 +787,9 @@ def cancelar_reserva_espontanea(reserva_id):
 
     db.session.flush()
 
+    if clase is not None:
+        _ofrecer_cupo_a_primero(clase)
+
     cancelaciones_mes = _contar_cancelaciones_mes(socio_id, ahora)
     sancion_aplicada = cancelaciones_mes > 3
     descuento_bloqueado_hasta = None
@@ -429,9 +802,25 @@ def cancelar_reserva_espontanea(reserva_id):
 
     db.session.commit()
 
+    reintegro_aplica = reintegro_info["aplica"]
+    if reintegro_aplica and not sancion_aplicada:
+        scenario_code = "escenario_1"
+        scenario_message = "Se reembolso el 50% del valor de la clase."
+    elif not reintegro_aplica and not sancion_aplicada:
+        scenario_code = "escenario_2"
+        scenario_message = ""
+    elif reintegro_aplica and sancion_aplicada:
+        scenario_code = "escenario_3"
+        scenario_message =  "Se reembolso el 50% del valor de la clase. Se aplico una sancion por cancelar 3 o más clases en el mes"
+    else:
+        scenario_code = "escenario_4"
+        scenario_message = "Se aplico una sancion por cancelar 3 o más clases en el mes"
+
     return {
         "status": "cancelled",
-        "message": "La reserva fue cancelada correctamente.",
+        "message": "Cancelacion correcta.",
+        "scenario": scenario_code,
+        "scenario_message": scenario_message,
         "reserva_id": reserva.reserva_id,
         "reintegro": reintegro_info,
         "cancelaciones_mes": cancelaciones_mes,
@@ -552,11 +941,15 @@ def _clase_inicio(clase):
 
 def _puede_cancelar_reserva(reserva, clase_inicio, ahora):
     if reserva is None or clase_inicio is None:
+        print("1")
         return False
+
 
     if reserva.estado not in RESERVA_ESTADOS_OCUPAN_CUPO:
+        print("2")
         return False
 
+    # print("clase_inicio > ahora: "+ str(clase_inicio > ahora))
     return clase_inicio > ahora
 
 

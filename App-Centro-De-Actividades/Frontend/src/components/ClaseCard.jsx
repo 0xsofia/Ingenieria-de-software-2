@@ -1,5 +1,11 @@
 import './ClaseCard.css'
 
+const currencyFormatter = new Intl.NumberFormat('es-AR', {
+  style: 'currency',
+  currency: 'ARS',
+  minimumFractionDigits: 2,
+})
+
 export default function ClaseCard({
   clase,
   onView,
@@ -22,11 +28,19 @@ export default function ClaseCard({
       <div className="clase-card__meta-grid">
         <div className="clase-card__meta-item">
           <span className="clase-card__label">Fecha</span>
-          <span className="clase-card__value">{clase.fecha}</span>
+          <span className="clase-card__value">{clase.fecha ? clase.fecha.split('-').reverse().join('/') : ''}</span>
         </div>
         <div className="clase-card__meta-item">
           <span className="clase-card__label">Horario</span>
           <span className="clase-card__value">{clase.horario_inicio} - {clase.horario_fin}</span>
+        </div>
+        <div className="clase-card__meta-item">
+          <span className="clase-card__label">Precio</span>
+          <span className="clase-card__value">
+            {clase.precio !== undefined && clase.precio !== null
+              ? currencyFormatter.format(Number(clase.precio))
+              : 'Sin precio'}
+          </span>
         </div>
         <div className="clase-card__meta-item">
           <span className="clase-card__label">Cancha</span>
@@ -49,9 +63,10 @@ export default function ClaseCard({
           <button type="button" className="secondary-action" onClick={() => onView(clase)}>
             {viewLabel}
           </button>
+          {/*
           <button type="button" className="primary-action" onClick={() => onReserve(clase)}>
             {reserveLabel}
-          </button>
+          </button> */}
         </div>
       </div>
     </article>

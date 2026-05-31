@@ -191,10 +191,10 @@ function LoginPage() {
             <section className="role-panel" aria-labelledby="role-selection-title">
               <div className="role-copy">
                 <h2 id="role-selection-title">Elegí cómo querés ingresar</h2>
-                <p>
+                {/* <p>
                   La cuenta <strong>{pendingIdentity?.email}</strong> tiene más de un rol
                   disponible.
-                </p>
+                </p> */}
               </div>
 
               <div className="role-grid">
@@ -263,7 +263,7 @@ function LoginPage() {
                 </p>
               </form>
 
-              <section className="test-credentials-card" aria-labelledby="test-credentials-title">
+              {/* <section className="test-credentials-card" aria-labelledby="test-credentials-title">
                 <div className="section-heading">
                   <h2 id="test-credentials-title">Credenciales de prueba</h2>
                   <p>Podés usar cualquiera de estas cuentas seed para entrar.</p>
@@ -282,7 +282,7 @@ function LoginPage() {
                     </article>
                   ))}
                 </div>
-              </section>
+              </section> */}
             </>
           )}
         </div>
@@ -303,8 +303,6 @@ function validateForm(form) {
 
   if (!form.password) {
     errors.password = 'La contraseña es obligatoria.'
-  } else if (form.password.length < 4) {
-    errors.password = 'La contraseña debe tener al menos 4 caracteres.'
   } else if (form.password.length > 128) {
     errors.password = 'La contraseña debe tener como máximo 128 caracteres.'
   }

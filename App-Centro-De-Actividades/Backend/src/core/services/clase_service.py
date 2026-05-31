@@ -47,12 +47,16 @@ def validar_payload_clase(payload):
             errors["fecha"] = "La fecha debe tener formato YYYY-MM-DD."
 
     # Validar horario_inicio
-    if not normalized_payload["horario_inicio"]:
+    if normalized_payload["horario_inicio"] is None or str(normalized_payload["horario_inicio"]).strip() == "":
         errors["horario_inicio"] = "El horario de inicio es obligatorio."
     else:
         try:
-            datetime.strptime(f"{normalized_payload["horario_inicio"]:02d}:00", "%H:%M").time()
-        except ValueError:
+            horario_inicio_int = int(normalized_payload["horario_inicio"])
+            if horario_inicio_int < 0 or horario_inicio_int > 23:
+                errors["horario_inicio"] = "El horario debe estar entre 00:00 y 23:00."
+            else:
+                datetime.strptime(f"{horario_inicio_int:02d}:00", "%H:%M").time()
+        except (TypeError, ValueError):
             errors["horario_inicio"] = "El horario debe tener formato HH:MM."
 
     # Validar cancha
@@ -78,10 +82,9 @@ def validar_payload_clase(payload):
         except (ValueError, TypeError):
             errors["cupos"] = "Los cupos deben ser un número válido."
 
-    # Validar precio (opcional)
     precio_raw = normalized_payload.get("precio")
     if precio_raw is None or str(precio_raw).strip() == "":
-        normalized_payload["precio"] = None
+        errors["precio"] = "El precio es obligatorio."
     else:
         try:
             precio_value = float(precio_raw)
@@ -173,8 +176,8 @@ def crear_clase_completa(payload):
     }, 201
 
 
-def obtener_clases(actividad=None):
-    """Obtiene las clases con un filtro opcional por actividad."""
+def obtener_clases(actividad=None, fecha=None, horario=None):
+    """Obtiene las clases con filtros opcionales por actividad, fecha y horario."""
     query = Clase.query
 
     if actividad:
@@ -184,7 +187,64 @@ def obtener_clases(actividad=None):
         except ValueError:
             return []
 
+    if fecha:
+        try:
+            fecha_obj = datetime.strptime(fecha, "%Y-%m-%d").date()
+            query = query.filter(Clase.fecha == fecha_obj)
+        except ValueError:
+            return []
+
+    if horario:
+        try:
+            horario_obj = datetime.strptime(horario, "%H:%M").time()
+            query = query.filter(Clase.horario_inicio == horario_obj)
+        except ValueError:
+            return []
+
     return query.order_by(Clase.fecha, Clase.horario_inicio).all()
+
+# def obtener_clases(actividad=None, fecha=None, horario=None):
+#     """Obtiene las clases con filtros opcionales por actividad, fecha y horario."""
+#     query = Clase.query
+#     ahora = datetime.now()
+#     fecha_actual = ahora.date()
+#     hora_actual = ahora.time()
+
+#     if actividad:
+#         try:
+#             actividad_enum = ActividadEnum(actividad)
+#             query = query.filter(Clase.actividad == actividad_enum)
+#         except ValueError:
+#             return []
+
+#     if fecha:
+#         try:
+#             fecha_obj = datetime.strptime(fecha, "%Y-%m-%d").date()
+#             query = query.filter(Clase.fecha == fecha_obj)
+#             if fecha_obj == fecha_actual and not horario:
+#                 query = query.filter(Clase.horario_inicio >= hora_actual)
+
+#         except ValueError:
+#             return []
+#     # else : 
+#     #     fecha_actual = datetime.now().date()
+#     #     query = query.filter(Clase.fecha >= fecha_actual)
+#     else:
+#         query = query.filter(
+#             (Clase.fecha > fecha_actual) | 
+#             ((Clase.fecha == fecha_actual) & (Clase.horario_inicio >= hora_actual))
+#         )
+
+#     if horario:
+#         try:
+#             horario_obj = datetime.strptime(horario, "%H:%M").time()
+#             query = query.filter(Clase.horario_inicio == horario_obj)
+#         except ValueError:
+#             return []
+
+#     # return query.order_by(Clase.fecha, Clase.horario_inicio).all()
+#     # Para que ordene de fechas más cercanas
+#     return query.order_by(Clase.fecha.asc(), Clase.horario_inicio.asc()).all()
 
 
 def _validation_error(field, message):
@@ -206,3 +266,68 @@ def _integrity_error_response(error):
         "status": "error",
         "message": "No se pudo completar el registro de la clase por un conflicto de datos.",
     }, 409
+
+
+def obtener_detalle_clase_con_socios(clase_id, dni=None):
+    """Obtiene el detalle de una clase junto con los socios registrados y su estado de asistencia."""
+    from src.core.models.persona import Persona
+    from src.core.models.reserva import Reserva
+    
+    # Obtener la clase
+    clase = Clase.query.get(clase_id)
+    if not clase:
+        return None, 404
+    
+    estados_validos = ['confirmada', 'pendiente_pago', 'asistio']
+    query = Reserva.query.filter_by(clase_id=clase_id).filter(Reserva.estado.in_(estados_validos))
+
+    if dni:
+        dni_normalizado = str(dni).strip()
+        query = query.join(Persona, Persona.persona_id == Reserva.socio_id).filter(Persona.dni == dni_normalizado)
+
+    reservas = query.all()
+
+    cupos_ocupados = (
+        Reserva.query.filter_by(clase_id=clase_id)
+        .filter(Reserva.estado.in_(estados_validos))
+        .count()
+    )
+    
+    # Construir lista de socios con su información de asistencia
+    socios_data = []
+    for reserva in reservas:
+        persona = Persona.query.get(reserva.socio_id)
+        if persona:
+            socios_data.append({
+                "reserva_id": reserva.reserva_id,
+                "socio_id": reserva.socio_id,
+                "nombre": persona.nombre,
+                "apellido": persona.apellido,
+                "nombre_completo": persona.nombre_completo,
+                "email": persona.email,
+                "telefono": persona.telefono,
+                "dni": persona.dni,
+                "estado_reserva": reserva.estado,
+                "asistencia_registrada": reserva.estado == "asistio",
+                "creada_en": reserva.creada_en.isoformat() if reserva.creada_en else None,
+            })
+    
+    # Construir respuesta con datos de la clase
+    clase_data = {
+        "clase_id": clase.clase_id,
+        "actividad": clase.actividad.value,
+        "fecha": clase.fecha.strftime("%Y-%m-%d"),
+        "horario_inicio": clase.horario_inicio.strftime("%H:%M"),
+        "horario_fin": clase.horario_fin.strftime("%H:%M"),
+        "cancha": clase.cancha,
+        "nivel": clase.nivel.value,
+        "cupos": clase.cupos,
+        "cupos_ocupados": cupos_ocupados,
+        "precio": float(clase.precio) if clase.precio is not None else None,
+        "tipo_clase": clase.tipo_clase.value,
+        "profesor_id": clase.profesor_id,
+        "profesor_nombre": clase.profesor.nombre if clase.profesor else None,
+        "socios": socios_data,
+    }
+    
+    return clase_data, 200

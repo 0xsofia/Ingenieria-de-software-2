@@ -1,8 +1,11 @@
-from flask import Flask,Blueprint, request, jsonify
-from src.core.database import db
-from src.core.services.gestion_asistencias import (ReservaNoEncontradaException, 
-                            FueraDeHorarioException,
-                            generar_token_asistencia) 
+from flask import Blueprint, jsonify
+from src.core.services.gestion_asistencias import (
+    AccesoQRDenegadoException,
+    AutenticacionRequeridaException,
+    FueraDeHorarioException,
+    ReservaNoEncontradaException,
+    generar_token_asistencia,
+)
 
 generar_token_asistencia_bp = Blueprint('generateQR', __name__, url_prefix='/api/asistencia')
 
@@ -19,6 +22,12 @@ def solicitar_qr(reserva_id):
         
     except ReservaNoEncontradaException as e:
         return jsonify({"error": "No encontrado", "message": str(e)}), 404
+
+    except AutenticacionRequeridaException as e:
+        return jsonify({"error": "No autenticado", "message": str(e)}), 401
+
+    except AccesoQRDenegadoException as e:
+        return jsonify({"error": "Acceso denegado", "message": str(e)}), 403
         
     except FueraDeHorarioException as e:
         # Devuelve 403 para que Axios en el Front reconozca que está fuera de hora pero muestre el mensaje

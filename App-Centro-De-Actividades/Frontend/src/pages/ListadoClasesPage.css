@@ -26,6 +26,12 @@
   flex-wrap: wrap;
 }
 
+.listado-clases__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .listado-clases__header-row .primary-action {
   margin-top: 0;
 }

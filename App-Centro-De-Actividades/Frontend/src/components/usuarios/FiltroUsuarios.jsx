@@ -27,12 +27,11 @@ export default function FiltroUsuarios({ initialValues, onSubmit, isSubmitting }
   return (
     <FilterForm
       title="Filtrar usuarios"
-      description="Buscá por DNI, email o nombre para encontrar usuarios específicos."
+      description=""
       fields={USER_FILTER_FIELDS}
       initialValues={initialValues}
       onSubmit={onSubmit}
       submitLabel="Filtrar usuarios"
-      resetLabel="Limpiar filtros"
       isSubmitting={isSubmitting}
     />
   )
