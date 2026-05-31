@@ -1,11 +1,11 @@
 import { endpoints } from '../services/api'
 import { http } from './http'
 
-export async function escanearQR(payload, idClase) {
+export async function escanearQR(payload) {
   const bodyData = {
     dni: String(payload.dni).trim(),
     id_reserva: Number(payload.id_reserva),
-    id_clase: idClase ? Number(idClase) : null
+    id_clase: Number(payload.id_clase)
   };
 
   const { data } = await http.post('/api/asistencia/escanearQR', bodyData);

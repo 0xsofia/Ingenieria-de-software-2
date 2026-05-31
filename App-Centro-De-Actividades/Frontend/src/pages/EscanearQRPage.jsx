@@ -10,7 +10,7 @@ const EscanearQR = () => {
     const [resultadoEscaneo, setResultadoEscaneo] = useState(null);
     const [errorLog, setErrorLog] = useState(null);
     const [cargando, setCargando] = useState(false);
-    const { idClase } = useParams(); 
+    // const { idClase } = useParams(); 
     const { session } = useAuth();
     const html5QrCodeRef = useRef(null);
     
@@ -81,12 +81,11 @@ const EscanearQR = () => {
                 throw new Error("El QR es inválido.");
             }
 
-            if (!payload.dni || !payload.id_reserva) {
-                throw new Error("El QR no contiene los datos obligatorios del cliente (DNI o Reserva).");
+           if (!payload.dni || !payload.id_reserva || !payload.id_clase) {
+                throw new Error("El QR no contiene los datos obligatorios del cliente (DNI, Reserva o Clase).");
             }
 
-            // Llamamos a tu servicio asíncrono
-            const data = await escanearQR(payload, idClase);
+            const data = await escanearQR(payload);
             setResultadoEscaneo(data.message || "Asistencia registrada con éxito.");
 
         } catch (err) {
@@ -123,7 +122,6 @@ const EscanearQR = () => {
             <p className="text-xs text-gray-400 text-center mb-6">Panel para el empleado de recepción</p>
 
             {!resultadoEscaneo && !errorLog && !cargando && (
-                // 👈 Un contenedor con tamaño fijo inicial para que no se rompa el diseño mientras enciende
                 <div 
                     id="reader-asistencia" 
                     className="overflow-hidden rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200"
@@ -144,12 +142,12 @@ const EscanearQR = () => {
                     <CheckCircle2 className="mx-auto text-green-600 mb-3" size={48} />
                     <h3 className="text-lg font-bold text-green-800">¡Ingreso Autorizado!</h3>
                     <p className="text-green-700 text-sm mt-2">{resultadoEscaneo}</p>
-                    {/* <button 
+                    <button 
                         onClick={iniciarCamaraDirecta}
                         className="mt-6 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-xl text-sm transition-all shadow-md shadow-green-100"
                     >
                         Escanear Siguiente
-                    </button> */}
+                    </button>
                 </div>
             )}
 
@@ -159,12 +157,12 @@ const EscanearQR = () => {
                     <AlertTriangle className="mx-auto text-red-500 mb-3" size={48} />
                     <h3 className="text-lg font-bold text-red-800">Acceso Denegado</h3>
                     <p className="text-red-700 text-sm mt-2">{errorLog}</p>
-                    {/* <button 
+                    <button 
                         onClick={iniciarCamaraDirecta}
                         className="mt-6 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-xl text-sm transition-all shadow-md shadow-red-100"
                     >
                         Reintentar Escaneo
-                    </button> */}
+                    </button>
                 </div>
             )}
         </div>
