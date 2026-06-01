@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 import uuid
 
 from src.core.bcrypt_and_session import bcrypt
 from src.core.database import db
 from src.core.enums.clase_enum import ActividadEnum, NivelEnum, TipoClaseEnum
+from src.core.models.abono_mensual import AbonoMensual
+from src.core.models.actividad import Actividad
 from src.core.models.clase import Clase
 from src.core.models.lista_espera import ListaEspera
 from src.core.models.pago import Pago
@@ -52,6 +54,15 @@ BLOQUEO_CLASS_TEMPLATES = {
         "minuto": 0,
     },
 }
+
+RENOVACION_ACTIVIDAD = "Futbol"
+RENOVACION_HORA = time(19, 0)
+RENOVACION_CLASES_JUNIO_2026 = (
+    date(2026, 6, 1),
+    date(2026, 6, 8),
+    date(2026, 6, 15),
+    date(2026, 6, 22),
+)
 
 
 def seed_bloqueos_escenarios(seed_datetime=None):
@@ -121,6 +132,27 @@ def seed_bloqueos_escenarios(seed_datetime=None):
     )
     _set_sancion(mate_id, None)
 
+    sancion_id = _ensure_socio_user(
+        email="sancion@centro.test",
+        dni="40000006",
+        nombre="Sancion",
+        apellido="Centro",
+        rol=rol_socio,
+        password="123456.",
+    )
+    _set_sancion(sancion_id, date(2026, 6, 30))
+
+    renovacion_clases = _ensure_renovacion_classes()
+    _ensure_abono_renovable(
+        socio_id=mate_id,
+        actividad_nombre=RENOVACION_ACTIVIDAD,
+    )
+    _ensure_abono_expirado_mate(mate_id)
+    _ensure_abono_renovable(
+        socio_id=sancion_id,
+        actividad_nombre=RENOVACION_ACTIVIDAD,
+    )
+
     # 1) Waitlist test "confirmar turno" (Waitlist 2)
     _ensure_lista_espera(
         clase_id=clases["con_lista_espera"].clase_id,
@@ -158,11 +190,15 @@ def seed_bloqueos_escenarios(seed_datetime=None):
     db.session.commit()
 
     print("[SEED] Escenarios de bloqueo/desbloqueo listos:")
-    print("   Password general: 123456. (mate@centro.com usa 123456 sin punto)")
+    print("   Password general: 123456.")
     print("   - bloqueo1@centro.test (sin reservas, sin sanciones)")
     print("   - bloqueo2@centro.test (reserva paga, sin lista de espera, con sanciones)")
     print("   - bloqueo3@centro.test (reserva paga, con lista de espera)")
-    print("   - mate@centro.com (siguiente en 2 listas de espera)")
+    print("   - mate@centro.test (siguiente en 2 listas de espera)")
+    print(
+        "   - mate@centro.test y sancion@centro.test "
+        f"(abonos renovables hacia clase {renovacion_clases[0].fecha:%d/%m/%Y})"
+    )
 
 
 def _as_utc(seed_datetime=None):
@@ -326,6 +362,115 @@ def _set_sancion(persona_id: int, blocked_until):
     if socio is not None:
         socio.descuento_bloqueado_hasta = blocked_until
         db.session.flush()
+
+
+def _ensure_actividad(nombre: str) -> Actividad:
+    actividad = Actividad.query.filter_by(nombre=nombre).first()
+    if actividad is not None:
+        return actividad
+
+    actividad = Actividad(nombre=nombre)
+    db.session.add(actividad)
+    db.session.flush()
+    return actividad
+
+
+def _ensure_renovacion_classes():
+    profesor = Profesor.query.filter_by(dni="87654321").first()
+    if profesor is None:
+        raise RuntimeError(
+            "No existe el profesor con DNI 87654321 para el seed de renovación."
+        )
+
+    clases = []
+    for fecha in RENOVACION_CLASES_JUNIO_2026:
+        clase = _get_or_create_clase(
+            {
+                "actividad": RENOVACION_ACTIVIDAD,
+                "cancha": "Cancha Renovacion",
+                "nivel": "Intermedio",
+                "cupos": 8,
+                "profesor_dni": profesor.dni,
+                "precio": Decimal("1000.00"),
+                "fecha": fecha,
+                "horario_inicio": RENOVACION_HORA,
+            }
+        )
+        clases.append(clase)
+
+    return clases
+
+
+def _ensure_abono_renovable(*, socio_id: int, actividad_nombre: str):
+    actividad = _ensure_actividad(actividad_nombre)
+
+    abono = (
+        AbonoMensual.query.filter_by(
+            socio_id=socio_id,
+            actividad_id=actividad.actividad_id,
+            periodo_inicio=date(2026, 5, 4),
+        )
+        .first()
+    )
+
+    if abono is None:
+        abono = AbonoMensual(
+            socio_id=socio_id,
+            actividad_id=actividad.actividad_id,
+            periodo_inicio=date(2026, 5, 4),
+            periodo_fin=date(2026, 5, 25),
+            hora_inicio=RENOVACION_HORA,
+            dia_semana="lunes",
+            fecha_limite_renovacion=date(2026, 6, 10),
+            estado="activo",
+        )
+        db.session.add(abono)
+    else:
+        abono.periodo_fin = date(2026, 5, 25)
+        abono.hora_inicio = RENOVACION_HORA
+        abono.dia_semana = "lunes"
+        abono.fecha_limite_renovacion = date(2026, 6, 10)
+        abono.estado = "activo"
+        abono.prioridad_renovacion = False
+
+    db.session.flush()
+    return abono
+
+
+def _ensure_abono_expirado_mate(socio_id: int):
+    actividad = _ensure_actividad("Voley")
+
+    abono = (
+        AbonoMensual.query.filter_by(
+            socio_id=socio_id,
+            actividad_id=actividad.actividad_id,
+            periodo_inicio=date(2026, 4, 6),
+        )
+        .first()
+    )
+
+    if abono is None:
+        abono = AbonoMensual(
+            socio_id=socio_id,
+            actividad_id=actividad.actividad_id,
+            periodo_inicio=date(2026, 4, 6),
+            periodo_fin=date(2026, 4, 27),
+            hora_inicio=time(18, 0),
+            dia_semana="lunes",
+            fecha_limite_renovacion=date(2026, 5, 10),
+            estado="activo",
+        )
+        db.session.add(abono)
+    else:
+        abono.periodo_fin = date(2026, 4, 27)
+        abono.hora_inicio = time(18, 0)
+        abono.dia_semana = "lunes"
+        abono.fecha_limite_renovacion = date(2026, 5, 10)
+        abono.estado = "activo"
+        abono.prioridad_renovacion = False
+
+    db.session.flush()
+    return abono
 
 
 def _ensure_reserva_confirmada(

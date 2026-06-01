@@ -273,6 +273,16 @@ function handleRenovarAbono(abono) {
     return currentDate > limite
   }
 
+  const canRenovarAbono = (abono) => abono?.renovable && !isAbonoExpired(abono)
+
+  const getRenovacionLabel = (abono) => {
+    if (renewingAbonoId === abono?.abono_mensual_id) return 'Renovando...'
+    if (canRenovarAbono(abono)) return 'Renovar'
+    if (abono?.renovado) return 'Abono pago'
+    if (isAbonoExpired(abono)) return 'Expirado'
+    return 'Próximo'
+  }
+
   function getSlug(text) {
     return String(text || '')
       .toLowerCase()
@@ -342,6 +352,14 @@ function handleRenovarAbono(abono) {
             <div className="mis-clases-table-wrapper">
               <h2>Abonos Mensuales</h2>
               <table className="mis-clases-table">
+                <colgroup>
+                  <col />
+                  <col />
+                  <col />
+                  <col />
+                  <col />
+                  <col className="mis-clases-table__renew-column" />
+                </colgroup>
                 <thead>
                   <tr>
                     <th scope="col">Actividad</th>
@@ -349,7 +367,7 @@ function handleRenovarAbono(abono) {
                     <th scope="col">Hora</th>
                     <th scope="col">Día</th>
                     <th scope="col">Fecha Lim. Renovación</th>
-                    <th scope="col">Renovación</th>
+                    <th className="mis-clases-table__renew-head" scope="col">Renovación</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -371,20 +389,18 @@ function handleRenovarAbono(abono) {
                         <td data-label="Fecha Lim. Renovación">
                           {abono.fecha_limite_renovacion ? abono.fecha_limite_renovacion.split('-').reverse().join('/') : '-'}
                         </td>
-                        <td data-label="Acción">
-                          <div className="mis-clases-table__actions">
+                        <td className="mis-clases-table__renew-cell" data-label="Acción">
+                          <div className="mis-clases-table__actions mis-clases-table__actions--renewal">
                             <button
                               type="button"
-                              className="primary-action"
+                              className="primary-action mis-clases-table__renew-action"
                               onClick={() => handleRenovarAbono(abono)}
-                              // disabled={!abono.renovable || renewingAbonoId === abono.abono_mensual_id}
-                              disabled={isAbonoExpired(abono) || !abono.renovable || renewingAbonoId === abono.abono_mensual_id}
+                              disabled={
+                                !canRenovarAbono(abono) ||
+                                renewingAbonoId === abono.abono_mensual_id
+                              }
                             >
-                              {renewingAbonoId === abono.abono_mensual_id
-                                ? 'Renovando...'
-                                : isAbonoExpired(abono)
-                                ? 'Expirado'
-                                : 'Renovar'}
+                              {getRenovacionLabel(abono)}
                             </button>
                           </div>
                         </td>

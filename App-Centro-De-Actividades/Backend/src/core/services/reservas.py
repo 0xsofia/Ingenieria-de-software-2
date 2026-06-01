@@ -13,6 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
 from src.core.database import db
+from src.core.enums.clase_enum import ActividadEnum
 from src.core.models.abono_mensual import AbonoMensual
 from src.core.models.actividad import Actividad
 from src.core.models.clase import Clase
@@ -258,7 +259,7 @@ def iniciar_reserva_abonada(clase_id):
         dia_semana=_dia_semana_label(clase_base.fecha),
         descuento_aplicado_pct=descuento_pct,
         prioridad_renovacion=False,
-        fecha_limite_renovacion=_fin_mes_siguiente(ahora) if descuento_pct > 0 else None,
+        fecha_limite_renovacion=_fecha_limite_renovacion_siguiente(clases_abono[0].fecha),
         estado="pendiente_pago" if requiere_pago else "activo",
     )
     db.session.add(abono)
@@ -857,8 +858,17 @@ def listar_reservas_socio():
         .all()
     )
 
+    abonos_body, abonos_status = listar_abonos_mensuales_socio()
+    if abonos_status != 200:
+        return abonos_body, abonos_status
+
     if not reservas:
-        return {"status": "ok", "reservas": [], "lista_espera":lista_espera_data}, 200
+        return {
+            "status": "ok",
+            "reservas": [],
+            "lista_espera": lista_espera_data,
+            "abonos": abonos_body.get("abonos", []),
+        }, 200
 
     reserva_ids = [reserva.reserva_id for reserva in reservas]
     abono_ids = [
@@ -943,11 +953,6 @@ def listar_reservas_socio():
             }
         )
 
-    
-    abonos_body, abonos_status = listar_abonos_mensuales_socio()
-    if abonos_status != 200:
-        return abonos_body, abonos_status
-
     return {
         "status": "ok",
         "reservas": reservas_data,
@@ -967,15 +972,27 @@ def listar_abonos_mensuales_socio():
         .all()
     )
 
-    hoy = date.today()
+    abono_ids = [abono.abono_mensual_id for abono in abonos]
+    abonos_ya_renovados = set()
+    if abono_ids:
+        abonos_ya_renovados = {
+            abono_anterior_id
+            for (abono_anterior_id,) in db.session.query(
+                AbonoMensual.abono_anterior_id
+            )
+            .filter(AbonoMensual.abono_anterior_id.in_(abono_ids))
+            .all()
+            if abono_anterior_id is not None
+        }
+
+    hoy = _now().date()
     abonos_data = []
     for abono in abonos:
         actividad = db.session.get(Actividad, abono.actividad_id)
-        fecha_limite = abono.fecha_limite_renovacion
+        fecha_limite = _fecha_limite_renovacion_siguiente(abono.periodo_inicio)
         renovable = (
-            abono.estado == "activo"
-            and 1 <= hoy.day <= 10
-            and (fecha_limite is None or hoy <= fecha_limite)
+            abono.abono_mensual_id not in abonos_ya_renovados
+            and _abono_renovable_en_fecha(abono, hoy, fecha_limite)
         )
 
         abonos_data.append(
@@ -989,6 +1006,7 @@ def listar_abonos_mensuales_socio():
                 "fecha_limite_renovacion": fecha_limite.isoformat() if fecha_limite else None,
                 "estado": abono.estado,
                 "renovable": renovable,
+                "renovado": abono.abono_mensual_id in abonos_ya_renovados,
                 "cancelable": abono.estado == "activo",
             }
         )
@@ -1585,6 +1603,20 @@ def _fin_mes_siguiente(ahora):
     return date(year, month, last_day)
 
 
+def _fecha_limite_renovacion_siguiente(fecha_periodo):
+    year = fecha_periodo.year + (1 if fecha_periodo.month == 12 else 0)
+    month = 1 if fecha_periodo.month == 12 else fecha_periodo.month + 1
+    return date(year, month, 10)
+
+
+def _abono_renovable_en_fecha(abono, hoy, fecha_limite):
+    if abono.estado != "activo":
+        return False
+
+    inicio_ventana = date(fecha_limite.year, fecha_limite.month, 1)
+    return inicio_ventana <= hoy <= fecha_limite
+
+
 def _reintegrar_mercadopago(pago, monto):
     if pago is None:
         return "no_aplica", "No se encontro un pago aprobado para reintegrar."
@@ -1905,10 +1937,40 @@ def renovar_abono_mensual(abono_mensual_id):
             "message": "No tenés permisos para renovar este abono.",
         }, 403
 
+    actividad = db.session.get(Actividad, abono_previo.actividad_id)
+    if actividad is None:
+        return {
+            "status": "error",
+            "message": "La actividad del abono mensual no existe.",
+        }, 404
+
+    abono_ya_renovado = (
+        AbonoMensual.query.filter_by(abono_anterior_id=abono_previo.abono_mensual_id)
+        .first()
+        is not None
+    )
+    if abono_ya_renovado:
+        return {
+            "status": "already_renewed",
+            "message": "Este abono mensual ya fue renovado.",
+        }, 409
+
+    ahora = _now()
+    fecha_limite_abono_previo = _fecha_limite_renovacion_siguiente(
+        abono_previo.periodo_inicio
+    )
+    if not _abono_renovable_en_fecha(
+        abono_previo, ahora.date(), fecha_limite_abono_previo
+    ):
+        return {
+            "status": "error",
+            "message": "Solo se puede renovar entre el 1 y 10 del mes siguiente al abono.",
+        }, 409
+
     fecha_primera_clase_nueva = abono_previo.periodo_fin + timedelta(days=7)
     
     clase_base_nueva = (
-        Clase.query.filter(Clase.actividad_id == abono_previo.actividad_id)  
+        Clase.query.filter(Clase.actividad == ActividadEnum(actividad.nombre))
         .filter(Clase.fecha == fecha_primera_clase_nueva)
         .filter(Clase.horario_inicio == abono_previo.hora_inicio)
         .first()
@@ -1943,14 +2005,15 @@ def renovar_abono_mensual(abono_mensual_id):
                 "clase_id": clase.clase_id,
             }, 409
 
-    # 5. Cálculo de montos y regla comercial del descuento (Pagar entre el 1 y el 10)
-    ahora = _now()
+    # 5. Cálculo de montos y regla comercial del descuento (Pagar en ventana de renovación)
     sancionado = _socio_sancionado_para_descuento(socio_id, ahora)
     
-    # El descuento se mantiene si hoy está en la ventana del 1 al 10 y no está sancionado
     descuento_pct = (
         DESCUENTO_ABONO_PCT
-        if (1 <= ahora.day <= 10) and not sancionado
+        if _abono_renovable_en_fecha(
+            abono_previo, ahora.date(), fecha_limite_abono_previo
+        )
+        and not sancionado
         else Decimal("0.00")
     )
     
@@ -1969,7 +2032,7 @@ def renovar_abono_mensual(abono_mensual_id):
         dia_semana=abono_previo.dia_semana,
         descuento_aplicado_pct=descuento_pct,
         prioridad_renovacion=True,
-        fecha_limite_renovacion=_fin_mes_siguiente(ahora) if descuento_pct > 0 else None,
+        fecha_limite_renovacion=_fecha_limite_renovacion_siguiente(clases_abono[0].fecha),
         estado="pendiente_pago" if requiere_pago else "activo",
     )
     db.session.add(nuevo_abono)
