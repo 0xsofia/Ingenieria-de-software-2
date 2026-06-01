@@ -34,7 +34,7 @@ export const endpoints = {
   listarPagos: '/api/pagos/lista',
   recuperarContrasena: '/api/recuperar-contrasena',
   cambiarContrasena: '/api/cambiar-contrasena',
-  metricas : 'api/metricas'
+  metricas: '/api/metricas'
 }
 
 endpoints.confirmacionTurno = (token) => `/api/confirmaciones/turno/${token}`
