@@ -8,6 +8,7 @@ from src.core.bcrypt_and_session import bcrypt
 from src.core.database import db
 from src.core.enums.clase_enum import ActividadEnum, NivelEnum, TipoClaseEnum
 from src.core.models.clase import Clase
+from src.core.models.lista_espera import ListaEspera
 from src.core.models.pago import Pago
 from src.core.models.persona import Persona, PersonaRolPuente, Rol, Socio
 from src.core.models.profesor import Profesor
@@ -155,6 +156,7 @@ def seed_reintegros_escenarios(seed_datetime=None):
         )
 
         if case.get("needs_sancion"):
+            _set_sancion_descuento(socio_id, now.date() + timedelta(days=30))
             _ensure_cancelled_reservas_in_month(
                 socio_id=socio_id,
                 base_reserva_id=int(case["cancelled_base_id"]),
@@ -175,6 +177,20 @@ def seed_reintegros_escenarios(seed_datetime=None):
             monto=Decimal("1000.00"),
         )
 
+    mate_id = _ensure_socio_user(
+        email="mate@centro.test",
+        dni="40000004",
+        nombre="Mateo",
+        apellido="Centro",
+        rol=rol_socio,
+    )
+    for case in cases[:3]:
+        _ensure_lista_espera(
+            clase_id=case["target_clase"].clase_id,
+            socio_id=mate_id,
+            posicion=1,
+        )
+
     db.session.commit()
 
     print("✅ [SEED] Escenarios de reintegro listos:")
@@ -183,6 +199,7 @@ def seed_reintegros_escenarios(seed_datetime=None):
         print(
             f"   - {case['scenario']}: user={case['email']} / reserva_id={case['target_reserva_id']}"
         )
+    print("   - mate@centro.test en lista de espera de reintegros 1, 2 y 3")
 
 
 def _get_or_create_role(role_name: str) -> Rol:
@@ -392,6 +409,26 @@ def _ensure_pago_aprobado(*, socio_id: int, reserva_id: int, monto: Decimal):
     db.session.flush()
 
 
+def _ensure_lista_espera(*, clase_id: int, socio_id: int, posicion: int):
+    entry = ListaEspera.query.filter_by(clase_id=clase_id, socio_id=socio_id).first()
+    if entry is None:
+        entry = ListaEspera(
+            clase_id=clase_id,
+            socio_id=socio_id,
+            posicion=posicion,
+            estado="pendiente",
+        )
+        db.session.add(entry)
+    else:
+        entry.posicion = posicion
+        entry.estado = "pendiente"
+
+    entry.notificado_en = None
+    entry.vence_confirmacion_en = None
+    entry.confirmada_en = None
+    db.session.flush()
+
+
 def _ensure_cancelled_reservas_in_month(*, socio_id: int, base_reserva_id: int, now: datetime, clases: list[Clase]):
     inicio_mes = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
@@ -419,3 +456,12 @@ def _ensure_cancelled_reservas_in_month(*, socio_id: int, base_reserva_id: int, 
             reserva.cancelada_en = inicio_mes + timedelta(hours=offset + 1)
 
         db.session.flush()
+
+
+def _set_sancion_descuento(socio_id: int, blocked_until):
+    socio = Socio.query.get(socio_id)
+    if socio is None:
+        return
+
+    socio.descuento_bloqueado_hasta = blocked_until
+    db.session.flush()

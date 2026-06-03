@@ -28,6 +28,11 @@ PROFESORES_TO_SEED = [
         "dni": "44620873",
         "telefono": "2215003105",
     },
+    {
+        "nombre": "Profesor Sin Clases Futuras",
+        "dni": "55779911",
+        "telefono": "2215003106",
+    },
 ]
 
 

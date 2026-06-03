@@ -3,6 +3,7 @@ import unittest
 from src.core.bcrypt_and_session import bcrypt
 from src.core.database import db
 from src.core.models.credito import Credito
+from src.core.models.lista_espera import ListaEspera
 from src.core.models.pago import Pago
 from src.core.models.persona import (
     Empleado,
@@ -338,6 +339,18 @@ class IniciarSesionTestCase(unittest.TestCase):
             pago = Pago.query.filter_by(reserva_id=reserva_id).first()
             self.assertIsNotNone(pago)
             self.assertEqual(pago.socio_id, persona.persona_id)
+
+        mate = Persona.query.filter_by(email="mate@centro.test").first()
+        self.assertIsNotNone(mate)
+        for reserva_id in [9101, 9102, 9103]:
+            reserva = Reserva.query.get(reserva_id)
+            self.assertIsNotNone(
+                ListaEspera.query.filter_by(
+                    socio_id=mate.persona_id,
+                    clase_id=reserva.clase_id,
+                    estado="pendiente",
+                ).first()
+            )
 
         response = self.client.post(
             "/api/login",
