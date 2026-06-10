@@ -241,8 +241,8 @@ function MisClasesPage() {
                 })}
               </div>
             ) : null}
-             */}
-           {/*
+           */}
+           
              <div className="mis-clases-table-wrapper">
                 <h2> En lista de espera </h2>
                 <table className="mis-clases-table">
@@ -253,7 +253,8 @@ function MisClasesPage() {
                       <th scope="col">Horario</th>
                       <th scope="col">Cancha</th>
                       <th scope="col">Estado</th>
-                      {/*<th scope="col">Posición</th>
+                      {/*<th scope="col">Posición</th>*/}
+                      <th scope="col">Acciones</th>
                     </tr>
                   </thead>
                 <tbody>
@@ -277,7 +278,18 @@ function MisClasesPage() {
                             {item.estado === 'notificado' ? 'Turno disponible' : 'En espera'}
                           </span>
                         </td>
-                        {/*<td data-label="Posición">{item.posicion ?? '-'}</td>
+                        {/*<td data-label="Posición">{item.posicion ?? '-'}</td>*/}
+                        <td data-label="Acciones">
+                          <div className="mis-clases-table">
+                              <button
+                                type="button"
+                                className="secondary-action"
+                                onClick={() => handleAbandonarListaEspera(reserva)}
+                              >
+                                Abandonar lista de espera
+                              </button>
+                            </div>
+                          </td>
                       </tr>
                     ))
                   )} 
@@ -285,9 +297,9 @@ function MisClasesPage() {
               </table>
               </div>                
                    
-            */}
+            
             <div className="mis-clases-table-wrapper">
-           {/* <h2>Reservadas</h2>  */}
+            <h2>Reservadas</h2>
             <table className="mis-clases-table">
               <thead>
                 <tr>
@@ -327,13 +339,6 @@ function MisClasesPage() {
                       </td>
                       <td data-label="Acciones">
                         <div className="mis-clases-table__actions">
-                          {/*<button
-                            type="button"
-                            className="secondary-action"
-                            onClick={() => handleAbandonarListaEspera(reserva)}
-                          >
-                            Abandonar lista de espera
-                          </button>*/}
 
                           <button
                             type="button"
