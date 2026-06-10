@@ -12,6 +12,7 @@ export const endpoints = {
   obtenerProfesores: '/api/profesor/lista',
   crearProfesor: '/api/profesor/crear',
   actividades: '/api/actividades',
+  eliminarProfesor: (id) => `/api/profesor/${id}`,
   reservaEspontanea: '/api/reservas/espontanea',
   reservaEspontaneaListaEspera: '/api/reservas/espontanea/lista-espera',
   reservaEspontaneaPagoRetorno: '/api/reservas/espontanea/pago-retorno',
