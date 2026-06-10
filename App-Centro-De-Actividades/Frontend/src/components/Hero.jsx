@@ -19,6 +19,7 @@ function Hero({ role, onLogout, isLoggingOut = false }) {
 
   if (role === 'empleado') {
     navigationItems.splice(1, 0, { to: '/clases', label: 'Ver Clases' })
+    navigationItems.splice(2, 0, { to: '/profesores', label: 'Ver profesores' })
   }
 
   if (role === 'socio') {

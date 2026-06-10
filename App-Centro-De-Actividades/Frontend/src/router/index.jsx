@@ -22,6 +22,7 @@ import MisClasesPage from '../pages/MisClasesPage.jsx'
 import EscanearQRPage from '../pages/EscanearQRPage.jsx'
 import GenerarQRPage from '../pages/GenerarQRPage.jsx'
 import CrearProfesorPage from '../pages/CrearProfesorPage.jsx'
+import ListadoProfesoresPage from '../pages/ListadoProfesoresPage.jsx'
 import ListadoPagosPage from '../pages/ListadoPagosPage.jsx'
 import ConfirmarTurnoPage from '../pages/ConfirmarTurnoPage.jsx'
 
@@ -65,6 +66,10 @@ const router = createBrowserRouter([
       {
         path: '/profesor/crear',
         element: <CrearProfesorPage />,
+      },
+      {
+        path: '/profesores',
+        element: <ListadoProfesoresPage />,
       },
       {
         path: '/clases/:claseId/modificar',
