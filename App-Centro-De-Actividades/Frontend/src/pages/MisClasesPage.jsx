@@ -271,7 +271,7 @@ function MisClasesPage() {
                     <th scope="col">Cancha</th>
                     <th scope="col">Estado</th>
                     <th scope="col">Posición</th>
-                    <th scope="col">Accion</th>
+                    <th scope="col">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
