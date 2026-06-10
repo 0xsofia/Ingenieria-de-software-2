@@ -14,12 +14,35 @@ const INITIAL_FILTERS = Object.freeze({
   horario: '',
 })
 
+const ARGENTINA_TIMEZONE = 'America/Argentina/Buenos_Aires'
+const argentinaDateTimeFormatter = new Intl.DateTimeFormat('sv-SE', {
+  timeZone: ARGENTINA_TIMEZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false,
+})
+
 export default function ActividadesPage() {
   const { session } = useAuth()
   const [clases, setClases] = useState([])
   const [submittedFilters, setSubmittedFilters] = useState(INITIAL_FILTERS)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [currentTime, setCurrentTime] = useState(() => Date.now())
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentTime(Date.now())
+    }, 60_000)
+
+    return () => {
+      window.clearInterval(intervalId)
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -51,9 +74,14 @@ export default function ActividadesPage() {
     }
   }, [])
 
+  const clasesDisponibles = useMemo(
+    () => clases.filter((clase) => isClaseDisponible(clase, currentTime)),
+    [clases, currentTime]
+  )
+
   const horarioOptions = useMemo(
-    () => Array.from(new Set(clases.map((clase) => clase.horario_inicio))).sort(),
-    [clases]
+    () => Array.from(new Set(clasesDisponibles.map((clase) => clase.horario_inicio))).sort(),
+    [clasesDisponibles]
   )
 
   const filterFields = useMemo(
@@ -85,7 +113,7 @@ export default function ActividadesPage() {
   )
 
   const filteredClases = useMemo(() => {
-    return clases.filter((clase) => {
+    return clasesDisponibles.filter((clase) => {
       if (submittedFilters.actividad && clase.actividad !== submittedFilters.actividad) {
         return false
       }
@@ -100,7 +128,7 @@ export default function ActividadesPage() {
 
       return true
     })
-  }, [clases, submittedFilters])
+  }, [clasesDisponibles, submittedFilters])
 
   const hasActiveFilters = Object.values(submittedFilters).some(Boolean)
   const canReserve = session?.role === 'socio'
@@ -218,4 +246,37 @@ function getSlug(nombre) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
+}
+
+function isClaseDisponible(clase, currentTime) {
+  if (!clase?.fecha || !clase?.horario_inicio) {
+    return true
+  }
+
+  const currentDateTimeKey = getArgentinaDateTimeKey(currentTime)
+  if (!currentDateTimeKey) {
+    return true
+  }
+
+  return `${clase.fecha}T${clase.horario_inicio}:00` > currentDateTimeKey
+}
+
+function getArgentinaDateTimeKey(currentTime) {
+  const date = new Date(currentTime)
+  if (Number.isNaN(date.getTime())) {
+    return null
+  }
+
+  const parts = Object.fromEntries(
+    argentinaDateTimeFormatter
+      .formatToParts(date)
+      .filter((part) => part.type !== 'literal')
+      .map((part) => [part.type, part.value])
+  )
+
+  if (!parts.year || !parts.month || !parts.day || !parts.hour || !parts.minute || !parts.second) {
+    return null
+  }
+
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`
 }

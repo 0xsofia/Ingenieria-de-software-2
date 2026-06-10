@@ -91,6 +91,57 @@
   color: var(--text-soft);
 }
 
+.mis-clases-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.mis-clases-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.mis-clases-modal__dialog {
+  position: relative;
+  width: min(100%, 440px);
+  padding: 28px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow-soft);
+}
+
+.mis-clases-modal__dialog h2 {
+  margin: 0 0 12px;
+  color: var(--text-strong);
+  text-align: center;
+}
+
+.mis-clases-modal__dialog p {
+  margin: 0;
+  color: var(--text-soft);
+  text-align: center;
+}
+
+.mis-clases-modal__actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.mis-clases-modal__actions .primary-action,
+.mis-clases-modal__actions .secondary-action {
+  width: 152px;
+  margin-top: 0;
+}
+
 @media (min-width: 721px) {
   .mis-clases-table {
     table-layout: auto;
@@ -188,5 +239,22 @@
 
   .mis-clases-table__empty::before {
     content: none;
+  }
+
+  .mis-clases-modal {
+    padding: 16px;
+  }
+
+  .mis-clases-modal__dialog {
+    padding: 24px 18px;
+  }
+
+  .mis-clases-modal__actions {
+    flex-direction: column-reverse;
+  }
+
+  .mis-clases-modal__actions .primary-action,
+  .mis-clases-modal__actions .secondary-action {
+    width: 100%;
   }
 }

@@ -37,6 +37,12 @@ export default function ActividadPage() {
 
     try {
       const result = await reservarEspontanea({ clase_id: claseId })
+      
+      // 🚀 INYECTÁ ESTOS LOGS DE CONTROL ACÁ:
+      console.log("=== DEBUG RESERVA ===")
+      console.log("Objeto result completo:", result)
+      console.log("status que viene del backend:", result?.status)
+      console.log("payment_url que viene del backend:", result?.payment_url)
 
       if (result.status === 'no_cupo') {
         setSuccessMessage(result.message)
@@ -55,22 +61,22 @@ export default function ActividadPage() {
       }
 
       setSuccessMessage(result.message || 'Reserva procesada.')
-    } catch (error) {
-      if (error?.data?.status === 'no_cupo') {
-        setSuccessMessage(error?.data?.message)
-        setPendingWaitlistClaseId(claseId)
-        return
-      }
+      }  catch (error) {
+        if (error?.data?.status === 'no_cupo') {
+          setSuccessMessage(error?.data?.message)
+          setPendingWaitlistClaseId(claseId)
+          return
+        }
 
-      if (error?.data?.status === 'already_reserved') {
-        setSuccessMessage(error?.data?.message)
-        return
-      }
+        if (error?.data?.status === 'already_reserved') {
+          setSuccessMessage(error?.data?.message)
+          return
+        }
 
-      setRequestError(error?.data?.message || 'No se pudo realizar la reserva.')
-    } finally {
-      setIsSubmitting(false)
-    }
+        setRequestError(error?.data?.message || 'No se pudo realizar la reserva.')
+      } finally {
+        setIsSubmitting(false)
+      }
   }
 
   async function handleEntrarListaEspera() {
@@ -162,7 +168,7 @@ export default function ActividadPage() {
               <div className="section-heading">
                 <h3>Sin cupo</h3>
                 <p>
-                  No hay más cupo en la clase seleccionada.
+                  La clase se encuentra llena.
                   ¿Querés entrar a la lista de espera?
                 </p>
               </div>

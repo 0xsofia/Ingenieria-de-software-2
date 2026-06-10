@@ -76,10 +76,7 @@ function PagoRetornoPage() {
       <section className="dashboard-frame dashboard-frame--compact">
         <header className="dashboard-header">
           <p className="auth-subtitle">Pago</p>
-          <h1>Confirmando inscripción</h1>
-          <p className="dashboard-copy">
-            Estamos procesando el resultado del pago para anotarte en la clase.
-          </p>
+          
         </header>
 
         {errorMessage ? (
@@ -91,8 +88,7 @@ function PagoRetornoPage() {
         {result ? (
           <section className="dashboard-section">
             <div className="section-heading">
-              <h2>Resultado</h2>
-              <p>{result.message}</p>
+              <h2>{result.message}</h2>
             </div>
           </section>
         ) : null}

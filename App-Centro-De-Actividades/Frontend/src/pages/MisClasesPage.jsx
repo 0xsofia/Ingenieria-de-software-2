@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 
 import {
@@ -17,6 +18,7 @@ function MisClasesPage() {
   const [error, setError] = useState('')
   const [feedback, setFeedback] = useState('')
   const [cancelingId, setCancelingId] = useState(null)
+  const [pendingCancelReserva, setPendingCancelReserva] = useState(null)
   const [ofertas, setOfertas] = useState([])
   const [confirmingId, setConfirmingId] = useState(null)
 
@@ -77,19 +79,25 @@ function MisClasesPage() {
   async function handleCancelarReserva(reserva) {
     if (!reserva?.reserva_id) return
 
-    const confirmCancel = window.confirm(
-      'Vas a cancelar la reserva. El reintegro depende de las politicas de cancelacion. Queres continuar?',
-    )
+    setPendingCancelReserva(reserva)
+  }
 
-    if (!confirmCancel) return
+  function handleCloseCancelModal() {
+    if (cancelingId) return
 
-    setCancelingId(reserva.reserva_id)
+    setPendingCancelReserva(null)
+  }
+
+  async function handleConfirmCancelReserva() {
+    if (!pendingCancelReserva?.reserva_id) return
+
+    setCancelingId(pendingCancelReserva.reserva_id)
     setError('')
     setFeedback('')
 
     try {
       const result = await cancelarReservaEspontanea({
-        reserva_id: reserva.reserva_id,
+        reserva_id: pendingCancelReserva.reserva_id,
       })
 
       console.log(result)
@@ -109,6 +117,7 @@ function MisClasesPage() {
       }
 
       setFeedback(message)
+      setPendingCancelReserva(null)
       await fetchReservas()
       await fetchOfertas()
     } catch (err) {
@@ -199,7 +208,7 @@ function MisClasesPage() {
         {isLoading ? (
           <p className="dashboard-copy">Cargando reservas...</p>
         ) : (
-          <div>
+          <div>{/*
             {ofertas.length > 0 ? (
               <div className="ofertas-list">
                 {ofertas.map((oferta) => {
@@ -232,9 +241,10 @@ function MisClasesPage() {
                 })}
               </div>
             ) : null}
-
-            {listaEspera.length > 0 ? (
-              <div className="mis-clases-table-wrapper">
+             */}
+           {/*
+             <div className="mis-clases-table-wrapper">
+                <h2> En lista de espera </h2>
                 <table className="mis-clases-table">
                   <thead>
                     <tr>
@@ -243,11 +253,18 @@ function MisClasesPage() {
                       <th scope="col">Horario</th>
                       <th scope="col">Cancha</th>
                       <th scope="col">Estado</th>
-                      <th scope="col">Posición</th>
+                      {/*<th scope="col">Posición</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {listaEspera.map((item) => (
+                <tbody>
+                  {listaEspera.length === 0 ? (
+                    <tr>
+                      <td className="mis-clases-table__empty" colSpan={8}>
+                        Aún no hay clases en lista de espera.
+                      </td>
+                    </tr>   
+                    ):(
+                    listaEspera.map((item) => (
                       <tr key={`waitlist-${item.lista_espera_id}`}>
                         <td data-label="Actividad">{item.actividad || 'Actividad'}</td>
                         <td data-label="Fecha">{item.fecha || '-'}</td>
@@ -260,15 +277,17 @@ function MisClasesPage() {
                             {item.estado === 'notificado' ? 'Turno disponible' : 'En espera'}
                           </span>
                         </td>
-                        <td data-label="Posición">{item.posicion ?? '-'}</td>
+                        {/*<td data-label="Posición">{item.posicion ?? '-'}</td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : null}
-
+                    ))
+                  )} 
+                </tbody>
+              </table>
+              </div>                
+                   
+            */}
             <div className="mis-clases-table-wrapper">
+           {/* <h2>Reservadas</h2>  */}
             <table className="mis-clases-table">
               <thead>
                 <tr>
@@ -351,7 +370,43 @@ function MisClasesPage() {
             </div>
         </div>
         )}
-      
+
+        {pendingCancelReserva
+          ? createPortal(
+          <div className="mis-clases-modal" role="presentation">
+            <div className="mis-clases-modal__backdrop" onClick={handleCloseCancelModal} />
+            <section
+              className="mis-clases-modal__dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="cancelar-reserva-title"
+            >
+              <h2 id="cancelar-reserva-title">Confirmar cancelacion</h2>
+              <p>¿Seguro que quiere cancelar la reserva?</p>
+              <div className="mis-clases-modal__actions">
+                <button
+                  type="button"
+                  className="secondary-action"
+                  onClick={handleCloseCancelModal}
+                  disabled={Boolean(cancelingId)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="primary-action"
+                  onClick={handleConfirmCancelReserva}
+                  disabled={Boolean(cancelingId)}
+                >
+                  {cancelingId ? 'Cancelando...' : 'Aceptar'}
+                </button>
+              </div>
+            </section>
+          </div>,
+          document.body,
+        )
+          : null}
+       
       </section>
      </main>
      

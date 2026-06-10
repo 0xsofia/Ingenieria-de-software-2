@@ -71,7 +71,7 @@ const router = createBrowserRouter([
         element: <ModificarClasePage />,
       },
       {
-        path: '/clases/:idClase/qr',
+        path: '/clases/escanear-qr',
         element: <EscanearQRPage />,
       },
       {

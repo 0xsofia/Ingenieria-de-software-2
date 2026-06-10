@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-import logoCad from '../assets/Logo CAD.png'
+import logoCad from '../assets/logo-cad.png'
 import { useAuth } from '../hooks/useAuth'
 import './InicioPage.css'
 

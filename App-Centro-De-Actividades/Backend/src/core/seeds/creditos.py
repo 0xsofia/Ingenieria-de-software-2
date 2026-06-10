@@ -5,7 +5,7 @@ from src.core.models.persona import Persona
 CREDITOS_TO_SEED = [
     {
         "email": "credito@gmail.com",
-        "cantidad": 2,
+        "cantidad": 1,
     },
 ]
 
@@ -18,16 +18,20 @@ def seed_creditos():
             continue
 
         socio_id = persona.socio.persona_id
-        existentes = (
+        creditos_disponibles = (
             Credito.query.filter_by(socio_id=socio_id)
             .filter(Credito.reserva_que_consume_id.is_(None))
             .filter(Credito.consumido_en.is_(None))
             .filter(db.func.lower(Credito.estado) == "disponible")
-            .count()
+            .order_by(Credito.credito_id.asc())
+            .all()
         )
 
         objetivo = int(credito_data.get("cantidad", 1))
-        for _ in range(max(objetivo - existentes, 0)):
+        for credito in creditos_disponibles[objetivo:]:
+            db.session.delete(credito)
+
+        for _ in range(max(objetivo - len(creditos_disponibles), 0)):
             credito = Credito(
                 socio_id=socio_id,
                 estado="disponible",

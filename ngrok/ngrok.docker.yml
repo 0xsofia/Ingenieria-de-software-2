@@ -1,0 +1,14 @@
+version: "2"
+
+# Use NGROK_AUTHTOKEN environment variable in docker compose.
+
+tunnels:
+  frontend:
+    proto: http
+    addr: frontend:5173
+    hostname: "inge2-front2.ngrok.app"
+
+  backend:
+    proto: http
+    addr: backend:5000
+    hostname: "inge2-back2.ngrok.app"

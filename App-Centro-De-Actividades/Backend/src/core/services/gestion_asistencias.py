@@ -41,7 +41,7 @@ class HorarioInvalidoException(Exception): pass
 
 
 def generar_token_asistencia(reserva_id):
-    # 🚀 FORZAMOS UN JOIN LIMPIO: Traemos la Reserva y su Clase correspondiente en una sola consulta
+
     resultado = db.session.query(Reserva, Clase)\
         .join(Clase, Reserva.clase_id == Clase.clase_id)\
         .filter(Reserva.reserva_id == reserva_id)\
@@ -68,8 +68,11 @@ def generar_token_asistencia(reserva_id):
         return {
             "dni": persona.dni,
             "id_reserva": id_reserva_real,
+            "id_clase": clase.clase_id, 
             "nombre": persona.nombre,
             "clase": clase.actividad.name.capitalize() if hasattr(clase.actividad, 'name') else str(clase.actividad),
+            "dia": clase.fecha.strftime('%d/%m/%Y'),
+            "horario": clase.horario_inicio.strftime('%H:%M'),
             "ya_asistio": True
         }
 
@@ -81,17 +84,6 @@ def generar_token_asistencia(reserva_id):
 
     limite_inferior = inicio_clase_dt - timedelta(minutes=15)
     limite_superior = inicio_clase_dt + timedelta(minutes=15)
-    
-    # print(f"\n🔍 DEBUG RESERVA ID: {reserva_id}", flush=True)
-    # print(f"⏰ HORA ACTUAL DEL SISTEMA: {ahora.strftime('%H:%M:%S')}", flush=True)
-    # print(f"📌 MARGEN INFERIOR PERMITIDO: {limite_inferior.strftime('%H:%M:%S')}", flush=True)
-    # print(f"📌 MARGEN SUPERIOR PERMITIDO: {limite_superior.strftime('%H:%M:%S')}\n", flush=True)
-
-    # if ahora < limite_inferior:
-    #     raise FueraDeHorarioException("Aún es temprano. Podrás visualizar tu QR 15 minutos antes de la clase.")
-
-    # if ahora > limite_superior:
-    #     raise FueraDeHorarioException("El margen de tiempo de 15 minutos para ingresar ha expirado.")
 
     if not (limite_inferior <= ahora <= limite_superior):
         raise FueraDeHorarioException(
@@ -113,11 +105,15 @@ def generar_token_asistencia(reserva_id):
     return {
         "dni": persona.dni,
         "id_reserva": id_reserva_real,
+        "id_clase": clase.clase_id,
         "nombre": persona.nombre,
         "clase": clase.actividad.name.capitalize() if hasattr(clase.actividad, 'name') else str(clase.actividad),
+        "dia": clase.fecha.strftime('%d/%m/%Y'),
+        "horario": clase.horario_inicio.strftime('%H:%M'),
         "ya_asistio": False,
         "token": token,
     }
+
 
 def registrar_asistencia(dni, id_reserva, id_clase):
     """Ejecuta los controles de validación de ingreso y registra el presente en la BD."""
@@ -136,8 +132,8 @@ def registrar_asistencia(dni, id_reserva, id_clase):
 
     if id_clase is not None:
         if int(reserva.clase_id) != int(id_clase):
-            raise AccesoQRDenegadoException(
-                "El QR escaneado no corresponde a la clase seleccionada."
+            raise QRInvalidoException(
+                "El QR es inválido."
             )
 
     # 3. Validación: Impedir duplicados controlando el estado string de tu modelo
@@ -171,7 +167,7 @@ def registrar_asistencia(dni, id_reserva, id_clase):
     db.session.add(asistencia)
     db.session.commit()
 
-    return f"Asistencia registrada con éxito para {persona.nombre_completo} en la clase de {reserva.clase.actividad.value}."
+    return f"Asistencia registrada con éxito para {persona.nombre_completo} en la clase de {reserva.clase.actividad.value}.."
 
 
 def registrar_asistencia_manual(reserva_id):
