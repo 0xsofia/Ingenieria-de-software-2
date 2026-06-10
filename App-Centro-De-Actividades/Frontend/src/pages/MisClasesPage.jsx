@@ -7,6 +7,7 @@ import {
   listarMisClases,
   obtenerOfertasActivas,
   confirmarTurno,
+  abandonarListaEspera,
 } from '../api/reservas'
 import './MisClasesPage.css'
 
@@ -21,6 +22,7 @@ function MisClasesPage() {
   const [pendingCancelReserva, setPendingCancelReserva] = useState(null)
   const [ofertas, setOfertas] = useState([])
   const [confirmingId, setConfirmingId] = useState(null)
+  const [abandoningId, setAbandoningId] = useState(null)
 
   const currencyFormatter = useMemo(
     () =>
@@ -33,17 +35,33 @@ function MisClasesPage() {
   )
 
   function handleAbandonarListaEspera(reserva) {
-    if (!reserva?.reserva_id) return
+    // espera: recibe un objeto de lista de espera
+    if (!reserva?.lista_espera_id) return
 
     setError('')
-    setFeedback('Funcionalidad de abandonar lista de espera todavía no está implementada.')
+    setFeedback('')
+
+    setAbandoningId(reserva.lista_espera_id)
+
+    abandonarListaEspera({ lista_espera_id: reserva.lista_espera_id })
+      .then((result) => {
+        if (result && result.status === 'ok') {
+          setFeedback(result.message || 'Se abandono la lista de espera existosamente')
+          fetchReservas()
+        } else {
+          setError(result?.message || 'No se pudo abandonar la lista de espera.')
+        }
+      })
+      .catch((err) => {
+        setError(err.data?.message || 'No se pudo abandonar la lista de espera.')
+      })
+      .finally(() => setAbandoningId(null))
   }
 
   function handleGenerarQR(reserva) {
     if (!reserva?.reserva_id) return
 
     setError('')
-    // Navega a la página que ya realiza la llamada al backend y renderiza el QR
     navigate(`/reservas/${reserva.reserva_id}/qr`)
   }
 
@@ -188,9 +206,9 @@ function MisClasesPage() {
       <section className="dashboard-frame mis-clases-frame">
         <header className="dashboard-header mis-clases-header">
           <h1>Mis clases</h1>
-          {/* <p className="dashboard-copy">
+          <p className="dashboard-copy">
             Gestiona tus reservas y consulta si aplica reintegro.
-          </p> */}
+          </p>
         </header>
         
         {error ? (
@@ -208,7 +226,7 @@ function MisClasesPage() {
         {isLoading ? (
           <p className="dashboard-copy">Cargando reservas...</p>
         ) : (
-          <div>{/*
+          <div>
             {ofertas.length > 0 ? (
               <div className="ofertas-list">
                 {ofertas.map((oferta) => {
@@ -241,29 +259,29 @@ function MisClasesPage() {
                 })}
               </div>
             ) : null}
-             */}
-           {/*
-             <div className="mis-clases-table-wrapper">
-                <h2> En lista de espera </h2>
-                <table className="mis-clases-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Actividad</th>
-                      <th scope="col">Fecha</th>
-                      <th scope="col">Horario</th>
-                      <th scope="col">Cancha</th>
-                      <th scope="col">Estado</th>
-                      {/*<th scope="col">Posición</th>
-                    </tr>
-                  </thead>
+
+            <div className="mis-clases-table-wrapper">
+              <h2>En lista de espera</h2>
+              <table className="mis-clases-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Actividad</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Horario</th>
+                    <th scope="col">Cancha</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Posición</th>
+                    <th scope="col">Accion</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {listaEspera.length === 0 ? (
                     <tr>
-                      <td className="mis-clases-table__empty" colSpan={8}>
+                      <td className="mis-clases-table__empty" colSpan={7}>
                         Aún no hay clases en lista de espera.
                       </td>
                     </tr>   
-                    ):(
+                  ) : (
                     listaEspera.map((item) => (
                       <tr key={`waitlist-${item.lista_espera_id}`}>
                         <td data-label="Actividad">{item.actividad || 'Actividad'}</td>
@@ -277,139 +295,146 @@ function MisClasesPage() {
                             {item.estado === 'notificado' ? 'Turno disponible' : 'En espera'}
                           </span>
                         </td>
-                        {/*<td data-label="Posición">{item.posicion ?? '-'}</td>
+                        <td data-label="Posición">{item.posicion ?? '-'}</td>
+                        <td data-label="Accion">
+                          <button
+                            type="button"
+                            className="secondary-action"
+                            onClick={() => handleAbandonarListaEspera(item)}
+                            disabled={abandoningId === item.lista_espera_id}
+                          >
+                            {abandoningId === item.lista_espera_id ? 'Abandonando...' : 'Abandonar'}
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )} 
                 </tbody>
               </table>
-              </div>                
+            </div>                
                    
-            */}
             <div className="mis-clases-table-wrapper">
-           {/* <h2>Reservadas</h2>  */}
-            <table className="mis-clases-table">
-              <thead>
-                <tr>
-                  <th scope="col">Actividad</th>
-                  <th scope="col">Fecha</th>
-                  <th scope="col">Horario</th>
-                  <th scope="col">Cancha</th>
-                  <th scope="col">Pago</th>
-                  <th scope="col">Monto abonado</th>
-                  <th scope="col">Reintegro estimado</th>
-                  <th scope="col">Acciones</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {reservas.length === 0 ? (
+              <h2>Reservadas</h2>
+              <table className="mis-clases-table">
+                <thead>
                   <tr>
-                    <td className="mis-clases-table__empty" colSpan={8}>
-                      Aún no hay clases asociadas.
-                    </td>
+                    <th scope="col">Actividad</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Horario</th>
+                    <th scope="col">Cancha</th>
+                    <th scope="col">Pago</th>
+                    <th scope="col">Monto abonado</th>
+                    <th scope="col">Reintegro estimado</th>
+                    <th scope="col">Acciones</th>
                   </tr>
-                ) : (
-                  reservas.map((reserva) => (
-                    <tr key={reserva.reserva_id}>
-                      <td data-label="Actividad">{reserva.actividad || 'Actividad'}</td>
-                      <td data-label="Fecha">{reserva.fecha ? reserva.fecha.split('-').reverse().join('/') : ''}</td>
-                      <td data-label="Horario" style={{ whiteSpace: 'nowrap' }}>
-                        {reserva.horario_inicio || '--:--'} - {reserva.horario_fin || '--:--'}
-                      </td>
-                      <td data-label="Cancha">{reserva.cancha || '-'}</td>
-                      <td data-label="Pago">{reserva.pago_estado || 'Sin pago'}</td>
-                      <td data-label="Monto abonado">{renderMonto(reserva.monto_pagado)}</td>
-                      <td data-label="Reintegro estimado">
-                        {reserva.reintegro_aplica
-                          ? renderMonto(reserva.reintegro_estimado)
-                          : 'No aplica'}
-                      </td>
-                      <td data-label="Acciones">
-                        <div className="mis-clases-table__actions">
-                          {/*<button
-                            type="button"
-                            className="secondary-action"
-                            onClick={() => handleAbandonarListaEspera(reserva)}
-                          >
-                            Abandonar lista de espera
-                          </button>*/}
+                </thead>
 
-                          <button
-                            type="button"
-                            className="secondary-action"
-                            onClick={() => handleGenerarQR(reserva)}
-                          >
-                            Generar QR
-                          </button>
-
-                          <button
-                            type="button"
-                            className="primary-action"
-                            onClick={() => handleCancelarReserva(reserva)}
-                            disabled={!reserva.puede_cancelar || cancelingId === reserva.reserva_id}
-                          >
-                            {cancelingId === reserva.reserva_id
-                              ? 'Cancelando...'
-                              : 'Cancelar reserva'}
-                          </button>
-
-                          {!reserva.puede_cancelar ? (
-                            <p className="mis-clases-table__hint">
-                              Esta reserva ya no puede cancelarse.
-                            </p>
-                          ) : null}
-                        </div>
+                <tbody>
+                  {reservas.length === 0 ? (
+                    <tr>
+                      <td className="mis-clases-table__empty" colSpan={8}>
+                        Aún no hay clases asociadas.
                       </td>
                     </tr>
-                  )
-                )
-              )}
-              </tbody>
-            </table>
+                  ) : (
+                    reservas.map((reserva) => (
+                      <tr key={reserva.reserva_id}>
+                        <td data-label="Actividad">{reserva.actividad || 'Actividad'}</td>
+                        <td data-label="Fecha">{reserva.fecha ? reserva.fecha.split('-').reverse().join('/') : ''}</td>
+                        <td data-label="Horario" style={{ whiteSpace: 'nowrap' }}>
+                          {reserva.horario_inicio || '--:--'} - {reserva.horario_fin || '--:--'}
+                        </td>
+                        <td data-label="Cancha">{reserva.cancha || '-'}</td>
+                        <td data-label="Pago">{reserva.pago_estado || 'Sin pago'}</td>
+                        <td data-label="Monto abonado">{renderMonto(reserva.monto_pagado)}</td>
+                        <td data-label="Reintegro estimado">
+                          {reserva.reintegro_aplica
+                            ? renderMonto(reserva.reintegro_estimado)
+                            : 'No aplica'}
+                        </td>
+                        <td data-label="Acciones">
+                          <div className="mis-clases-table__actions">
+                            <button
+                              type="button"
+                              className="secondary-action"
+                              onClick={() => handleAbandonarListaEspera(reserva)}
+                            >
+                              Abandonar lista de espera
+                            </button>
+
+                            <button
+                              type="button"
+                              className="secondary-action"
+                              onClick={() => handleGenerarQR(reserva)}
+                            >
+                              Generar QR
+                            </button>
+
+                            <button
+                              type="button"
+                              className="primary-action"
+                              onClick={() => handleCancelarReserva(reserva)}
+                              disabled={!reserva.puede_cancelar || cancelingId === reserva.reserva_id}
+                            >
+                              {cancelingId === reserva.reserva_id
+                                ? 'Cancelando...'
+                                : 'Cancelar reserva'}
+                            </button>
+
+                            {!reserva.puede_cancelar ? (
+                              <p className="mis-clases-table__hint">
+                                Esta reserva ya no puede cancelarse.
+                              </p>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-        </div>
+          </div>
         )}
 
         {pendingCancelReserva
           ? createPortal(
-          <div className="mis-clases-modal" role="presentation">
-            <div className="mis-clases-modal__backdrop" onClick={handleCloseCancelModal} />
-            <section
-              className="mis-clases-modal__dialog"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="cancelar-reserva-title"
-            >
-              <h2 id="cancelar-reserva-title">Confirmar cancelacion</h2>
-              <p>¿Seguro que quiere cancelar la reserva?</p>
-              <div className="mis-clases-modal__actions">
-                <button
-                  type="button"
-                  className="secondary-action"
-                  onClick={handleCloseCancelModal}
-                  disabled={Boolean(cancelingId)}
+              <div className="mis-clases-modal" role="presentation">
+                <div className="mis-clases-modal__backdrop" onClick={handleCloseCancelModal} />
+                <section
+                  className="mis-clases-modal__dialog"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="cancelar-reserva-title"
                 >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  className="primary-action"
-                  onClick={handleConfirmCancelReserva}
-                  disabled={Boolean(cancelingId)}
-                >
-                  {cancelingId ? 'Cancelando...' : 'Aceptar'}
-                </button>
-              </div>
-            </section>
-          </div>,
-          document.body,
-        )
+                  <h2 id="cancelar-reserva-title">Confirmar cancelacion</h2>
+                  <p>¿Seguro que quiere cancelar la reserva?</p>
+                  <div className="mis-clases-modal__actions">
+                    <button
+                      type="button"
+                      className="secondary-action"
+                      onClick={handleCloseCancelModal}
+                      disabled={Boolean(cancelingId)}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      className="primary-action"
+                      onClick={handleConfirmCancelReserva}
+                      disabled={Boolean(cancelingId)}
+                    >
+                      {cancelingId ? 'Cancelando...' : 'Aceptar'}
+                    </button>
+                  </div>
+                </section>
+              </div>,
+              document.body,
+            )
           : null}
        
       </section>
-     </main>
-     
+    </main>
   )
 }
 

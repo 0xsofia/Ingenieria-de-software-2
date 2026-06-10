@@ -26,6 +26,11 @@ export async function cancelarReservaEspontanea(payload) {
   return data
 }
 
+export async function abandonarListaEspera(payload) {
+  const { data } = await http.post(endpoints.abandonarListaEspera, payload)
+  return data
+}
+
 export async function obtenerOfertasActivas() {
   const { data } = await http.get(endpoints.ofertasActivas)
   console.log("obtenerofertas activas:", data);

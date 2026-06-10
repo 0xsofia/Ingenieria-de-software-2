@@ -8,6 +8,7 @@ from src.core.services.reservas import (
     procesar_retorno_pago,
     obtener_ofertas_activas,
     confirmar_turno,
+    abandonar_lista_espera,
 )
 
 
@@ -190,4 +191,37 @@ def confirmar_oferta():
         )
 
     body, status_code = confirmar_turno(lista_espera_id)
+    return jsonify(body), status_code
+
+
+@reservas_bp.post('/reservas/lista-espera/abandonar')
+def abandonar_lista_espera_route():
+    payload = request.get_json(silent=True) or {}
+
+    lista_espera_id = payload.get('lista_espera_id')
+    if lista_espera_id is None:
+        return (
+            jsonify(
+                {
+                    'status': 'validation_error',
+                    'errors': {'lista_espera_id': 'El id de la lista de espera es obligatorio.'},
+                }
+            ),
+            400,
+        )
+
+    try:
+        lista_espera_id = int(lista_espera_id)
+    except (TypeError, ValueError):
+        return (
+            jsonify(
+                {
+                    'status': 'validation_error',
+                    'errors': {'lista_espera_id': 'El id debe ser un número.'},
+                }
+            ),
+            400,
+        )
+
+    body, status_code = abandonar_lista_espera(lista_espera_id)
     return jsonify(body), status_code
