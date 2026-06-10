@@ -49,7 +49,7 @@ CLASES_TO_SEED = [
     {
         "actividad": "Basquet",
         "fecha": "2026-05-25",
-        "horario_inicio": "02:00",
+        "horario_inicio": "19:30",
         "cancha": "Cancha D",
         "nivel": "Intermedio",
         "cupos": 12,
@@ -58,8 +58,8 @@ CLASES_TO_SEED = [
     },
     {
         "actividad": "Basquet",
-        "fecha": "2026-05-20",
-        "horario_inicio": "08:30",
+        "fecha": "2026-05-25",
+        "horario_inicio": "19:40",
         "cancha": "Cancha QR",
         "nivel": "Intermedio",
         "cupos": 5,
@@ -69,7 +69,7 @@ CLASES_TO_SEED = [
     {
         "actividad": "Basquet",
         "fecha": "2026-05-25",
-        "horario_inicio": "02:00",
+        "horario_inicio": "19:50",
         "cancha": "Cancha QR",
         "nivel": "Intermedio",
         "cupos": 5,
