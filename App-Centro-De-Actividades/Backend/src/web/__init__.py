@@ -21,6 +21,8 @@ from src.web.controllers.profesor_controller import profesor_bp
 from src.web.controllers.reservas import reservas_bp
 from src.web.controllers.pagos_controller import pagos_bp
 from src.web.controllers.confirmaciones import confirmaciones_bp
+from src.web.controllers.recuperar_contrasena import recuperar_contrasena_bp
+from src.web.controllers.cambiar_contrasena import cambiar_contrasena_bp
 
 from src.core.bcrypt_and_session import bcrypt, cipher, login_manager
 
@@ -90,6 +92,8 @@ def create_app(env=None, static_folder="../../static"):
     app.register_blueprint(escanearQR_bp)
     app.register_blueprint(generar_token_asistencia_bp) 
     app.register_blueprint(confirmaciones_bp)
+    app.register_blueprint(recuperar_contrasena_bp)
+    app.register_blueprint(cambiar_contrasena_bp)
     
     @app.cli.command(name="reset_db")
     def reset_db():

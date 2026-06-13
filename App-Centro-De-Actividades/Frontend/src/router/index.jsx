@@ -5,6 +5,8 @@ import InicioPage from '../pages/InicioPage.jsx'
 import ListadoClasesPage from '../pages/ListadoClasesPage.jsx'
 import DetalleClasePage from '../pages/DetalleClasePage.jsx'
 import LoginPage from '../pages/LoginPage.jsx'
+import RecuperarContrasenaPage from '../pages/RecuperarContrasenaPage.jsx'
+import CambiarContrasenaPage from '../pages/CambiarContrasenaPage.jsx'
 import PagoRetornoPage from '../pages/PagoRetornoPage.jsx'
 import PerfilPage from '../pages/PerfilPage.jsx'
 import RegistrarsePage from '../pages/RegistrarsePage.jsx'
@@ -38,6 +40,14 @@ const router = createBrowserRouter([
   {
     path: '/registrarse',
     element: <RegistrarsePage />,
+  },
+  {
+    path: '/recuperar-contrasena',
+    element: <RecuperarContrasenaPage />,
+  },
+  {
+    path: '/cambiar-contrasena/:token',
+    element: <CambiarContrasenaPage />,
   },
   {
     path: '/confirmar-turno/:token',
@@ -101,6 +111,10 @@ const router = createBrowserRouter([
       {
         path: '/perfil/actualizar',
         element: <ActualizarPerfilPage />,
+      },
+      {
+        path: '/perfil/cambiar-contrasena',
+        element: <CambiarContrasenaPage />,
       },
       {
         path: '/mis-pagos',
