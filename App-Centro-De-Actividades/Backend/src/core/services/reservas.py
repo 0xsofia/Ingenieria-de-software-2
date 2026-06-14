@@ -517,6 +517,52 @@ def confirmar_turno_desde_token(token):
     }, 200
 
 
+def abandonar_lista_espera(lista_espera_id):
+    socio_id, error = _require_socio()
+    if error is not None:
+        return error
+
+    entry = db.session.get(ListaEspera, lista_espera_id)
+    if entry is None or entry.socio_id != socio_id:
+        return {
+            "status": "error",
+            "message": "La entrada de lista de espera no existe o no te pertenece.",
+        }, 404
+
+    if entry.estado == "cancelada":
+        return {
+            "status": "ok",
+            "message": "La entrada ya fue cancelada.",
+        }, 200
+
+    clase = db.session.get(Clase, entry.clase_id)
+
+    # Guardar posicion para recolocar a los demas
+    posicion = entry.posicion
+
+    entry.estado = "cancelada"
+    entry.notificado_en = None
+    entry.vence_confirmacion_en = None
+    entry.confirmada_en = None
+    db.session.flush()
+
+    # Reajustar posiciones de los que estaban por detras
+    db.session.execute(
+        ListaEspera.__table__.update()
+        .where(ListaEspera.clase_id == entry.clase_id)
+        .where(ListaEspera.posicion > posicion)
+        .values({"posicion": ListaEspera.posicion - 1})
+    )
+
+    # Si estaba notificado, ofrecer el cupo al siguiente
+    if clase is not None:
+        _ofrecer_cupo_a_primero(clase)
+
+    db.session.commit()
+
+    return {"status": "ok", "message": "Se abandono la lista de espera existosamente."}, 200
+
+
 def _schedule_conflict_exists(socio_id, clase):
     return (
         Reserva.query.join(Clase)

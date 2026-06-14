@@ -23,6 +23,11 @@ function PerfilUpdateForm() {
   const emailValue = formValues.email ?? session.email ?? ''
   const interesesValue = formValues.intereses ?? session.intereses ?? ''
 
+  const emailChanged = emailValue !== (session.email ?? '')
+  const interesesChanged = interesesValue !== (session.intereses ?? '')
+  const hasChanges = emailChanged || interesesChanged
+  const isButtonDisabled = !hasChanges || isSaving
+
   const handleChange = (event) => {
     const { name, value } = event.target
     setFormValues((prev) => ({ ...prev, [name]: value }))
@@ -116,7 +121,7 @@ function PerfilUpdateForm() {
           />
         </div>
 
-        <button type="submit" className="primary-action" disabled={isSaving}>
+        <button type="submit" className="primary-action" disabled={isButtonDisabled}>
           {isSaving ? 'Guardando...' : 'Actualizar perfil'}
         </button>
 
