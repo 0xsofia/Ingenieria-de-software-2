@@ -15,6 +15,7 @@ class Persona(db.Model):
     numero_puerta = db.Column(db.String(20), nullable=False)
     codigo_postal = db.Column(db.String(20), nullable=False)
     estado = db.Column(db.String(50), nullable=False, server_default="activo")
+    motivo_bloqueo = db.Column(db.String(255), nullable=True)
     intereses = db.Column(db.String(255), nullable=False, server_default="")
     token_recuperacion = db.Column(db.String(255), nullable=True)
     creado_en = db.Column(db.DateTime(timezone=True), nullable=False, server_default=db.func.now())

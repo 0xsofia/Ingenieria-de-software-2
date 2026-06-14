@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 
-import { listarUsuarios } from '../api/usuarios'
+import { listarUsuarios, bloquearUsuario, desbloquearUsuario } from '../api/usuarios'
 import FiltroUsuarios from '../components/usuarios/FiltroUsuarios'
 import ListadoUsuarios from '../components/usuarios/ListadoUsuarios'
+import BloquearUsuarioModal from '../components/usuarios/BloquearUsuarioModal'
 import { useAuth } from '../hooks/useAuth'
 import './ListadoUsuariosPage.css'
 
@@ -19,6 +21,15 @@ export default function ListadoUsuariosPage() {
   const [submittedFilters, setSubmittedFilters] = useState(INITIAL_USER_FILTERS)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+  
+  const [userToBlock, setUserToBlock] = useState(null)
+  const [isBlocking, setIsBlocking] = useState(false)
+  const [blockError, setBlockError] = useState('')
+
+  const [userToUnblock, setUserToUnblock] = useState(null)
+  const [isUnblocking, setIsUnblocking] = useState(false)
+  const [unblockError, setUnblockError] = useState('')
 
   const canViewUsers = session?.role === 'administrador' || session?.role === 'empleado'
   const canManageUsers = session?.role === 'administrador'
@@ -70,6 +81,7 @@ export default function ListadoUsuariosPage() {
   async function handleFilterSubmit(nextFilters) {
     setIsLoading(true)
     setError('')
+    setSuccessMessage('')
 
     try {
       const result = await listarUsuarios(nextFilters)
@@ -79,6 +91,47 @@ export default function ListadoUsuariosPage() {
       setError(requestError?.data?.message || 'No se pudo filtrar el listado de usuarios.')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  async function handleUnblockUser(user) {
+    setUserToUnblock(user)
+  }
+
+  async function handleConfirmUnblock() {
+    setIsUnblocking(true)
+    setUnblockError('')
+    setSuccessMessage('')
+
+    try {
+      await desbloquearUsuario(userToUnblock.persona_id)
+      setSuccessMessage(`El usuario ${userToUnblock.nombre_completo} ha sido desbloqueado exitosamente.`)
+      setUserToUnblock(null)
+      // Refresh list
+      const result = await listarUsuarios(submittedFilters)
+      setUsers(result.users || [])
+    } catch (requestError) {
+      setUnblockError(requestError?.data?.message || 'Error al desbloquear el usuario.')
+    } finally {
+      setIsUnblocking(false)
+    }
+  }
+
+  async function handleConfirmBlock({ motivo, devolver_dinero }) {
+    setIsBlocking(true)
+    setBlockError('')
+    
+    try {
+      const result = await bloquearUsuario(userToBlock.persona_id, { motivo, devolver_dinero })
+      setSuccessMessage(result.message || `El usuario ${userToBlock.nombre_completo} ha sido bloqueado exitosamente.`)
+      setUserToBlock(null)
+      // Refresh list
+      const listResult = await listarUsuarios(submittedFilters)
+      setUsers(listResult.users || [])
+    } catch (requestError) {
+      setBlockError(requestError?.data?.message || 'Error al bloquear el usuario.')
+    } finally {
+      setIsBlocking(false)
     }
   }
 
@@ -123,6 +176,12 @@ export default function ListadoUsuariosPage() {
             </p>
           ) : null}
 
+          {successMessage ? (
+            <p className="banner banner--success" role="status">
+              {successMessage}
+            </p>
+          ) : null}
+
           {isLoading ? (
             <p className="dashboard-copy">Cargando usuarios...</p>
           ) : (
@@ -135,11 +194,72 @@ export default function ListadoUsuariosPage() {
                 users={users}
                 emptyMessage={emptyMessage}
                 canManageUsers={canManageUsers}
+                onBlockUser={setUserToBlock}
+                onUnblockUser={handleUnblockUser}
               />
             </>
           )}
         </div>
       </section>
+      
+      {userToBlock ? (
+        <BloquearUsuarioModal
+          user={userToBlock}
+          onClose={() => {
+            setUserToBlock(null)
+            setBlockError('')
+          }}
+          onConfirm={handleConfirmBlock}
+          isSubmitting={isBlocking}
+          error={blockError}
+        />
+      ) : null}
+      {userToUnblock ? (
+        createPortal(
+          <div className="bloquear-usuario-modal" role="presentation">
+            <div className="bloquear-usuario-modal__backdrop" onClick={() => {
+              if (!isUnblocking) setUserToUnblock(null)
+            }} />
+            <section
+              className="bloquear-usuario-modal__dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="desbloquear-usuario-title"
+            >
+              <h2 id="desbloquear-usuario-title">Confirmar desbloqueo</h2>
+              <p style={{ textAlign: 'center', marginBottom: '24px', color: 'var(--text-soft)' }}>
+                ¿Estás seguro de que deseas desbloquear a {userToUnblock.nombre_completo}?
+              </p>
+              
+              {unblockError ? (
+                <p className="banner banner--error" role="alert" style={{ marginBottom: '1rem' }}>
+                  {unblockError}
+                </p>
+              ) : null}
+
+              <div className="bloquear-usuario-modal__actions">
+                <button
+                  type="button"
+                  className="secondary-action"
+                  onClick={() => setUserToUnblock(null)}
+                  disabled={isUnblocking}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="primary-action"
+                  onClick={handleConfirmUnblock}
+                  disabled={isUnblocking}
+                >
+                  {isUnblocking ? 'Desbloqueando...' : 'Aceptar'}
+                </button>
+              </div>
+            </section>
+          </div>,
+          document.body
+        )
+      ) : null}
     </section>
   )
 }

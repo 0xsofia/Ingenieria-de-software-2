@@ -536,6 +536,62 @@ class UsuariosTestCase(unittest.TestCase):
         db.session.commit()
         return persona
 
+    def test_admin_puede_bloquear_usuario(self):
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        persona = self._crear_usuario_con_roles(
+            email="socio@centro.test",
+            dni="33333333",
+            password="123456",
+            roles=["socio"],
+        )
+        self._login_admin()
+
+        response = self.client.put(
+            f"/api/usuarios/{persona.persona_id}/bloquear",
+            json={"motivo": "Socio problemático", "devolver_dinero": False},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["status"], "ok")
+        self.assertIn("bloqueado exitosamente", response.json["message"])
+        
+        updated_persona = db.session.get(Persona, persona.persona_id)
+        self.assertEqual(updated_persona.estado, "bloqueado")
+        self.assertEqual(updated_persona.motivo_bloqueo, "Socio problemático")
+
+    def test_admin_puede_desbloquear_usuario(self):
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        persona = self._crear_usuario_con_roles(
+            email="socio@centro.test",
+            dni="33333333",
+            password="123456",
+            roles=["socio"],
+        )
+        persona.estado = "bloqueado"
+        persona.motivo_bloqueo = "Socio problemático"
+        db.session.commit()
+        
+        self._login_admin()
+
+        response = self.client.put(f"/api/usuarios/{persona.persona_id}/desbloquear")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["status"], "ok")
+        
+        updated_persona = db.session.get(Persona, persona.persona_id)
+        self.assertEqual(updated_persona.estado, "activo")
+        self.assertIsNone(updated_persona.motivo_bloqueo)
+
     def _crear_rol(self, nombre, commit=True):
         role = Rol(nombre=nombre, descripcion=f"Rol {nombre}")
         db.session.add(role)
