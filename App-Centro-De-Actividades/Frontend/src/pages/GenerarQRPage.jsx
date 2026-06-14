@@ -24,6 +24,7 @@ const GenerarQR = () => {
             try {
                 // Invocamos a tu API de Flask pasando el ID de la reserva
                 const data = await generarQR(idReserva);
+                console.log("Respuesta completa del Backend:", data);
 
                 // Verificamos que el backend responda con la estructura esperada
                 if (data && data.qr_payload) {
@@ -32,7 +33,7 @@ const GenerarQR = () => {
                     setErrorMsg("El servidor no retornó un código de acceso válido.");
                 }
             } catch (err) {
-                // Capturamos el mensaje exacto que lanza tu backend (FueraDeHorarioException, etc.)
+
                 const mensajeError = err.response?.data?.message || err.response?.data?.error || "Error al conectar con el módulo de accesos.";
                 setErrorMsg(mensajeError);
             } finally {
@@ -67,12 +68,12 @@ const GenerarQR = () => {
                     <p className="text-red-700 text-sm whitespace-pre-line leading-relaxed mb-6">
                         {errorMsg}
                     </p>
-                    {/* <button 
+                    <button 
                         onClick={() => window.location.reload()}
                         className="bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2.5 px-6 rounded-xl text-sm transition-all"
                     >
                         Volver a intentar
-                    </button> */}
+                    </button>
                 </div>
             </div>
         );
@@ -95,18 +96,26 @@ const GenerarQR = () => {
                     </h2>
                     
                     {payloadQR?.clase && (
-                        <p className="text-gray-700 text-sm font-semibold bg-gray-50 py-1.5 px-3 rounded-full inline-block border border-gray-100">
-                            Clase: {payloadQR.clase}
-                        </p>
+                        <div className="mt-2 mb-4 p-3 bg-gray-50 rounded-2xl border border-gray-100 text-center">
+                            <p className="text-gray-800 font-bold text-base mb-1">
+                                {payloadQR.clase}
+                            </p>
+                            <div className="flex items-center justify-center gap-3 text-xs text-gray-500 font-medium">
+                                <span>📅 {payloadQR.dia || "Hoy"}</span>
+                                <span className="flex items-center gap-1">
+                                    <Clock size={12} /> {payloadQR.horario ? `${payloadQR.horario} hs` : "Horario reservado"}
+                                </span>
+                            </div>
+                        </div>
                     )}
 
-                    {/* 🚀 EL CAMBIO CLAVE AQUÍ: Aseguramos DNI string y Reserva numérica limpia */}
                     <div className="my-6 flex justify-center">
                         <div className="p-4 bg-white border border-gray-200 rounded-2xl shadow-md">
                             <QRCodeSVG 
                                 value={JSON.stringify({
                                     dni: String(payloadQR.dni).trim(),
-                                    id_reserva: Number(payloadQR.id_reserva)
+                                    id_reserva: Number(payloadQR.id_reserva),
+                                    id_clase : Number(payloadQR.id_clase)
                                 })}
                                 size={220}
                                 level="H"

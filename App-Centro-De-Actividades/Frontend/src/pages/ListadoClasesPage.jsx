@@ -101,9 +101,9 @@ export default function ListadoClasesPage() {
     return '#'
   }
 
-  function handleScanQR(clase) {
-    navigate(`/clases/${clase.clase_id}/qr`, { state: { clase } })
-  }
+  // function handleScanQR(clase) {
+  //   navigate(`/clases/${clase.clase_id}/qr`, { state: { clase } })
+  // }
 
   function handleFilterSubmit(values) {
     setFilters(values)
@@ -128,6 +128,9 @@ export default function ListadoClasesPage() {
             </Link>
             <Link className="secondary-action" to="/profesor/crear">
               Crear profesor
+            </Link>
+            <Link className="qr-action" to="/clases/escanear-qr">
+              Escanear QR
             </Link>
           </div>
         </div>
@@ -165,8 +168,8 @@ export default function ListadoClasesPage() {
                     clase={clase}
                     onView={handleViewClass}
                     onReserve={handleEditClass}
-                    onScanQR={handleScanQR}
-                    viewScanLabel="Escanear QR"
+                    // onScanQR={handleScanQR}
+                    // viewScanLabel="Escanear QR"
                     viewLabel="Ver detalle"
                     reserveLabel="Modificar"
                   />

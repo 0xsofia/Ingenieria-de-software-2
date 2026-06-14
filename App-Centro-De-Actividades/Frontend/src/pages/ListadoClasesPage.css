@@ -53,14 +53,28 @@
   }
 }
 
-.clase-card__actions .scan-qr-action {
-  background-color: #f3f4f6; 
-  border: 1px solid #d1d5db;
-  color: #1f2937;
-  font-weight: 600;
+.listado-clases__actions .qr-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 15px 24px;
+  font-size: 17px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease-in-out;
+  background-color: #f8fafc;          
+  color: #334155;                     
+  border: 1px solid #cbd5e1;       
 }
 
-.clase-card__actions .scan-qr-action:hover {
-  background-color: #e5e7eb;
+.listado-clases__actions .qr-action:hover {
+  background-color: #f1f5f9;           
+  color: #0f172a;                      
+  border-color: #94a3b8;               
   cursor: pointer;
 }
