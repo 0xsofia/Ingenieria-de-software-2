@@ -46,6 +46,10 @@ def send_employee_access_email(*, recipient_email, recipient_name, temporary_pas
     message.set_content(text_part)
     message.add_alternative(html_part, subtype='html')
 
+    # For local testing with fake emails, print the login URL to the console
+    if recipient_email.endswith('.test') or current_app.config.get('TESTING'):
+        print(f"\n{'='*50}\n[LOCAL TESTING] Employee Access for {recipient_email}:\nPassword: {temporary_password}\nLogin URL: {login_url}\n{'='*50}\n", flush=True)
+
     try:
         with smtplib.SMTP(
             mail_settings['host'],
@@ -62,6 +66,90 @@ def send_employee_access_email(*, recipient_email, recipient_name, temporary_pas
             'No se pudo enviar el email con la contraseña temporal del empleado.'
         ) from error
 
+
+def send_password_recovery_email(*, recipient_email, recipient_name, token):
+    mail_settings = _load_mailjet_settings()
+    frontend_url = current_app.config.get('FRONTEND_BASE_URL') or 'http://localhost:5173'
+    recovery_url = f"{frontend_url}/cambiar-contrasena/{token}"
+    
+    subject = 'Recuperación de contraseña - Centro de Actividades'
+    text_part = (
+        f'Hola {recipient_name},\n\n'
+        'Recibimos una solicitud para recuperar tu contraseña en Centro de Actividades.\n\n'
+        'Podés cambiar tu contraseña desde este enlace:\n'
+        f'{recovery_url}\n\n'
+        'Si no solicitaste este cambio, podés ignorar este mensaje.'
+    )
+    
+    safe_name = html.escape(recipient_name)
+    safe_recovery_url = html.escape(recovery_url, quote=True)
+    
+    html_part = f"""
+<!DOCTYPE html>
+<html lang="es">
+  <body style="margin:0;padding:0;background-color:#ececec;color:#4e4e4e;font-family:'Trebuchet MS','Segoe UI',sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#ececec;padding:24px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background-color:#ffffff;border:1px solid #b8b8b8;border-radius:20px;overflow:hidden;">
+            <tr>
+              <td style="padding:32px 32px 20px;background-color:#f3f3f3;border-bottom:1px solid #d6d6d6;">
+                <p style="margin:0 0 10px;font-size:13px;letter-spacing:1.2px;text-transform:uppercase;color:#666666;">Centro de Actividades</p>
+                <h1 style="margin:0;font-size:34px;line-height:1.05;font-weight:500;color:#111111;">Recuperación de contraseña</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px 32px 32px;">
+                <p style="margin:0 0 14px;font-size:17px;line-height:1.6;">Hola {safe_name},</p>
+                <p style="margin:0 0 14px;font-size:17px;line-height:1.6;">Recibimos una solicitud para recuperar tu contraseña en Centro de Actividades.</p>
+                <p style="margin:0 0 24px;font-size:16px;line-height:1.6;">Hacé click en el siguiente botón para cambiar tu contraseña:</p>
+                <table role="presentation" cellspacing="0" cellpadding="0">
+                  <tr>
+                    <td align="center" bgcolor="#d6d6d6" style="border:2px solid #2f2f2f;border-radius:14px;">
+                      <a href="{safe_recovery_url}" style="display:inline-block;padding:15px 28px;font-size:16px;font-weight:600;line-height:1.2;color:#111111;text-decoration:none;">Cambiar contraseña</a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:24px 0 0;font-size:14px;line-height:1.6;color:#666666;">Si no solicitaste este cambio, podés ignorar este mensaje.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+"""
+
+    message = EmailMessage()
+    message['Subject'] = subject
+    message['From'] = formataddr(
+        (mail_settings['sender_name'], mail_settings['sender_email'])
+    )
+    message['To'] = recipient_email
+    message['Reply-To'] = mail_settings['sender_email']
+    message.set_content(text_part)
+    message.add_alternative(html_part, subtype='html')
+
+    # For local testing with fake emails, print the recovery URL to the console
+    if recipient_email.endswith('.test') or current_app.config.get('TESTING'):
+        print(f"\n{'='*50}\n[LOCAL TESTING] Password Recovery URL for {recipient_email}:\n{recovery_url}\n{'='*50}\n", flush=True)
+
+    try:
+        with smtplib.SMTP(
+            mail_settings['host'],
+            mail_settings['port'],
+            timeout=mail_settings['timeout'],
+        ) as smtp:
+            smtp.ehlo()
+            smtp.starttls(context=ssl.create_default_context())
+            smtp.ehlo()
+            smtp.login(mail_settings['api_key'], mail_settings['secret_key'])
+            smtp.send_message(message)
+    except (OSError, smtplib.SMTPException) as error:
+        raise EmailDeliveryError(
+            'No se pudo enviar el email de recuperación de contraseña.'
+        ) from error
 
 def _load_mailjet_settings():
     api_key = current_app.config.get('MAILJET_API_KEY', '').strip()

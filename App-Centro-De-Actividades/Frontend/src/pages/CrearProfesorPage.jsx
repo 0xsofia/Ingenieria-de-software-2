@@ -93,7 +93,7 @@ export default function CrearProfesorPage() {
 
     try {
       const result = await crearProfesor(values)
-      redirectTo(navigate, '/clases', {
+      redirectTo(navigate, '/profesores', {
         flashMessage: result.message || 'El profesor fue cargado correctamente.',
       })
     } catch (error) {

@@ -5,6 +5,8 @@ import InicioPage from '../pages/InicioPage.jsx'
 import ListadoClasesPage from '../pages/ListadoClasesPage.jsx'
 import DetalleClasePage from '../pages/DetalleClasePage.jsx'
 import LoginPage from '../pages/LoginPage.jsx'
+import RecuperarContrasenaPage from '../pages/RecuperarContrasenaPage.jsx'
+import CambiarContrasenaPage from '../pages/CambiarContrasenaPage.jsx'
 import PagoRetornoPage from '../pages/PagoRetornoPage.jsx'
 import PerfilPage from '../pages/PerfilPage.jsx'
 import RegistrarsePage from '../pages/RegistrarsePage.jsx'
@@ -22,6 +24,7 @@ import MisClasesPage from '../pages/MisClasesPage.jsx'
 import EscanearQRPage from '../pages/EscanearQRPage.jsx'
 import GenerarQRPage from '../pages/GenerarQRPage.jsx'
 import CrearProfesorPage from '../pages/CrearProfesorPage.jsx'
+import ListadoProfesoresPage from '../pages/ListadoProfesoresPage.jsx'
 import ListadoPagosPage from '../pages/ListadoPagosPage.jsx'
 import ConfirmarTurnoPage from '../pages/ConfirmarTurnoPage.jsx'
 
@@ -38,6 +41,14 @@ const router = createBrowserRouter([
   {
     path: '/registrarse',
     element: <RegistrarsePage />,
+  },
+  {
+    path: '/recuperar-contrasena',
+    element: <RecuperarContrasenaPage />,
+  },
+  {
+    path: '/cambiar-contrasena/:token',
+    element: <CambiarContrasenaPage />,
   },
   {
     path: '/confirmar-turno/:token',
@@ -65,6 +76,10 @@ const router = createBrowserRouter([
       {
         path: '/profesor/crear',
         element: <CrearProfesorPage />,
+      },
+      {
+        path: '/profesores',
+        element: <ListadoProfesoresPage />,
       },
       {
         path: '/clases/:claseId/modificar',
@@ -101,6 +116,10 @@ const router = createBrowserRouter([
       {
         path: '/perfil/actualizar',
         element: <ActualizarPerfilPage />,
+      },
+      {
+        path: '/perfil/cambiar-contrasena',
+        element: <CambiarContrasenaPage />,
       },
       {
         path: '/mis-pagos',

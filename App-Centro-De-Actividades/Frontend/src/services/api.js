@@ -13,17 +13,21 @@ export const endpoints = {
   obtenerProfesores: '/api/profesor/lista',
   crearProfesor: '/api/profesor/crear',
   actividades: '/api/actividades',
+  eliminarProfesor: (id) => `/api/profesor/${id}`,
   reservaEspontanea: '/api/reservas/espontanea',
   reservaEspontaneaListaEspera: '/api/reservas/espontanea/lista-espera',
   reservaEspontaneaPagoRetorno: '/api/reservas/espontanea/pago-retorno',
   misClases: '/api/reservas/mis-clases',
   reservaEspontaneaCancelar: '/api/reservas/espontanea/cancelar',
+  abandonarListaEspera: '/api/reservas/lista-espera/abandonar',
   ofertasActivas: '/api/reservas/ofertas-activas',
   confirmarTurno: '/api/reservas/confirmar',
   misPagos: '/api/pagos/',
   EscanearQR: '/api/asistencia/escanearQR',
   GenerarQR: '/api/asistencia/generarQR/<int:reserva_id>',
-  listarPagos: '/api/pagos/lista'
+  listarPagos: '/api/pagos/lista',
+  recuperarContrasena: '/api/recuperar-contrasena',
+  cambiarContrasena: '/api/cambiar-contrasena'
 }
 
 endpoints.confirmacionTurno = (token) => `/api/confirmaciones/turno/${token}`

@@ -128,10 +128,7 @@ export default function ListadoClasesPage() {
             <Link className="primary-action" to="/clases/crear">
               Crear clase
             </Link>
-            <Link className="secondary-action" to="/profesor/crear">
-              Crear profesor
-            </Link>
-            <Link className="qr-action" to="/clases/escanear-qr">
+            <Link className="secondary-action" to="/clases/escanear-qr">
               Escanear QR
             </Link>
           </div>

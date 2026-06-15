@@ -1,9 +1,25 @@
-import { Link } from 'react-router-dom'
+import { useEffect, useState, startTransition } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import './PerfilPage.css'
 import PerfilInfo from '../components/perfil/PerfilInfo'
 import { useAuth } from '../hooks/useAuth'
+
 function PerfilPage() {
   const { session } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [successMessage, setSuccessMessage] = useState(location.state?.flashMessage || '')
+
+  useEffect(() => {
+    const flashMessage = location.state?.flashMessage
+    if (!flashMessage) {
+      return
+    }
+
+    startTransition(() => {
+      navigate(location.pathname, { replace: true, state: null })
+    })
+  }, [location.pathname, location.state, navigate])
   
   return (
     <main className="dashboard-shell profile-shell">
@@ -11,6 +27,12 @@ function PerfilPage() {
         <header className="dashboard-header profile-header">
           <h1>Mi perfil</h1>
         </header>
+
+        {successMessage ? (
+          <p className="banner banner--success" role="status" style={{ marginBottom: '1.5rem' }}>
+            {successMessage}
+          </p>
+        ) : null}
 
         <div className="profile-grid">
           <section className="profile-summary-card">
@@ -25,6 +47,9 @@ function PerfilPage() {
               <h2>Accesos rápidos</h2>
               <Link className="secondary-action" to="/perfil/actualizar">
                 Actualizar perfil
+              </Link>
+              <Link className="secondary-action" to="/perfil/cambiar-contrasena" style={{ marginTop: '0.5rem' }}>
+                Cambiar contraseña
               </Link>
             </div>
 

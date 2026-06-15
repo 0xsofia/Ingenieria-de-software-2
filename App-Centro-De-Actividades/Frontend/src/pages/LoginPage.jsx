@@ -58,8 +58,8 @@ function LoginPage() {
   } = useAuth()
   const [form, setForm] = useState(INITIAL_FORM)
   const [fieldErrors, setFieldErrors] = useState({})
-  const [requestError, setRequestError] = useState('')
-  const [successMessage, setSuccessMessage] = useState(location.state?.flashMessage || '')
+  const [successMessage, setSuccessMessage] = useState(location.state?.flashType !== 'error' ? (location.state?.flashMessage || '') : '')
+  const [requestError, setRequestError] = useState(location.state?.flashType === 'error' ? (location.state?.flashMessage || '') : '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSelectingRole, setIsSelectingRole] = useState(false)
 
@@ -249,6 +249,12 @@ function LoginPage() {
                   />
                   {fieldErrors.password ? <small>{fieldErrors.password}</small> : null}
                 </label>
+
+                <div style={{ textAlign: 'right', marginBottom: '1rem' }}>
+                  <Link className="login-register-link" to="/recuperar-contrasena">
+                    He olvidado mi contraseña
+                  </Link>
+                </div>
 
                 <button className="primary-action" type="submit" disabled={isSubmitting}>
                   {isSubmitting ? 'Validando credenciales...' : 'Iniciar sesión'}
