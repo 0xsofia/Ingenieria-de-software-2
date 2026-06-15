@@ -226,18 +226,43 @@ def actualizar_clase(clase_id, payload):
         .filter(Reserva.estado.in_(ESTADOS_OCUPAN_CUPO))
         .count()
     )
-    hora= int(payload['horario_inicio'])
-    horario_inicio_obj = datetime.strptime(f"{hora:02d}:00", "%H:%M").time()
-    fecha_obj = datetime.strptime(payload['fecha'], "%Y-%m-%d").date()
 
-    print("Clase ", clase.horario_inicio, clase.fecha, clase.profesor_id)
+    payload_horario = payload.get('horario_inicio')
+    if payload_horario is not None and str(payload_horario).strip() != '':
+        horario_inicio_obj = datetime.strptime(f"{int(payload_horario):02d}:00", "%H:%M").time()
+    else:
+        horario_inicio_obj = clase.horario_inicio
+
+    payload_fecha = payload.get('fecha')
+    if payload_fecha is not None and str(payload_fecha).strip() != '':
+        fecha_obj = datetime.strptime(payload_fecha, "%Y-%m-%d").date()
+    else:
+        fecha_obj = clase.fecha
+
+    payload_profesor_id = payload.get('profesor_id')
+    if payload_profesor_id is None or str(payload_profesor_id).strip() == '':
+        profesor_id_value = clase.profesor_id
+    else:
+        try:
+            profesor_id_value = int(payload_profesor_id)
+        except (ValueError, TypeError):
+            profesor_id_value = payload_profesor_id
+
+
+    print("Clase en service ", clase.horario_inicio, clase.fecha, clase.profesor_id)
     print("payload en service", horario_inicio_obj, fecha_obj, payload['profesor_id']  )
 
     if cupos_ocupados > 0:
-        if payload['profesor_id'] != clase.profesor_id or horario_inicio_obj != clase.horario_inicio or fecha_obj != clase.fecha:
+        if profesor_id_value != clase.profesor_id or horario_inicio_obj != clase.horario_inicio or fecha_obj != clase.fecha:
             return {
                 "status": "error",
                 "message": "No puede actualizarse la clase ya que tiene reservas activas y solo se pueden modificar los cupos.",
+            }, 400
+
+        if 'cupos' not in payload:
+            return {
+                "status": "error",
+                "message": "Debe indicar la cantidad de cupos para actualizar la clase.",
             }, 400
 
         if int(payload['cupos']) < cupos_ocupados:
