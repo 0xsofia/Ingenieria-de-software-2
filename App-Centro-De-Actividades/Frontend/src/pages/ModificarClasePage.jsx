@@ -329,37 +329,42 @@ export default function ModificarClasePage() {
         </header>
 
         <div className="actividad-placeholder-page__card">
-          <h2>Resumen de clase</h2>
-          <dl className="actividad-placeholder-page__details">
-            <div>
-              <dt>Actividad</dt>
-              <dd>{clase.actividad}</dd>
-            </div>
-            <div>
-              <dt>Fecha</dt>
-              <dd>{clase.fecha}</dd>
-            </div>
-            <div>
-              <dt>Horario actual</dt>
-              <dd>{clase.horario_inicio} - {clase.horario_fin}</dd>
-            </div>
-            <div>
-              <dt>Cancha</dt>
-              <dd>{clase.cancha}</dd>
-            </div>
-            <div>
-              <dt>Nivel</dt>
-              <dd>{clase.nivel}</dd>
-            </div>
-            <div>
-              <dt>Profesor</dt>
-              <dd>{clase.profesor_nombre || 'A confirmar'}</dd>
-            </div>
-            <div>
-              <dt>Cupos ocupados</dt>
-              <dd>{clase.cupos_ocupados}</dd>
-            </div>
-          </dl>
+          {clase?.cupos_ocupados > 0 && (
+            <>
+              <h2>Resumen de clase</h2>
+              
+              <dl className="actividad-placeholder-page__details">
+                <div>
+                  <dt>Actividad</dt>
+                  <dd>{clase.actividad}</dd>
+                </div>
+                <div>
+                  <dt>Fecha</dt>
+                  <dd>{clase.fecha}</dd>
+                </div>
+                <div>
+                  <dt>Horario actual</dt>
+                  <dd>{clase.horario_inicio} - {clase.horario_fin}</dd>
+                </div>
+                <div>
+                  <dt>Cancha</dt>
+                  <dd>{clase.cancha}</dd>
+                </div>
+                <div>
+                  <dt>Nivel</dt>
+                  <dd>{clase.nivel}</dd>
+                </div>
+                <div>
+                  <dt>Profesor</dt>
+                  <dd>{clase.profesor_nombre || 'A confirmar'}</dd>
+                </div>
+                <div>
+                  <dt>Cupos ocupados</dt>
+                  <dd>{clase.cupos_ocupados}</dd>
+                </div>
+              </dl>
+            </>
+          )}
 
           <DynamicForm2
             key={clase?.clase_id ?? 'modificar-clase'}
