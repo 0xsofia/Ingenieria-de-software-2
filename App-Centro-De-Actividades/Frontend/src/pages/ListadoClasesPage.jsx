@@ -97,8 +97,10 @@ export default function ListadoClasesPage() {
     navigate(`/clases/${clase.clase_id}/detalle`)
   }
 
-  function handleEditClass() {
-    return '#'
+  function handleEditClass(clase) {
+    navigate(`/clases/${clase.clase_id}/modificar`, {
+      state: { clase, from: '/clases' },
+    })
   }
 
   // function handleScanQR(clase) {

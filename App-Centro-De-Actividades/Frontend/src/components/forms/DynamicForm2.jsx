@@ -103,6 +103,7 @@ function DynamicForm2({
                   autoComplete={field.autoComplete}
                   placeholder={field.placeholder}
                   rows={field.rows || 4}
+                  disabled={field.disabled}
                   aria-invalid={fieldError ? 'true' : 'false'}
                 />
               ) : field.type === 'select' ? (
@@ -110,6 +111,7 @@ function DynamicForm2({
                   name={field.name}
                   value={values[field.name] || ''}
                   onChange={(event) => handleChange(event, field)}
+                  disabled={field.disabled}
                   aria-invalid={fieldError ? 'true' : 'false'}
                 >
                   <option value="">Seleccionar {field.label.toLowerCase()}</option>
@@ -133,6 +135,7 @@ function DynamicForm2({
                   maxLength={field.maxLength}
                   pattern={field.pattern}
                   step={field.step}
+                  disabled={field.disabled}
                   aria-invalid={fieldError ? 'true' : 'false'}
                 />
               )}

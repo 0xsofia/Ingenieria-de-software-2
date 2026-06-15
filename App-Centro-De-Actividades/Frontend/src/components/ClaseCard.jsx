@@ -63,10 +63,11 @@ export default function ClaseCard({
           <button type="button" className="secondary-action" onClick={() => onView(clase)}>
             {viewLabel}
           </button>
-          {/*
-          <button type="button" className="primary-action" onClick={() => onReserve(clase)}>
-            {reserveLabel}
-          </button> */}
+          {onReserve && (
+            <button type="button" className="primary-action" onClick={() => onReserve(clase)}>
+              {reserveLabel}
+            </button>
+          )}
         </div>
       </div>
     </article>

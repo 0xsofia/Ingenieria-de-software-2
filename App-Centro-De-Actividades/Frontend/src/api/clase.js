@@ -35,6 +35,15 @@ export async function obtenerDetalleClase(claseId, dni) {
   return data
 }
 
+export async function actualizarClase(claseId, payload) {
+  console.log("llego a pasar por aca");
+  
+  const { data } = await http.put(endpoints.actualizarClase(claseId), payload)
+  console.log(data);
+  
+  return data
+}
+
 export async function obtenerProfesores() {
   const response = await http.get(endpoints.obtenerProfesores)
 

@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from src.core.database import db
 from src.core.models.clase import Clase
 from src.core.models.profesor import Profesor
+from src.core.models.reserva import Reserva
 from src.core.enums.clase_enum import ActividadEnum, NivelEnum, TipoClaseEnum
 
 ACTIVIDADES_VALIDAS = {e.value for e in ActividadEnum}
@@ -116,13 +117,18 @@ def crear_clase_completa(payload):
     try:
         fecha_obj = datetime.strptime(payload["fecha"], "%Y-%m-%d").date()
         horario_obj = datetime.strptime(f"{payload["horario_inicio"]:02d}:00", "%H:%M").time()
-        
-        clase_existente = Clase.query.filter_by(
-            profesor_id=int(payload["profesor_id"]),
-            fecha=fecha_obj,
-            horario_inicio=horario_obj, 
+
+        # calcular fin de la nueva clase (1 hora)
+        horario_fin = (datetime.combine(fecha_obj, horario_obj) + timedelta(hours=1)).time()
+
+        # Buscar cualquier clase del mismo profesor en la misma fecha cuyo intervalo se solape
+        clase_existente = Clase.query.filter(
+            Clase.profesor_id == int(payload["profesor_id"]),
+            Clase.fecha == fecha_obj,
+            Clase.horario_inicio < horario_fin,
+            Clase.horario_fin > horario_obj,
         ).first()
-        
+
         if clase_existente:
             return (
                 {
@@ -176,6 +182,9 @@ def crear_clase_completa(payload):
     }, 201
 
 
+ESTADOS_OCUPAN_CUPO = ('confirmada', 'pendiente_pago')
+
+
 def obtener_clases(actividad=None, fecha=None, horario=None):
     """Obtiene las clases con filtros opcionales por actividad, fecha y horario."""
     query = Clase.query
@@ -202,6 +211,82 @@ def obtener_clases(actividad=None, fecha=None, horario=None):
             return []
 
     return query.order_by(Clase.fecha, Clase.horario_inicio).all()
+
+
+def actualizar_clase(clase_id, payload):
+    clase = Clase.query.get(clase_id)
+    if not clase:
+        return {
+            "status": "error",
+            "message": "La clase no fue encontrada.",
+        }, 404
+
+    cupos_ocupados = (
+        Reserva.query.filter_by(clase_id=clase_id)
+        .filter(Reserva.estado.in_(ESTADOS_OCUPAN_CUPO))
+        .count()
+    )
+    hora= int(payload['horario_inicio'])
+    horario_inicio_obj = datetime.strptime(f"{hora:02d}:00", "%H:%M").time()
+    fecha_obj = datetime.strptime(payload['fecha'], "%Y-%m-%d").date()
+
+    print("Clase ", clase.horario_inicio, clase.fecha, clase.profesor_id)
+    print("payload en service", horario_inicio_obj, fecha_obj, payload['profesor_id']  )
+
+    if cupos_ocupados > 0:
+        if payload['profesor_id'] != clase.profesor_id or horario_inicio_obj != clase.horario_inicio or fecha_obj != clase.fecha:
+            return {
+                "status": "error",
+                "message": "No puede actualizarse la clase ya que tiene reservas activas y solo se pueden modificar los cupos.",
+            }, 400
+
+        if int(payload['cupos']) < cupos_ocupados:
+            return {
+                "status": "error",
+                "message": "La cantidad de cupos debe ser mayor o igual a la cantidad de reservas asociadas",
+            }, 400
+
+        clase.cupos = int(payload['cupos'])
+        db.session.commit()
+
+        return {
+            "status": "success",
+            "message": "La clase fue actualizada correctamente.",
+        }, 200
+
+    # calcular fin de la clase propuesta (1 hora)
+    horario_fin_obj = (datetime.combine(fecha_obj, horario_inicio_obj) + timedelta(hours=1)).time()
+
+    clase_existente = Clase.query.filter(
+        Clase.profesor_id == int(payload['profesor_id']),
+        Clase.fecha == fecha_obj,
+        Clase.horario_inicio < horario_fin_obj,
+        Clase.horario_fin > horario_inicio_obj,
+        Clase.clase_id != clase_id,
+    ).first()
+
+    if clase_existente:
+        return {
+            "status": "error",
+            "message": "No puede actualizarse la clase ya que el profesor tiene superposición horaria con otra clase",
+        }, 400
+
+    clase.actividad = ActividadEnum(payload['actividad'])
+    clase.fecha = fecha_obj
+    clase.horario_inicio = horario_inicio_obj
+    clase.horario_fin = (datetime.combine(fecha_obj, horario_inicio_obj) + timedelta(hours=1)).time()
+    clase.cancha = payload['cancha']
+    clase.nivel = NivelEnum(payload['nivel'])
+    clase.cupos = int(payload['cupos'])
+    clase.precio = payload['precio']
+    clase.profesor_id = int(payload['profesor_id'])
+
+    db.session.commit()
+
+    return {
+        "status": "success",
+        "message": "La clase fue actualizada correctamente.",
+    }, 200
 
 # def obtener_clases(actividad=None, fecha=None, horario=None):
 #     """Obtiene las clases con filtros opcionales por actividad, fecha y horario."""

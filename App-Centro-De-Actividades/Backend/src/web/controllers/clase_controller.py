@@ -8,6 +8,7 @@ from src.core.services.clase_service import (
     crear_clase_completa,
     obtener_clases,
     obtener_detalle_clase_con_socios,
+    actualizar_clase,
 )
 
 clase_bp = Blueprint("clase", __name__, url_prefix="/api/clase")
@@ -53,6 +54,19 @@ def listar_clases():
     ]
 
     return jsonify(clases_data), 200
+
+
+@clase_bp.put("/actualizar/<int:clase_id>")
+def actualizar_clase_controller(clase_id):
+    payload = request.get_json(silent=True) or {}
+    
+    normalized_payload, errors = validar_payload_clase(payload)
+    print("Payload recibido despues de validar:", normalized_payload, errors)   
+    if errors:
+        return jsonify({"status": "validation_error", "errors": errors}), 400
+
+    body, status_code = actualizar_clase(clase_id, normalized_payload)
+    return jsonify(body), status_code
 
 
 def _obtener_cupos_ocupados(clases):
