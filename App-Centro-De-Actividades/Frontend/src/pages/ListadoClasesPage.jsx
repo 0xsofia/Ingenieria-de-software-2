@@ -24,6 +24,7 @@ export default function ListadoClasesPage() {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [errorCancel, setErrorCancel] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
 
   const canManageClasses = session?.role === 'empleado'
@@ -110,9 +111,11 @@ export default function ListadoClasesPage() {
       const result = await cancelarClase(clase.clase_id)
       setSuccessMessage(result?.message || 'La cancelación se realizó correctamente.')
       setError('')
+      setErrorCancel('')
     } catch (err) {
       setSuccessMessage('')
-      setError(err?.data?.message || 'No se pudo cancelar la clase.')
+      setError('')
+      setErrorCancel(err?.data?.message || 'No se pudo cancelar la clase.')
     } finally {
       setLoading(false)
     }
@@ -159,6 +162,9 @@ export default function ListadoClasesPage() {
           <>
             {successMessage && (
               <p className="banner banner--success" role="status">{successMessage}</p>
+            )}
+            {errorCancel && (
+              <p className="banner banner--error" role="status">{errorCancel}</p>
             )}
             <div className="listado-clases__controls">
               <FilterForm
