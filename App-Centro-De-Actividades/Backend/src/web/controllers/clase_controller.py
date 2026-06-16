@@ -9,6 +9,7 @@ from src.core.services.clase_service import (
     obtener_clases,
     obtener_detalle_clase_con_socios,
     actualizar_clase,
+    cancelar_clase,
 )
 
 clase_bp = Blueprint("clase", __name__, url_prefix="/api/clase")
@@ -96,3 +97,9 @@ def obtener_detalle_clase(clase_id):
         return jsonify({"status": "error", "message": "La clase no fue encontrada."}), 404
 
     return jsonify(clase_data), status_code
+
+
+@clase_bp.post('/cancelar/<int:clase_id>')
+def cancelar_clase_controller(clase_id):
+    body, status_code = cancelar_clase(clase_id)
+    return jsonify(body), status_code

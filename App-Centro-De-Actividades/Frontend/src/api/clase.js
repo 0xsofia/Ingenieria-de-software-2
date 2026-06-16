@@ -44,6 +44,11 @@ export async function actualizarClase(claseId, payload) {
   return data
 }
 
+export async function cancelarClase(claseId) {
+  const { data } = await http.post(endpoints.cancelarClase(claseId), {})
+  return data
+}
+
 export async function obtenerProfesores() {
   const response = await http.get(endpoints.obtenerProfesores)
 

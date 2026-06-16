@@ -90,8 +90,15 @@
 }
 
 .clase-card__actions .primary-action,
-.clase-card__actions .secondary-action {
+.clase-card__actions .secondary-action,
+.clase-card__actions .danger-action {
   margin-top: 0;
+}
+
+.clase-card__actions .danger-action {
+  color: var(--text-strong);
+  background-color: rgba(217, 48, 37, 0.08);
+  border-color: rgba(217, 48, 37, 0.16);
 }
 
 @media (max-width: 640px) {

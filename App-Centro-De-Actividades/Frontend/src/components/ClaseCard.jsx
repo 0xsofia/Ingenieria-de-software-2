@@ -11,8 +11,10 @@ export default function ClaseCard({
   onView,
   onScanQR,
   onReserve,
+  onCancel,
   viewLabel = 'Ver',
   reserveLabel = 'Inscribirme',
+  cancelLabel = 'Cancelar clase',
   viewScanLabel = 'Escanear QR',
 }) {
   return (
@@ -68,6 +70,12 @@ export default function ClaseCard({
               {reserveLabel}
             </button>
           )}
+          {onCancel && (
+            <button type="button" className="danger-action" onClick={() => onCancel(clase)}>
+              {cancelLabel}
+            </button>
+          )}
+
         </div>
       </div>
     </article>

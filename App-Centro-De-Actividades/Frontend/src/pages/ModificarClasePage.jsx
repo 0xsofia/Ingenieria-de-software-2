@@ -3,7 +3,7 @@ import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-route
 import { z } from 'zod'
 
 import DynamicForm2 from '../components/forms/DynamicForm2'
-import { actualizarClase, obtenerDetalleClase, obtenerProfesores } from '../api/clase'
+import { actualizarClase, obtenerDetalleClase, obtenerProfesores, cancelarClase } from '../api/clase'
 import { useAuth } from '../hooks/useAuth'
 import { redirectTo } from '../services/redirectTo'
 import { ACTIVIDADES } from '../constants/actividades'
@@ -365,7 +365,6 @@ export default function ModificarClasePage() {
               </dl>
             </>
           )}
-
           <DynamicForm2
             key={clase?.clase_id ?? 'modificar-clase'}
             fields={fields}
