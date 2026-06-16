@@ -47,8 +47,11 @@ def create_app(env=None, static_folder="../../static"):
     allowed_origins = [
         origin
         for origin in {
+            "http://localhost:5137",
+            "http://127.0.0.1:5137",
             "http://localhost:5173",
             "http://127.0.0.1:5173",
+            "https://pcverde-linux.tail9449ba.ts.net:8443",
             frontend_origin,
         }
         if origin
@@ -59,11 +62,7 @@ def create_app(env=None, static_folder="../../static"):
         supports_credentials=True,  
         resources={
             r"/api/*": {
-                "origins": [
-                    "https://ingenieria-de-software-2-1.onrender.com",
-                    "http://localhost:5173",
-                    "http://127.0.0.1:5173"
-                ],
+                "origins": allowed_origins + ["https://ingenieria-de-software-2-1.onrender.com"],
                 "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
                 "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
                 "expose_headers": ["Set-Cookie"],
