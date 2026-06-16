@@ -23,6 +23,7 @@ function Hero({ role, onLogout, isLoggingOut = false }) {
   }
 
   if (role === 'socio') {
+    navigationItems.splice(2, 0, { to: '/abonos', label: 'Abonos' })
     navigationItems.splice(2, 0, { to: '/mis-clases', label: 'Mis clases' })
   }
 

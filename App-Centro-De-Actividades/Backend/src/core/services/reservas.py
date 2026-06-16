@@ -237,7 +237,11 @@ def iniciar_reserva_abonada(clase_id):
 
     ahora = _now()
     sancionado = _socio_sancionado_para_descuento(socio_id, ahora)
-    descuento_pct = DESCUENTO_ABONO_PCT if _en_ventana_descuento(ahora) and not sancionado else Decimal("0.00")
+    descuento_pct = (
+        DESCUENTO_ABONO_PCT
+        if _en_ventana_descuento(ahora, clase_base.fecha) and not sancionado
+        else Decimal("0.00")
+    )
     monto_bruto = sum((_decimal_precio_clase(clase) for clase in clases_abono), Decimal("0.00"))
     monto_a_cobrar = _aplicar_descuento(monto_bruto, descuento_pct)
     requiere_pago = monto_a_cobrar > 0
@@ -1413,8 +1417,9 @@ def _decimal_precio_clase(clase):
     return Decimal(str(precio)).quantize(Decimal("0.01"))
 
 
-def _en_ventana_descuento(ahora):
-    return 1 <= ahora.day <= 10
+def _en_ventana_descuento(ahora, fecha_clase):
+    fecha_limite = date(fecha_clase.year, fecha_clase.month, 10)
+    return ahora.date() <= fecha_limite
 
 
 def _socio_sancionado_para_descuento(socio_id, ahora):
