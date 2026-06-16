@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { Clock, AlertTriangle, Loader2, CheckCircle2 } from 'lucide-react';
-import { generarQR } from '../api/asistencias'; // Tu función http.post
+import { generarQR } from '../api/asistencias';
 import { useAuth } from '../hooks/useAuth';
 
 const GenerarQR = () => {

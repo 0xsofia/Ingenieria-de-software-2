@@ -22,7 +22,8 @@ export const endpoints = {
   misPagos: '/api/pagos/',
   EscanearQR: '/api/asistencia/escanearQR',
   GenerarQR: '/api/asistencia/generarQR/<int:reserva_id>',
-  listarPagos: '/api/pagos/lista'
+  listarPagos: '/api/pagos/lista',
+  metricas : 'api/metricas'
 }
 
 endpoints.confirmacionTurno = (token) => `/api/confirmaciones/turno/${token}`

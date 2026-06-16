@@ -24,6 +24,7 @@ import GenerarQRPage from '../pages/GenerarQRPage.jsx'
 import CrearProfesorPage from '../pages/CrearProfesorPage.jsx'
 import ListadoPagosPage from '../pages/ListadoPagosPage.jsx'
 import ConfirmarTurnoPage from '../pages/ConfirmarTurnoPage.jsx'
+import MetricasPage from '../pages/MetricasPage.jsx'
 
 
 const router = createBrowserRouter([
@@ -121,6 +122,10 @@ const router = createBrowserRouter([
       {
         path: '/actividad/:actividadName',
         element: <ActividadPage />,
+      },
+      {
+        path: '/metricas',
+        element: <MetricasPage />,
       },
     ],
   },
