@@ -27,7 +27,8 @@ export const endpoints = {
   GenerarQR: '/api/asistencia/generarQR/<int:reserva_id>',
   listarPagos: '/api/pagos/lista',
   recuperarContrasena: '/api/recuperar-contrasena',
-  cambiarContrasena: '/api/cambiar-contrasena'
+  cambiarContrasena: '/api/cambiar-contrasena',
+  metricas : 'api/metricas'
 }
 
 endpoints.confirmacionTurno = (token) => `/api/confirmaciones/turno/${token}`
