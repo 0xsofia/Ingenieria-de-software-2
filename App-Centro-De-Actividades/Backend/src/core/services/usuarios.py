@@ -186,3 +186,74 @@ def _integrity_error_response(error):
         "status": "error",
         "message": "No se pudo actualizar el usuario por un conflicto de datos.",
     }, 409
+
+from src.core.models.reserva import Reserva
+from src.core.models.clase import Clase
+from src.core.models.pago import Pago
+from src.core.services.reservas import _ofrecer_cupo_a_primero, _reintegrar_mercadopago, RESERVA_ESTADOS_OCUPAN_CUPO
+from datetime import datetime, timezone
+
+def _now():
+    return datetime.now(timezone.utc)
+
+def bloquear_usuario_service(persona_id, motivo, devolver_dinero=False):
+    persona = _obtener_persona_modificable(persona_id)
+    if persona is None:
+        return _not_found_response()
+        
+    if not motivo:
+        return {"status": "validation_error", "errors": {"motivo": "Debe ingresar un motivo de bloqueo para poder bloquear al usuario"}}, 400
+
+    persona.estado = "bloqueado"
+    persona.motivo_bloqueo = motivo
+
+    reservas = Reserva.query.filter_by(socio_id=persona_id).filter(Reserva.estado.in_(RESERVA_ESTADOS_OCUPAN_CUPO)).all()
+
+    for reserva in reservas:
+        reserva.estado = "cancelada"
+        reserva.cancelada_en = _now()
+        db.session.flush()
+        
+        clase = db.session.get(Clase, reserva.clase_id)
+        if clase is not None:
+            _ofrecer_cupo_a_primero(clase)
+
+        if devolver_dinero:
+            pago = Pago.query.filter_by(reserva_id=reserva.reserva_id).order_by(Pago.pago_id.desc()).first()
+            if pago and getattr(pago, "estado", "") in {"aprobado", "approved"}:
+                _reintegrar_mercadopago(pago, pago.monto_pagado)
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return {"status": "error", "message": str(e)}, 500
+
+    return {
+        "status": "ok",
+        "message": f"El usuario {persona.nombre} {persona.apellido} ha sido bloqueado exitosamente.",
+        "user": _serializar_usuario(persona)
+    }, 200
+
+def desbloquear_usuario_service(persona_id):
+    persona = _obtener_persona_modificable(persona_id)
+    if persona is None:
+        return _not_found_response()
+
+    persona.estado = "activo"
+    persona.motivo_bloqueo = None
+    
+    if persona.socio is not None:
+        persona.socio.descuento_bloqueado_hasta = None
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return {"status": "error", "message": str(e)}, 500
+
+    return {
+        "status": "ok",
+        "message": "Usuario desbloqueado.",
+        "user": _serializar_usuario(persona)
+    }, 200
