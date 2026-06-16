@@ -45,7 +45,14 @@
   font-weight: 600;
 }
 
-.actividad-placeholder-page__actions .primary-action {
+.actividad-placeholder-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.actividad-placeholder-page__actions .primary-action,
+.actividad-placeholder-page__actions .secondary-action {
   margin-top: 0;
 }
 

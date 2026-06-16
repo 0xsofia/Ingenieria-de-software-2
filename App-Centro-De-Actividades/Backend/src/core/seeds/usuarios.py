@@ -69,7 +69,7 @@ USERS_TO_SEED = [
         "roles": ["socio"],
     },
     {
-        "email": "credito@gmail.com",
+        "email": "credito@centro.test",
         "dni": "11111169",
         "nombre": "Credito",
         "apellido": "Credito",

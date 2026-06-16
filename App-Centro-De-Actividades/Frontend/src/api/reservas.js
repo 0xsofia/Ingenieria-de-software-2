@@ -6,6 +6,11 @@ export async function reservarEspontanea(payload) {
   return data
 }
 
+export async function reservarAbonada(payload) {
+  const { data } = await http.post(endpoints.reservaAbonada, payload)
+  return data
+}
+
 export async function entrarListaEspera(payload) {
   const { data } = await http.post(endpoints.reservaEspontaneaListaEspera, payload)
   return data

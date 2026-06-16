@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request
 from src.core.services.reservas import (
     cancelar_reserva_espontanea,
     entrar_lista_espera,
+    iniciar_reserva_abonada,
     iniciar_reserva_espontanea,
     listar_reservas_socio,
     procesar_retorno_pago,
@@ -45,6 +46,39 @@ def reservar_espontanea():
         )
 
     body, status_code = iniciar_reserva_espontanea(clase_id)
+    return jsonify(body), status_code
+
+
+@reservas_bp.post("/reservas/abonada")
+def reservar_abonada():
+    payload = request.get_json(silent=True) or {}
+
+    clase_id = payload.get("clase_id")
+    if clase_id is None:
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"clase_id": "La clase es obligatoria."},
+                }
+            ),
+            400,
+        )
+
+    try:
+        clase_id = int(clase_id)
+    except (TypeError, ValueError):
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"clase_id": "La clase debe ser un número."},
+                }
+            ),
+            400,
+        )
+
+    body, status_code = iniciar_reserva_abonada(clase_id)
     return jsonify(body), status_code
 
 

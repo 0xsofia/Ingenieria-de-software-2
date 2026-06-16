@@ -7,7 +7,12 @@ from src.core.models.clase import Clase
 from src.core.models.persona import Persona
 from src.core.models.reserva import Reserva
 from src.core.seeds import run_seeds
-from src.core.seeds.clases import _build_dynamic_clases_to_seed, seed_clases
+from src.core.seeds.clases import (
+    _build_abono_mensual_clases_to_seed,
+    _build_dynamic_clases_to_seed,
+    seed_clases,
+    seed_clases_abono_mensual,
+)
 from src.core.seeds.profesores import seed_profesores
 from src.core.seeds.reservas import seed_reservas
 from src.core.seeds.usuarios import seed_usuarios
@@ -83,6 +88,30 @@ class SeedClasesTestCase(unittest.TestCase):
             ],
         )
 
+    def test_seed_clases_abono_mensual_crea_cuatro_miercoles_del_mes_proximo(self):
+        seed_profesores()
+        seed_clases_abono_mensual(SEED_TIME)
+
+        clases = Clase.query.order_by(Clase.fecha, Clase.horario_inicio).all()
+
+        self.assertEqual(len(clases), 4)
+        self.assertEqual([clase.actividad.value for clase in clases], ["Futbol"] * 4)
+        self.assertEqual([clase.horario_inicio for clase in clases], [time(19, 0)] * 4)
+        self.assertEqual([clase.cupos for clase in clases], [8] * 4)
+        self.assertEqual(
+            [clase.fecha.isoformat() for clase in clases],
+            ["2026-06-03", "2026-06-10", "2026-06-17", "2026-06-24"],
+        )
+
+    def test_build_clases_abono_mensual_toma_mes_proximo_en_horario_argentina(self):
+        clases = _build_abono_mensual_clases_to_seed(UTC_EQUIVALENT_SEED_TIME)
+
+        self.assertEqual(
+            [clase_data["fecha"] for clase_data in clases],
+            ["2026-06-03", "2026-06-10", "2026-06-17", "2026-06-24"],
+        )
+        self.assertEqual([clase_data["horario_inicio"] for clase_data in clases], ["19:00"] * 4)
+
     def test_seed_db_reserva_todas_las_clases_dinamicas_para_socio_centro(self):
         seed_usuarios()
         seed_profesores()
@@ -111,4 +140,4 @@ class SeedClasesTestCase(unittest.TestCase):
 
         clases = Clase.query.order_by(Clase.fecha, Clase.horario_inicio).all()
 
-        self.assertEqual(len(clases), 8)
+        self.assertEqual(len(clases), 12)
