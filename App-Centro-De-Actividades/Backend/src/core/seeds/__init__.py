@@ -8,6 +8,7 @@ def run_seeds(app, include_reintegros=True):
         from .pagos import seed_pagos
         from .reservas import seed_reservas
         from .reintegros_escenarios import seed_reintegros_escenarios
+        from .bloqueos_escenarios import seed_bloqueos_escenarios
 
         seed_datetime = get_seed_reference_datetime()
 
@@ -18,6 +19,7 @@ def run_seeds(app, include_reintegros=True):
         seed_clases(seed_datetime)
         seed_pagos()
         seed_reservas(seed_datetime)
+        seed_bloqueos_escenarios(seed_datetime)
 
         if include_reintegros:
             seed_reintegros_escenarios(seed_datetime)

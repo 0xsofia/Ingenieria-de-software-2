@@ -74,13 +74,16 @@
 
 .sectioned-table-list__actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 10px;
 }
 
 .sectioned-table-list__actions .primary-action,
 .sectioned-table-list__actions .secondary-action {
   margin-top: 0;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
 }
 
 .sectioned-table-list__primary-cell {
