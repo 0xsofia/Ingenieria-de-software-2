@@ -84,10 +84,27 @@ CLASES_FUTURAS_TEMPLATE = [
     },
 ]
 SEED_TIMEZONE = ZoneInfo("America/Argentina/Buenos_Aires")
+CLASES_ABONO_MENSUAL_TEMPLATE = {
+    "actividad": "Futbol",
+    "cancha": "Cancha Abono",
+    "nivel": "Intermedio",
+    "cupos": 8,
+    "profesor_dni": "87654321",
+    "precio": 1000,
+    "horario_inicio": "19:00",
+}
+ABONO_MENSUAL_DIA_SEMANA = 2  # miércoles
 
 
 def seed_clases(seed_datetime=None):
     for clase_data in _build_dynamic_clases_to_seed(seed_datetime):
+        _get_or_create_clase(clase_data)
+
+    db.session.commit()
+
+
+def seed_clases_abono_mensual(seed_datetime=None):
+    for clase_data in _build_abono_mensual_clases_to_seed(seed_datetime):
         _get_or_create_clase(clase_data)
 
     db.session.commit()
@@ -146,6 +163,29 @@ def _build_dynamic_clases_to_seed(seed_datetime=None):
         )
 
     return clases_to_seed
+
+
+def _build_abono_mensual_clases_to_seed(seed_datetime=None):
+    seed_datetime = get_seed_reference_datetime(seed_datetime)
+    primera_fecha = _first_weekday_of_next_month(
+        seed_datetime.date(), ABONO_MENSUAL_DIA_SEMANA
+    )
+
+    return [
+        {
+            **CLASES_ABONO_MENSUAL_TEMPLATE,
+            "fecha": (primera_fecha + timedelta(days=7 * offset)).strftime("%Y-%m-%d"),
+        }
+        for offset in range(4)
+    ]
+
+
+def _first_weekday_of_next_month(reference_date, weekday):
+    year = reference_date.year + (1 if reference_date.month == 12 else 0)
+    month = 1 if reference_date.month == 12 else reference_date.month + 1
+    first_day = reference_date.replace(year=year, month=month, day=1)
+    days_until_weekday = (weekday - first_day.weekday()) % 7
+    return first_day + timedelta(days=days_until_weekday)
 
 
 def _get_or_create_clase(clase_data):

@@ -10,6 +10,9 @@ class CORSMiddleware(object):
         origin = environ.get('HTTP_ORIGIN', '')
         allowed_origins = [
             "https://ingenieria-de-software-2-1.onrender.com",
+            "https://pcverde-linux.tail9449ba.ts.net",
+            "http://localhost:5137",
+            "http://127.0.0.1:5137",
             "http://localhost:5173",
             "http://127.0.0.1:5173"
         ]
