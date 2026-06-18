@@ -4,11 +4,10 @@ from datetime import datetime, date, timezone
 import calendar
 from sqlalchemy import func, or_
 from src.core.database import db
-from src.core.models import Pago, Asistencia, Reserva, Clase,  ListaEspera
+from src.core.models import Pago, Asistencia, Reserva, Clase, ListaEspera
 
 
 def obtener_dashboard_metricas(anio=None, mes=None):
-
     anio = int(anio) if anio else datetime.now().year
     
     if mes and mes.isdigit() and 1 <= int(mes) <= 12:
@@ -38,6 +37,7 @@ def obtener_dashboard_metricas(anio=None, mes=None):
         "ocupacion_clases": ocupacion_data
     }
 
+
 def _calcular_ingresos(fecha_inicio, fecha_fin, vista_mensual, anio, mes):
     query_pagos = db.session.query(Pago.proveedor, Pago.monto_pagado, Pago.fecha_pago)\
         .filter(or_(Pago.estado == "approved", Pago.estado == "aprobado", Pago.estado == "confirmado"))\
@@ -59,6 +59,8 @@ def _calcular_ingresos(fecha_inicio, fecha_fin, vista_mensual, anio, mes):
     if query_pagos:
         df_pagos = pd.DataFrame(query_pagos, columns=["proveedor", "monto_pagado", "fecha_pago"])
         df_pagos["monto_pagado"] = df_pagos["monto_pagado"].apply(lambda x: float(x) if isinstance(x, (Decimal, float)) else 0.0)
+        
+        # Corrección menor: Evitar desajustes si guardas con tz en BD
         df_pagos["fecha_pago"] = pd.to_datetime(df_pagos["fecha_pago"]).dt.tz_localize(None)
         
         ingreso_total = float(df_pagos["monto_pagado"].sum())
@@ -93,20 +95,42 @@ def _calcular_asistencias(fecha_inicio, fecha_fin):
 
 
 def _calcular_lista_espera(date_inicio, date_fin):
-
-    query_espera = db.session.query(Clase.actividad, func.count(ListaEspera.lista_espera_id))\
+    query_espera = db.session.query(
+            Clase.actividad, 
+            Clase.fecha, 
+            Clase.horario_inicio, 
+            func.count(ListaEspera.lista_espera_id)
+        )\
         .join(ListaEspera, ListaEspera.clase_id == Clase.clase_id)\
         .filter(Clase.fecha >= date_inicio)\
         .filter(Clase.fecha <= date_fin)\
-        .group_by(Clase.actividad)\
+        .group_by(Clase.actividad, Clase.fecha, Clase.horario_inicio)\
         .order_by(func.count(ListaEspera.lista_espera_id).desc())\
         .limit(5)\
         .all()
 
     horarios_solicitados = []
-    for actividad_enum, cantidad in query_espera:
+    for actividad_enum, fecha_clase, hora_clase, cantidad in query_espera:
+        act_label = actividad_enum.value if hasattr(actividad_enum, 'value') else str(actividad_enum)
+        
+        fecha_str = ""
+        if fecha_clase:
+            if hasattr(fecha_clase, 'strftime'):
+                fecha_str = fecha_clase.strftime('%d/%m')
+            else:
+                fecha_str = str(fecha_clase)
+
+        hora_str = ""
+        if hora_clase:
+            if hasattr(hora_clase, 'strftime'):
+                hora_str = hora_clase.strftime('%H:%M')
+            else:
+                hora_str = str(hora_clase)[:5]
+
+        label_completo = f"{act_label} - {fecha_str} ({hora_str} hs)"
+
         horarios_solicitados.append({
-            "label": actividad_enum.value if hasattr(actividad_enum, 'value') else str(actividad_enum),
+            "label": label_completo,
             "cantidad": cantidad
         })
         
@@ -114,21 +138,28 @@ def _calcular_lista_espera(date_inicio, date_fin):
 
 
 def _calcular_ocupacion_clases(date_inicio, date_fin):
-
-    clases_periodo = db.session.query(Clase.clase_id, Clase.actividad, Clase.cupos)\
+    """
+    Optimizado: Trae las clases junto al conteo de sus reservas válidas 
+    en una sola consulta SQL agrupada (Evita el problema N+1).
+    """
+    # Consulta unificada haciendo un LEFT OUTER JOIN hacia Reservas filtradas
+    query_ocupacion = db.session.query(
+            Clase.actividad,
+            Clase.cupos,
+            func.count(Reserva.reserva_id)
+        )\
+        .outerjoin(Reserva, (Reserva.clase_id == Clase.clase_id) & 
+                            (Reserva.estado.in_(["asistio", "asistida", "confirmada", "confirmado"])))\
         .filter(Clase.fecha >= date_inicio)\
         .filter(Clase.fecha <= date_fin)\
+        .group_by(Clase.clase_id, Clase.actividad, Clase.cupos)\
         .all()
 
     ocupacion_map = {}
-    for c_id, act, cupos in clases_periodo:
+    for act, cupos, reservas_count in query_ocupacion:
         act_label = act.value if hasattr(act, 'value') else str(act)
         
-        reservas_count = db.session.query(func.count(Reserva.reserva_id))\
-            .filter(Reserva.clase_id == c_id)\
-            .filter(Reserva.estado.in_(["confirmada", "asistida", "confirmado"]))\
-            .scalar() or 0
-        
+        # Cálculo seguro de porcentajes
         pct = (reservas_count / cupos * 100) if cupos > 0 else 0.0
         pct = min(pct, 100.0)
         
@@ -143,4 +174,5 @@ def _calcular_ocupacion_clases(date_inicio, date_fin):
             "clase_label": act_label,
             "porcentaje_ocupacion": round(promedio, 1)
         })
+        
     return ocupacion_clases
