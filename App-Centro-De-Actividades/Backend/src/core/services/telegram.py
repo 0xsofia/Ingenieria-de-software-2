@@ -5,7 +5,8 @@ import requests
 
 from src.core.database import db
 from src.core.models.confirmacion_turno import ConfirmacionTurno
-from src.core.models.lista_espera import ListaEspera
+from src.core.models.persona import Persona
+
 
 
 def generar_token_confirmacion():
@@ -79,7 +80,12 @@ def enviar_mensaje_telegram(socio_id, lista_espera_id, clase_data, token):
         
         confirmacion_url = f"{frontend_base_url}confirmar-turno/{token}"
         
+       
+        persona = Persona.query.get(socio_id)
+        socio_nombre = persona.nombre_completo if persona else 'socio'
+        
         mensaje = (
+            f"¡Hola {socio_nombre}!\n\n"
             f"🎉 ¡Cupo disponible!\n\n"
             f"<b>{actividad}</b>\n"
             f"📅 Fecha: {fecha}\n"
@@ -172,3 +178,68 @@ def marcar_confirmacion_como_confirmada(token):
 
 def _now():
     return datetime.now(tz=timezone.utc)
+
+
+def notificar_cancelacion_clase(socio_id, lista_espera_id, clase_data, token):
+    """
+    Envía un mensaje de Telegram notificando la cancelacion de la clase.
+    
+    Args:
+        socio_id: ID del socio
+        clase_data: dict con {actividad, fecha, horario_inicio, horario_fin, cancha}
+
+    
+    Returns:
+        True si se envió exitosamente, False en caso contrario
+    """
+    telegram_bot_token = (os.environ.get('TELEGRAM_BOT_TOKEN') or '').strip()
+    telegram_chat_id = (os.environ.get('TELEGRAM_CHAT_ID') or '').strip()
+    frontend_base_url = (os.environ.get('FRONTEND_BASE_URL') or 'http://localhost:5173').strip()
+    
+    if not telegram_bot_token:
+        print("WARNING: TELEGRAM_BOT_TOKEN no configurado, saltando envío")
+        return False
+    
+    if not telegram_chat_id:
+        print(f"WARNING: TELEGRAM_CHAT_ID no configurado, saltando envío para socio {socio_id}")
+        return False
+    
+    try:
+        actividad = clase_data.get('actividad', 'Actividad')
+        fecha = clase_data.get('fecha', '')
+        horario_inicio = clase_data.get('horario_inicio', '--:--')
+        horario_fin = clase_data.get('horario_fin', '--:--')
+        cancha = clase_data.get('cancha', '')
+        
+        persona = Persona.query.get(socio_id)
+        socio_nombre = persona.nombre_completo if persona else 'socio'
+        
+        mensaje = (
+            f"¡Hola {socio_nombre}!\n\n"
+            f"La clase de <b>{actividad}</b>\n"
+            f"📅 Fecha: {fecha}\n"
+            f"🕒 Horario: {horario_inicio} - {horario_fin}\n"
+            f"🏟️ Cancha: {cancha}\n\n"
+            f"Ha sido cancelada.\n\n"
+            f"Hemos registrado un crédito a favor en su cuenta para que lo utilice en su próxima reserva.\n"
+        )
+        
+        url = f"https://api.telegram.org/bot{telegram_bot_token}/sendMessage"
+        payload = {
+            "chat_id": telegram_chat_id,
+            "text": mensaje,
+            "parse_mode": "HTML",
+        }
+        
+        response = requests.post(url, json=payload, timeout=10)
+        
+        if response.status_code == 200:
+            print(f"Mensaje Telegram enviado para socio {socio_id}")
+            return True
+        else:
+            print(f"Error enviando Telegram: {response.status_code} - {response.text}")
+            return False
+    
+    except Exception as e:
+        print(f"Error enviando mensaje Telegram: {e}")
+        return False

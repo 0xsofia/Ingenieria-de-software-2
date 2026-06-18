@@ -9,7 +9,9 @@ from src.core.database import db
 from src.core.models.clase import Clase
 from src.core.models.profesor import Profesor
 from src.core.models.reserva import Reserva
+from src.core.models.credito import Credito
 from src.core.enums.clase_enum import ActividadEnum, NivelEnum, TipoClaseEnum
+from src.core.services import telegram
 
 ACTIVIDADES_VALIDAS = {e.value for e in ActividadEnum}
 NIVELES_VALIDOS = {e.value for e in NivelEnum}
@@ -187,7 +189,7 @@ ESTADOS_OCUPAN_CUPO = ('confirmada', 'pendiente_pago')
 
 def obtener_clases(actividad=None, fecha=None, horario=None):
     """Obtiene las clases con filtros opcionales por actividad, fecha y horario."""
-    query = Clase.query
+    query = Clase.query.filter(Clase.is_eliminated == False)
 
     if actividad:
         try:
@@ -441,3 +443,82 @@ def obtener_detalle_clase_con_socios(clase_id, dni=None):
     }
     
     return clase_data, 200
+
+
+def cancelar_clase(clase_id):
+    """Cancela una clase. Si tiene reservas asociadas, otorga un credito por reserva y notifica.
+
+    Reglas:
+    - No se puede cancelar si la clase ya comenzó.
+    - Si no hay reservas activas, borra la clase.
+    - Si hay reservas activas, crea un `Credito` por cada reserva, marca la reserva como cancelada
+      y luego borra la clase.
+    """
+    clase = Clase.query.get(clase_id)
+    if not clase:
+        return {"status": "error", "message": "La clase no fue encontrada."}, 404
+
+    inicio_clase = datetime.combine(clase.fecha, clase.horario_inicio)
+    ahora = datetime.now()
+    if inicio_clase <= ahora:
+        return {"status": "error", "message": "No se puede realizar la cancelación, el horario de inicio ya expiro."}, 400
+
+    reservas = (
+        Reserva.query.filter_by(clase_id=clase_id)
+        .filter(Reserva.estado.in_(ESTADOS_OCUPAN_CUPO))
+        .all()
+    )
+    print("Cancelar clase: ", clase_id, " - reservas activas: ", len(reservas))
+    # Sin reservas: eliminar clase y devolver éxito
+    if not reservas:
+        try:
+            db.session.delete(clase)
+            db.session.commit()
+            return {"status": "success", "message": "La cancelación se realizó correctamente"}, 200
+        except Exception:
+            db.session.rollback()
+            return {"status": "error", "message": "No se pudo cancelar la clase."}, 500
+
+    # Con reservas: otorgar crédito y notificar a cada socio, luego eliminar la clase
+    try:
+        for reserva in reservas:
+            # crear credito disponible para el socio
+            credito = Credito(
+                socio_id=reserva.socio_id,
+                cancelacion_reserva_origen_id=reserva.reserva_id,
+                clase_cancelada_origen_id=clase.clase_id,
+                estado="disponible",
+            )
+            db.session.add(credito)
+
+            # marcar reserva como cancelada
+            reserva.estado = "cancelada"
+            reserva.cancelada_en = datetime.now()
+
+            # intentar notificar (si no está configurado, se registra y sigue)
+            clase_data = {
+                "actividad": clase.actividad.value if clase.actividad else None,
+                "fecha": clase.fecha.strftime("%Y-%m-%d") if clase.fecha else None,
+                "horario_inicio": clase.horario_inicio.strftime("%H:%M") if clase.horario_inicio else None,
+                "horario_fin": clase.horario_fin.strftime("%H:%M") if clase.horario_fin else None,
+                "cancha": clase.cancha,
+            }
+            try:
+                # enviar notificación de cancelación; si telegram no está configurado, la función lo ignora
+                telegram.notificar_cancelacion_clase(reserva.socio_id, None, clase_data, None)
+                #print("simulo enviar el mensaje")
+            except Exception:
+                # no interrumpir el flujo si falla la notificación
+                print(f"Warning: fallo al notificar socio {reserva.socio_id} sobre cancelacion de clase {clase.clase_id}")
+
+        # flush para asegurar que los cambios en reservas persisten antes de borrar la clase
+        db.session.flush()
+        
+        # borrar la clase
+        clase.is_eliminated = True
+        db.session.commit()
+        return {"status": "success", "message": "La cancelación se realizó correctamente"}, 200
+    except Exception as e:
+        db.session.rollback()
+        print("Error al cancelar clase:", e)
+        return {"status": "error", "message": "No se pudo completar la cancelación."}, 500

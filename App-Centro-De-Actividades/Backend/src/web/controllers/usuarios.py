@@ -9,6 +9,8 @@ from src.core.services.usuarios import (
     actualizar_usuario,
     listar_usuarios,
     obtener_usuario_modificable,
+    bloquear_usuario_service,
+    desbloquear_usuario_service,
 )
 
 usuarios_bp = Blueprint("usuarios", __name__, url_prefix="/api/usuarios")
@@ -64,6 +66,30 @@ def actualizar_usuario_controller(persona_id):
 
     payload = request.get_json(silent=True) or {}
     body, status_code = actualizar_usuario(persona_id, payload)
+    return jsonify(body), status_code
+
+
+@usuarios_bp.put("/<int:persona_id>/bloquear")
+def bloquear_usuario_controller(persona_id):
+    admin_error = _require_admin()
+    if admin_error is not None:
+        return admin_error
+
+    payload = request.get_json(silent=True) or {}
+    motivo = payload.get("motivo", "")
+    devolver_dinero = payload.get("devolver_dinero", False)
+
+    body, status_code = bloquear_usuario_service(persona_id, motivo, devolver_dinero)
+    return jsonify(body), status_code
+
+
+@usuarios_bp.put("/<int:persona_id>/desbloquear")
+def desbloquear_usuario_controller(persona_id):
+    admin_error = _require_admin()
+    if admin_error is not None:
+        return admin_error
+
+    body, status_code = desbloquear_usuario_service(persona_id)
     return jsonify(body), status_code
 
 

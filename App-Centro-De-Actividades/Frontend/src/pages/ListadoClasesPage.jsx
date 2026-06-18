@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 
-import { listarClases } from '../api/clase'
+import { listarClases, cancelarClase } from '../api/clase'
 import ClaseCard from '../components/ClaseCard'
 import FilterForm from '../components/listing/FilterForm'
 import { ACTIVIDADES } from '../constants/actividades'
@@ -24,6 +24,8 @@ export default function ListadoClasesPage() {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [errorCancel, setErrorCancel] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
 
   const canManageClasses = session?.role === 'empleado'
   const hasActiveFilter = Object.values(submittedFilters).some(Boolean)
@@ -103,6 +105,22 @@ export default function ListadoClasesPage() {
     })
   }
 
+  async function handleCancelClass(clase) {
+    try {
+      setLoading(true)
+      const result = await cancelarClase(clase.clase_id)
+      setSuccessMessage(result?.message || 'La cancelación se realizó correctamente.')
+      setError('')
+      setErrorCancel('')
+    } catch (err) {
+      setSuccessMessage('')
+      setError('')
+      setErrorCancel(err?.data?.message || 'No se pudo cancelar la clase.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // function handleScanQR(clase) {
   //   navigate(`/clases/${clase.clase_id}/qr`, { state: { clase } })
   // }
@@ -110,6 +128,8 @@ export default function ListadoClasesPage() {
   function handleFilterSubmit(values) {
     setFilters(values)
     setSubmittedFilters(values)
+    setSuccessMessage('')
+    setError('')
   }
 
   return (
@@ -139,8 +159,15 @@ export default function ListadoClasesPage() {
         ) : error ? (
           <p className="banner banner--error" role="alert">{error}</p>
         ) : (
-          <div className="listado-clases__controls">
-            <FilterForm
+          <>
+            {successMessage && (
+              <p className="banner banner--success" role="status">{successMessage}</p>
+            )}
+            {errorCancel && (
+              <p className="banner banner--error" role="status">{errorCancel}</p>
+            )}
+            <div className="listado-clases__controls">
+              <FilterForm
               title="Buscar clases"
               description=""
               fields={filterFields}
@@ -167,6 +194,7 @@ export default function ListadoClasesPage() {
                     clase={clase}
                     onView={handleViewClass}
                     onReserve={handleEditClass}
+                    onCancel={handleCancelClass}
                     // onScanQR={handleScanQR}
                     // viewScanLabel="Escanear QR"
                     viewLabel="Ver detalle"
@@ -176,6 +204,7 @@ export default function ListadoClasesPage() {
               </div>
             )}
           </div>
+          </>
         )}
       </section>
     </section>

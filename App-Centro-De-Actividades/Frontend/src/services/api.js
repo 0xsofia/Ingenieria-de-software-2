@@ -10,6 +10,7 @@ export const endpoints = {
   crearClase: '/api/clase/crear',
   listarClases: '/api/clase/lista', 
   actualizarClase:  (claseId) => `/api/clase/actualizar/${claseId}`,
+  cancelarClase: (claseId) => `/api/clase/cancelar/${claseId}`,
   obtenerProfesores: '/api/profesor/lista',
   crearProfesor: '/api/profesor/crear',
   actividades: '/api/actividades',

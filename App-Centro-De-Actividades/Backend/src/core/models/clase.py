@@ -21,6 +21,8 @@ class Clase(db.Model):
     creado_en = db.Column(
         db.DateTime(timezone=True), nullable=False, server_default=db.func.now()
     )
+    is_eliminated = db.Column(db.Boolean, nullable=False, server_default=db.text('false'))
+    
 
     profesor_id = db.Column(
         db.Integer, db.ForeignKey("profesor.profesor_id"), nullable=False

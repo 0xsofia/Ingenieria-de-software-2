@@ -90,8 +90,23 @@
 }
 
 .clase-card__actions .primary-action,
-.clase-card__actions .secondary-action {
+.clase-card__actions .secondary-action,
+.clase-card__actions .danger-action {
   margin-top: 0;
+}
+
+.clase-card__actions .danger-action {
+  color: var(--text-inverse);
+  background-color: #B02A37;
+  border-color: rgba(217, 49, 37, 0.466);
+  padding: 12px 16px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #d36d7066;
+  border-radius: var(--radius-control);
+  font-weight: 600;
+  font-size: var(--button-font-size);
+  text-transform: uppercase;
 }
 
 @media (max-width: 640px) {
