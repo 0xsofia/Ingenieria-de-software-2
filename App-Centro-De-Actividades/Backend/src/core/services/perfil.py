@@ -1,6 +1,7 @@
 from flask_login import current_user
 
 from src.core.database import db
+from src.core.models.credito import Credito
 from src.core.models.persona import Persona
 
 
@@ -34,6 +35,7 @@ def obtener_perfil_actual():
             "display_name": persona.nombre_completo,
             "role": current_user.role,
             "role_label": current_user.role_label,
+            "creditos_disponibles": _contar_creditos_disponibles(persona.persona_id),
         },
     }, 200
 
@@ -102,5 +104,16 @@ def actualizar_perfil(payload):
             "display_name": persona.nombre_completo,
             "role": current_user.role,
             "role_label": current_user.role_label,
+            "creditos_disponibles": _contar_creditos_disponibles(persona.persona_id),
         },
     }, 200
+
+
+def _contar_creditos_disponibles(socio_id):
+    return (
+        Credito.query.filter_by(socio_id=socio_id)
+        .filter(Credito.reserva_que_consume_id.is_(None))
+        .filter(Credito.consumido_en.is_(None))
+        .filter(db.func.lower(Credito.estado) == "disponible")
+        .count()
+    )
