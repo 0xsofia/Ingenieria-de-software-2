@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from src.core.services.reservas import (
+    cancelar_reserva_abonada,
     cancelar_reserva_espontanea,
     entrar_lista_espera,
     iniciar_reserva_abonada,
@@ -193,6 +194,43 @@ def cancelar_reserva():
         )
 
     body, status_code = cancelar_reserva_espontanea(reserva_id)
+    return jsonify(body), status_code
+
+
+@reservas_bp.post("/reservas/abonada/cancelar")
+def cancelar_reserva_abonada_route():
+    payload = request.get_json(silent=True) or {}
+
+    reserva_id = payload.get("reserva_id")
+    confirmar_sancion = bool(payload.get("confirmar_sancion", False))
+    if reserva_id is None:
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"reserva_id": "La reserva es obligatoria."},
+                }
+            ),
+            400,
+        )
+
+    try:
+        reserva_id = int(reserva_id)
+    except (TypeError, ValueError):
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"reserva_id": "La reserva debe ser un numero."},
+                }
+            ),
+            400,
+        )
+
+    body, status_code = cancelar_reserva_abonada(
+        reserva_id,
+        confirmar_sancion=confirmar_sancion,
+    )
     return jsonify(body), status_code
 
 

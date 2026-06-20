@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 
 import {
+  cancelarReservaAbonada,
   cancelarReservaEspontanea,
   listarMisClases,
   obtenerOfertasActivas,
@@ -114,8 +115,13 @@ function MisClasesPage() {
     setFeedback('')
 
     try {
-      const result = await cancelarReservaEspontanea({
+      const cancelarReserva = pendingCancelReserva.tipo_reserva === 'abonada'
+        ? cancelarReservaAbonada
+        : cancelarReservaEspontanea
+
+      const result = await cancelarReserva({
         reserva_id: pendingCancelReserva.reserva_id,
+        confirmar_sancion: Boolean(pendingCancelReserva.requiereConfirmarSancion),
       })
 
       console.log(result)
@@ -129,6 +135,11 @@ function MisClasesPage() {
       } else if (result.reintegro?.estado === 'pendiente') {
         message += ' El reintegro quedo pendiente de configuracion.'
       }
+      if (result.credito?.aplica) {
+        message += ' Se acredito una clase a favor.'
+      } else if (result.credito && !result.credito.aplica) {
+        message += ' No recibiras credito por esta cancelacion.'
+      }
 
       if (!result.scenario_message && result.sancion_aplicada) {
         message += ' Se aplico una sancion por cancelaciones repetidas.'
@@ -139,6 +150,16 @@ function MisClasesPage() {
       await fetchReservas()
       await fetchOfertas()
     } catch (err) {
+      if (err.data?.status === 'requires_sanction_confirmation') {
+        setPendingCancelReserva((current) => ({
+          ...current,
+          requiereConfirmarSancion: true,
+          sancionMessage: err.data.message,
+        }))
+        setError('')
+        return
+      }
+
       setError(err.data?.message || 'No se pudo cancelar la reserva.')
     } finally {
       setCancelingId(null)
@@ -378,7 +399,9 @@ function MisClasesPage() {
                             >
                               {cancelingId === reserva.reserva_id
                                 ? 'Cancelando...'
-                                : 'Cancelar reserva'}
+                                : reserva.tipo_reserva === 'abonada'
+                                  ? 'Cancelar reserva abonada'
+                                  : 'Cancelar reserva'}
                             </button>
 
                             {!reserva.puede_cancelar ? (
@@ -408,7 +431,18 @@ function MisClasesPage() {
                   aria-labelledby="cancelar-reserva-title"
                 >
                   <h2 id="cancelar-reserva-title">Confirmar cancelacion</h2>
-                  <p>¿Seguro que quiere cancelar la reserva?</p>
+                  {pendingCancelReserva.requiereConfirmarSancion ? (
+                    <p>
+                      {pendingCancelReserva.sancionMessage ||
+                        'Esta cancelacion aplica una sancion y perderas el descuento del abono del mes siguiente.'}
+                    </p>
+                  ) : pendingCancelReserva.tipo_reserva === 'abonada' ? (
+                    <p>
+                      ¿Seguro que quiere cancelar la reserva abonada?
+                    </p>
+                  ) : (
+                    <p>¿Seguro que quiere cancelar la reserva?</p>
+                  )}
                   <div className="mis-clases-modal__actions">
                     <button
                       type="button"
@@ -424,7 +458,11 @@ function MisClasesPage() {
                       onClick={handleConfirmCancelReserva}
                       disabled={Boolean(cancelingId)}
                     >
-                      {cancelingId ? 'Cancelando...' : 'Aceptar'}
+                      {cancelingId
+                        ? 'Cancelando...'
+                        : pendingCancelReserva.requiereConfirmarSancion
+                          ? 'Confirmar sancion'
+                          : 'Aceptar'}
                     </button>
                   </div>
                 </section>

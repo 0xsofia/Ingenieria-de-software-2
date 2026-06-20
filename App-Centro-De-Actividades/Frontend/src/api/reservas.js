@@ -31,6 +31,11 @@ export async function cancelarReservaEspontanea(payload) {
   return data
 }
 
+export async function cancelarReservaAbonada(payload) {
+  const { data } = await http.post(endpoints.reservaAbonadaCancelar, payload)
+  return data
+}
+
 export async function abandonarListaEspera(payload) {
   const { data } = await http.post(endpoints.abandonarListaEspera, payload)
   return data
