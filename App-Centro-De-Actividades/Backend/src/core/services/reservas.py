@@ -747,7 +747,7 @@ def _build_espontanea_reserva(clase, socio_id):
     return reserva, credito, requiere_pago, precio
 
 
-def procesar_retorno_pago(reserva_id, pago_status):
+def procesar_retorno_pago(reserva_id, pago_status, payment_id=None, external_reference=None):
     socio_id, error = _require_socio()
     if error is not None:
         return error
@@ -766,7 +766,12 @@ def procesar_retorno_pago(reserva_id, pago_status):
             "message": "No se encontró un pago asociado a la reserva.",
         }, 409
 
-    normalized = (pago_status or "").strip().lower()
+    normalized = _estado_pago_retorno(
+        pago,
+        pago_status,
+        payment_id=payment_id,
+        external_reference=external_reference,
+    )
 
     if reserva.estado == "confirmada":
         return {
@@ -775,7 +780,7 @@ def procesar_retorno_pago(reserva_id, pago_status):
             "reserva_id": reserva.reserva_id,
         }, 200
 
-    if normalized in {"approved", "aprobado", "success"}:
+    if normalized in {"approved", "aprobado", "success", "accredited"}:
         ahora = _now()
         reservas_a_confirmar = _reservas_del_mismo_abono(reserva)
         for reserva_abono in reservas_a_confirmar:
@@ -807,7 +812,9 @@ def procesar_retorno_pago(reserva_id, pago_status):
             "reserva_id": reserva.reserva_id,
         }, 200
 
-    if normalized in {"pending", "in_process"}:
+    if normalized in {"pending", "in_process", "in_mediation"}:
+        pago.estado = "pendiente"
+        db.session.commit()
         return {
             "status": "payment_pending",
             "message": "El pago quedó pendiente. Cuando se acredite, se confirmará la inscripción.",
@@ -852,15 +859,28 @@ def listar_reservas_socio():
         return {"status": "ok", "reservas": [], "lista_espera":lista_espera_data}, 200
 
     reserva_ids = [reserva.reserva_id for reserva in reservas]
+    abono_ids = [
+        reserva.abono_mensual_id
+        for reserva in reservas
+        if reserva.abono_mensual_id is not None
+    ]
     pagos = (
-        Pago.query.filter(Pago.reserva_id.in_(reserva_ids))
+        Pago.query.filter(
+            db.or_(
+                Pago.reserva_id.in_(reserva_ids),
+                Pago.abono_mensual_id.in_(abono_ids) if abono_ids else db.false(),
+            )
+        )
         .order_by(Pago.pago_id.desc())
         .all()
     )
     pagos_por_reserva = {}
+    pagos_por_abono = {}
     for pago in pagos:
         if pago.reserva_id not in pagos_por_reserva:
             pagos_por_reserva[pago.reserva_id] = pago
+        if pago.abono_mensual_id is not None and pago.abono_mensual_id not in pagos_por_abono:
+            pagos_por_abono[pago.abono_mensual_id] = pago
 
     ahora = _now()
     reservas_data = []
@@ -869,6 +889,8 @@ def listar_reservas_socio():
         clase_inicio = _clase_inicio(clase)
         puede_cancelar = _puede_cancelar_reserva(reserva, clase_inicio, ahora)
         pago = pagos_por_reserva.get(reserva.reserva_id)
+        if pago is None and reserva.abono_mensual_id is not None:
+            pago = pagos_por_abono.get(reserva.abono_mensual_id)
 
         # print("puede cancelar "+ str(puede_cancelar))
 
@@ -1125,6 +1147,11 @@ def _crear_checkout_mercadopago(pago, reserva, clase):
         preference_payload["auto_return"] = "approved"
 
     try:
+        print(
+            "Mercado Pago preference payload:",
+            json.dumps(preference_payload, ensure_ascii=False),
+        )
+
         request = Request(
             "https://api.mercadopago.com/checkout/preferences",
             data=json.dumps(preference_payload).encode("utf-8"),
@@ -1139,7 +1166,23 @@ def _crear_checkout_mercadopago(pago, reserva, clase):
             raw = response.read().decode("utf-8")
             preference = json.loads(raw)
 
-        init_point =  preference.get("sandbox_init_point")
+        print(
+            "Mercado Pago preference response:",
+            json.dumps(
+                {
+                    "id": preference.get("id"),
+                    "init_point": preference.get("init_point"),
+                    "sandbox_init_point": preference.get("sandbox_init_point"),
+                    "external_reference": preference.get("external_reference"),
+                    "auto_return": preference.get("auto_return"),
+                    "back_urls": preference.get("back_urls"),
+                    "items": preference.get("items"),
+                },
+                ensure_ascii=False,
+            ),
+        )
+
+        init_point = _checkout_url_from_preference(preference, access_token)
         if init_point:
             return init_point
 
@@ -1162,6 +1205,17 @@ def _clase_inicio(clase):
         return None
 
     return datetime.combine(clase.fecha, clase.horario_inicio).replace(tzinfo=timezone.utc)
+
+
+def _checkout_url_from_preference(preference, access_token):
+    if not preference:
+        return None
+
+    is_test_token = str(access_token or "").upper().startswith("TEST-")
+    if is_test_token:
+        return preference.get("sandbox_init_point") or preference.get("init_point")
+
+    return preference.get("init_point") or preference.get("sandbox_init_point")
 
 
 def _puede_cancelar_reserva(reserva, clase_inicio, ahora):
@@ -1292,6 +1346,59 @@ def _buscar_pago_mp_id(external_ref, access_token):
     approved = next((item for item in results if str(item.get("status")).lower() == "approved"), None)
     chosen = approved or results[0]
     return chosen.get("id")
+
+
+def _estado_pago_retorno(pago, pago_status, payment_id=None, external_reference=None):
+    if payment_id or external_reference:
+        estado_mp = _consultar_estado_pago_mp(
+            payment_id=payment_id,
+            external_reference=external_reference or pago.external_ref,
+        )
+        if estado_mp:
+            return estado_mp
+
+    return (pago_status or "").strip().lower()
+
+
+def _consultar_estado_pago_mp(payment_id=None, external_reference=None):
+    access_token = (os.environ.get("MP_ACCESS_TOKEN") or "").strip()
+    if not access_token:
+        return None
+
+    if payment_id:
+        status = _consultar_estado_pago_mp_por_id(payment_id, access_token)
+        if status:
+            return status
+
+    payment_id_from_ref = _buscar_pago_mp_id(external_reference, access_token)
+    if payment_id_from_ref:
+        return _consultar_estado_pago_mp_por_id(payment_id_from_ref, access_token)
+
+    return None
+
+
+def _consultar_estado_pago_mp_por_id(payment_id, access_token):
+    try:
+        request = Request(
+            f"https://api.mercadopago.com/v1/payments/{payment_id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+            method="GET",
+        )
+        with urlopen(request, timeout=10) as response:
+            raw = response.read().decode("utf-8")
+            payload = json.loads(raw)
+    except HTTPError as exc:
+        try:
+            body = exc.read().decode("utf-8")
+        except Exception:
+            body = ""
+        print("Mercado Pago payment lookup failed:", exc.code, body)
+        return None
+    except (URLError, ValueError, OSError) as exc:
+        print("Mercado Pago payment lookup failed:", str(exc))
+        return None
+
+    return (payload.get("status") or payload.get("status_detail") or "").strip().lower()
 
 
 def _crear_reintegro_mp(payment_id, monto, access_token, idempotency_key=None):

@@ -24,10 +24,15 @@ class ReservasAbonadasTestCase(unittest.TestCase):
         db.create_all()
         self.client = self.app.test_client()
         self.original_now = reservas_service._now
+        self.original_consultar_estado_pago_mp = reservas_service._consultar_estado_pago_mp
+        self.original_crear_checkout_mercadopago = reservas_service._crear_checkout_mercadopago
         reservas_service._now = lambda: datetime(2026, 6, 5, 12, 0, tzinfo=timezone.utc)
+        reservas_service._crear_checkout_mercadopago = lambda **kwargs: "https://mp.test/checkout"
 
     def tearDown(self):
         reservas_service._now = self.original_now
+        reservas_service._consultar_estado_pago_mp = self.original_consultar_estado_pago_mp
+        reservas_service._crear_checkout_mercadopago = self.original_crear_checkout_mercadopago
         db.session.remove()
         db.drop_all()
         self.ctx.pop()
@@ -69,6 +74,50 @@ class ReservasAbonadasTestCase(unittest.TestCase):
         self.assertEqual(pago.estado, "aprobado")
         self.assertEqual(pago.monto_pagado, Decimal("3200.00"))
 
+    def test_reserva_abonada_confirma_si_mercado_pago_informa_aprobado(self):
+        socio = self._crear_socio("retorno-mp@centro.test", "40555555")
+        clases = self._crear_clases_consecutivas()
+        self._login(socio.email)
+
+        response = self.client.post("/api/reservas/abonada", json={"clase_id": clases[0].clase_id})
+        reservas_service._consultar_estado_pago_mp = lambda **kwargs: "approved"
+
+        retorno = self.client.post(
+            "/api/reservas/espontanea/pago-retorno",
+            json={
+                "reserva_id": response.json["reserva_id"],
+                "status": "pending",
+                "payment_id": "123456789",
+            },
+        )
+
+        self.assertEqual(retorno.status_code, 200)
+        self.assertEqual(retorno.json["message"], "Reserva abonada confirmada.")
+        self.assertTrue(all(reserva.estado == "confirmada" for reserva in Reserva.query.all()))
+        self.assertEqual(Pago.query.one().estado, "aprobado")
+
+    def test_mis_clases_muestra_pago_del_abono_en_todas_las_reservas(self):
+        socio = self._crear_socio("listado-abono@centro.test", "40666666")
+        clases = self._crear_clases_consecutivas()
+        self._login(socio.email)
+
+        response = self.client.post("/api/reservas/abonada", json={"clase_id": clases[0].clase_id})
+        self.client.post(
+            "/api/reservas/espontanea/pago-retorno",
+            json={"reserva_id": response.json["reserva_id"], "status": "approved"},
+        )
+
+        listado = self.client.get("/api/reservas/mis-clases")
+
+        self.assertEqual(listado.status_code, 200)
+        self.assertEqual(len(listado.json["reservas"]), 4)
+        self.assertTrue(
+            all(reserva["pago_estado"] == "aprobado" for reserva in listado.json["reservas"])
+        )
+        self.assertTrue(
+            all(reserva["monto_pagado"] == "3200.00" for reserva in listado.json["reservas"])
+        )
+
     def test_reserva_abonada_sancionada_no_aplica_descuento(self):
         socio = self._crear_socio("sancionado@centro.test", "40222222")
         socio.socio.descuento_bloqueado_hasta = date(2026, 6, 30)
@@ -82,6 +131,32 @@ class ReservasAbonadasTestCase(unittest.TestCase):
         self.assertEqual(response.json["descuento_pct"], "0.00")
         self.assertEqual(response.json["monto_a_cobrar"], "4000.00")
         self.assertIn("No se aplicó descuento por sanción", response.json["message"])
+
+    def test_checkout_url_usa_init_point_con_token_productivo(self):
+        preference = {
+            "init_point": "https://www.mercadopago.com.ar/checkout/v1/redirect",
+            "sandbox_init_point": "https://sandbox.mercadopago.com.ar/checkout/v1/redirect",
+        }
+
+        checkout_url = reservas_service._checkout_url_from_preference(
+            preference,
+            "APP_USR-token",
+        )
+
+        self.assertEqual(checkout_url, preference["init_point"])
+
+    def test_checkout_url_usa_sandbox_con_token_de_prueba(self):
+        preference = {
+            "init_point": "https://www.mercadopago.com.ar/checkout/v1/redirect",
+            "sandbox_init_point": "https://sandbox.mercadopago.com.ar/checkout/v1/redirect",
+        }
+
+        checkout_url = reservas_service._checkout_url_from_preference(
+            preference,
+            "TEST-token",
+        )
+
+        self.assertEqual(checkout_url, preference["sandbox_init_point"])
 
     def test_reserva_abonada_falla_si_alguna_clase_no_tiene_cupo(self):
         socio = self._crear_socio("sin-cupo@centro.test", "40333333")

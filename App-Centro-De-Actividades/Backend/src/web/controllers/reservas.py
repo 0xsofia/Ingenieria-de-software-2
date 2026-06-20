@@ -121,6 +121,8 @@ def payment_return():
 
     reserva_id = payload.get("reserva_id")
     status = payload.get("status")
+    payment_id = payload.get("payment_id") or payload.get("collection_id")
+    external_reference = payload.get("external_reference")
 
     if reserva_id is None:
         return (
@@ -146,7 +148,12 @@ def payment_return():
             400,
         )
 
-    body, status_code = procesar_retorno_pago(reserva_id, status)
+    body, status_code = procesar_retorno_pago(
+        reserva_id,
+        status,
+        payment_id=payment_id,
+        external_reference=external_reference,
+    )
     return jsonify(body), status_code
 
 
