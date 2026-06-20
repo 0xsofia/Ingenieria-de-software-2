@@ -167,7 +167,7 @@ const MetricasPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xl flex items-center justify-between">
                     <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Ingresos</p>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Ingresos Totales</p>
                         <h3 className="text-3xl font-black text-gray-900 mt-1">
                             ${ingresos.total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                         </h3>
@@ -222,7 +222,7 @@ const MetricasPage = () => {
                     </h3>
                     <div className="flex flex-col h-[300px] justify-center">
                         {horarios_solicitados.length === 0 ? (
-                            <p className="text-center text-sm text-gray-400 font-medium">No hay registros de socios en lista de espera para este corte.</p>
+                            <p className="text-center text-sm text-gray-400 font-medium">No hay registros de socios en lista de espera para este periodo.</p>
                         ) : (
                             <div className="space-y-4 overflow-y-auto pr-1">
                                 {horarios_solicitados.map((item, index) => (
@@ -245,10 +245,9 @@ const MetricasPage = () => {
                     </div>
                 </div>
 
-                {/* Rendimiento por Clases */}
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xl lg:col-span-3">
                     <h3 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <Calendar size={18} className="text-indigo-500" /> Ocupación por clase
+                        <Calendar size={18} className="text-indigo-500" /> Ocupación por actividad
                     </h3>
                     <Chart options={chartOcupacion.options} series={chartOcupacion.series} type="bar" height={320} />
                 </div>
