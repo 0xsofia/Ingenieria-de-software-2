@@ -25,6 +25,9 @@ class AuthenticatedUser(UserMixin):
         self.apellido = persona.apellido
         self.dni = persona.dni
         self.intereses = getattr(persona, "intereses", "")
+        self.descuento_bloqueado_hasta = (
+            persona.socio.descuento_bloqueado_hasta if persona.socio is not None else None
+        )
         self.display_name = persona.nombre_completo
         self.role_id = role.rol_id
         self.role = normalized_role
@@ -272,6 +275,11 @@ def _build_auth_payload(authenticated_user):
         "role": authenticated_user.role,
         "role_label": authenticated_user.role_label,
         "permissions": authenticated_user.permissions,
+        "descuento_bloqueado_hasta": (
+            authenticated_user.descuento_bloqueado_hasta.isoformat()
+            if authenticated_user.descuento_bloqueado_hasta is not None
+            else None
+        ),
     }
 
 
