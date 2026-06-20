@@ -1,9 +1,17 @@
 import unittest
+from datetime import date, datetime, time, timezone, timedelta
+from decimal import Decimal
 from unittest.mock import patch
 
 from src.core.bcrypt_and_session import bcrypt
 from src.core.database import db
+from src.core.enums.clase_enum import ActividadEnum, NivelEnum, TipoClaseEnum
+from src.core.models.clase import Clase
+from src.core.models.lista_espera import ListaEspera
+from src.core.models.pago import Pago
 from src.core.models.persona import Empleado, Persona, PersonaRolPuente, Rol, Socio
+from src.core.models.profesor import Profesor
+from src.core.models.reserva import Reserva
 from src.core.services.mailjet_email import EmailDeliveryError
 from src.web import create_app
 
@@ -591,6 +599,218 @@ class UsuariosTestCase(unittest.TestCase):
         updated_persona = db.session.get(Persona, persona.persona_id)
         self.assertEqual(updated_persona.estado, "activo")
         self.assertIsNone(updated_persona.motivo_bloqueo)
+
+    @patch("src.core.services.reservas.telegram.enviar_mensaje_telegram")
+    @patch("src.core.services.reservas.telegram.crear_confirmacion_turno")
+    @patch("src.core.services.usuarios._reintegrar_mercadopago")
+    def test_bloqueo_devuelve_mensajes_ordenados_por_clase(
+        self,
+        mock_reintegrar,
+        mock_crear_confirmacion,
+        mock_enviar_telegram,
+    ):
+        mock_crear_confirmacion.return_value = "token-test"
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        persona = self._crear_usuario_con_roles(
+            email="socio@centro.test",
+            dni="33333333",
+            password="123456",
+            roles=["socio"],
+        )
+        persona.nombre = "Juan"
+        persona.apellido = "Perez"
+        socio_espera = self._crear_usuario_con_roles(
+            email="espera@centro.test",
+            dni="33333334",
+            password="123456",
+            roles=["socio"],
+        )
+        socio_espera.nombre = "Jorge"
+        socio_espera.apellido = "Fernandez"
+
+        clase = self._crear_clase_para_bloqueo(
+            actividad=ActividadEnum.VOLEY,
+            fecha=date(2026, 6, 24),
+            horario_inicio=time(18, 0),
+        )
+        reserva = self._crear_reserva_confirmada(persona.persona_id, clase.clase_id)
+        self._crear_pago_aprobado(persona.persona_id, reserva.reserva_id, Decimal("5000.00"))
+        db.session.add(
+            ListaEspera(
+                clase_id=clase.clase_id,
+                socio_id=socio_espera.persona_id,
+                posicion=1,
+                estado="pendiente",
+            )
+        )
+        db.session.commit()
+
+        self._login_admin()
+
+        response = self.client.put(
+            f"/api/usuarios/{persona.persona_id}/bloquear",
+            json={"motivo": "Socio Problematico", "devolver_dinero": True},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json["messages"],
+            [
+                "El usuario Juan Perez ha sido bloqueado exitosamente. Motivo: Socio Problematico",
+                "Se le han devuelto $5000 por la calse de Volley a las 18:00 el dia 24/06/26.",
+                'Se ha asignado el cupo de la clase de "Volley" de las "18:00" el dia "24/06/26" al siguiente en la lista de espera. Socio: Jorge Fernandez',
+            ],
+        )
+        self.assertEqual(db.session.get(Reserva, reserva.reserva_id).estado, "cancelada")
+        self.assertEqual(
+            ListaEspera.query.filter_by(socio_id=socio_espera.persona_id).first().estado,
+            "notificado",
+        )
+        mock_reintegrar.assert_called_once()
+        mock_enviar_telegram.assert_called_once()
+
+    def test_bloqueo_falla_si_no_ingresa_motivo_con_nombre_del_usuario(self):
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        persona = self._crear_usuario_con_roles(
+            email="socio@centro.test",
+            dni="33333333",
+            password="123456",
+            roles=["socio"],
+        )
+        persona.nombre = "Juan"
+        persona.apellido = "Perez"
+        db.session.commit()
+        self._login_admin()
+
+        response = self.client.put(
+            f"/api/usuarios/{persona.persona_id}/bloquear",
+            json={"motivo": "   "},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json["errors"]["motivo"],
+            "Debe ingresar un motivo de bloqueo para poder bloquear al usuario Juan Perez",
+        )
+
+    def test_desbloquear_usuario_informa_si_no_presentaba_sanciones(self):
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        persona = self._crear_usuario_con_roles(
+            email="socio@centro.test",
+            dni="33333333",
+            password="123456",
+            roles=["socio"],
+        )
+        persona.estado = "bloqueado"
+        persona.motivo_bloqueo = "Socio Problematico"
+        db.session.commit()
+
+        self._login_admin()
+
+        response = self.client.put(f"/api/usuarios/{persona.persona_id}/desbloquear")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json["message"],
+            "El usuario ha sido desbloqueado exitosamente. No presentaba sanciones.",
+        )
+
+    def test_desbloquear_usuario_reinicia_sanciones_y_muestra_mensaje(self):
+        self._crear_usuario_con_roles(
+            email="admin@centro.test",
+            dni="30000001",
+            password="123456",
+            roles=["administrador"],
+        )
+        persona = self._crear_usuario_con_roles(
+            email="socio@centro.test",
+            dni="33333333",
+            password="123456",
+            roles=["socio"],
+        )
+        persona.estado = "bloqueado"
+        persona.motivo_bloqueo = "Socio Problematico"
+        persona.socio.descuento_bloqueado_hasta = date.today() + timedelta(days=30)
+        db.session.commit()
+
+        self._login_admin()
+
+        response = self.client.put(f"/api/usuarios/{persona.persona_id}/desbloquear")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json["message"],
+            "El usuario ha sido desbloqueado exitosamente. Presentaba sanciones",
+        )
+
+        updated_persona = db.session.get(Persona, persona.persona_id)
+        self.assertEqual(updated_persona.estado, "activo")
+        self.assertIsNone(updated_persona.socio.descuento_bloqueado_hasta)
+
+    def _crear_clase_para_bloqueo(self, *, actividad, fecha, horario_inicio):
+        profesor = Profesor(nombre="Profesor Bloqueo", dni="99988877", telefono="2210001111")
+        db.session.add(profesor)
+        db.session.flush()
+
+        clase = Clase(
+            actividad=actividad,
+            fecha=fecha,
+            horario_inicio=horario_inicio,
+            horario_fin=time((horario_inicio.hour + 1) % 24, horario_inicio.minute),
+            cancha="Cancha Test",
+            nivel=NivelEnum.PRINCIPIANTE,
+            cupos=1,
+            precio=Decimal("5000.00"),
+            tipo_clase=TipoClaseEnum.PARTICULAR,
+            profesor_id=profesor.profesor_id,
+        )
+        db.session.add(clase)
+        db.session.flush()
+        return clase
+
+    def _crear_reserva_confirmada(self, socio_id, clase_id):
+        reserva = Reserva(
+            socio_id=socio_id,
+            clase_id=clase_id,
+            tipo_reserva="estandar",
+            estado="confirmada",
+            creada_en=datetime.now(timezone.utc),
+            confirmada_en=datetime.now(timezone.utc),
+        )
+        db.session.add(reserva)
+        db.session.flush()
+        return reserva
+
+    def _crear_pago_aprobado(self, socio_id, reserva_id, monto):
+        pago = Pago(
+            socio_id=socio_id,
+            reserva_id=reserva_id,
+            proveedor="mercadopago",
+            external_ref=f"test-{reserva_id}",
+            monto_bruto=monto,
+            descuento_pct=Decimal("0"),
+            monto_pagado=monto,
+            estado="aprobado",
+            fecha_pago=datetime.now(timezone.utc),
+        )
+        db.session.add(pago)
+        db.session.flush()
+        return pago
 
     def _crear_rol(self, nombre, commit=True):
         role = Rol(nombre=nombre, descripcion=f"Rol {nombre}")
