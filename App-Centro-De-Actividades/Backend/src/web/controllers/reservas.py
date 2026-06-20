@@ -1,8 +1,10 @@
 from flask import Blueprint, jsonify, request
 
 from src.core.services.reservas import (
+    cancelar_reserva_abonada,
     cancelar_reserva_espontanea,
     entrar_lista_espera,
+    iniciar_reserva_abonada,
     iniciar_reserva_espontanea,
     listar_reservas_socio,
     procesar_retorno_pago,
@@ -48,6 +50,39 @@ def reservar_espontanea():
     return jsonify(body), status_code
 
 
+@reservas_bp.post("/reservas/abonada")
+def reservar_abonada():
+    payload = request.get_json(silent=True) or {}
+
+    clase_id = payload.get("clase_id")
+    if clase_id is None:
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"clase_id": "La clase es obligatoria."},
+                }
+            ),
+            400,
+        )
+
+    try:
+        clase_id = int(clase_id)
+    except (TypeError, ValueError):
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"clase_id": "La clase debe ser un número."},
+                }
+            ),
+            400,
+        )
+
+    body, status_code = iniciar_reserva_abonada(clase_id)
+    return jsonify(body), status_code
+
+
 @reservas_bp.post("/reservas/espontanea/lista-espera")
 def waitlist_for_class():
     payload = request.get_json(silent=True) or {}
@@ -87,6 +122,8 @@ def payment_return():
 
     reserva_id = payload.get("reserva_id")
     status = payload.get("status")
+    payment_id = payload.get("payment_id") or payload.get("collection_id")
+    external_reference = payload.get("external_reference")
 
     if reserva_id is None:
         return (
@@ -112,7 +149,12 @@ def payment_return():
             400,
         )
 
-    body, status_code = procesar_retorno_pago(reserva_id, status)
+    body, status_code = procesar_retorno_pago(
+        reserva_id,
+        status,
+        payment_id=payment_id,
+        external_reference=external_reference,
+    )
     return jsonify(body), status_code
 
 
@@ -152,6 +194,43 @@ def cancelar_reserva():
         )
 
     body, status_code = cancelar_reserva_espontanea(reserva_id)
+    return jsonify(body), status_code
+
+
+@reservas_bp.post("/reservas/abonada/cancelar")
+def cancelar_reserva_abonada_route():
+    payload = request.get_json(silent=True) or {}
+
+    reserva_id = payload.get("reserva_id")
+    confirmar_sancion = bool(payload.get("confirmar_sancion", False))
+    if reserva_id is None:
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"reserva_id": "La reserva es obligatoria."},
+                }
+            ),
+            400,
+        )
+
+    try:
+        reserva_id = int(reserva_id)
+    except (TypeError, ValueError):
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"reserva_id": "La reserva debe ser un numero."},
+                }
+            ),
+            400,
+        )
+
+    body, status_code = cancelar_reserva_abonada(
+        reserva_id,
+        confirmar_sancion=confirmar_sancion,
+    )
     return jsonify(body), status_code
 
 

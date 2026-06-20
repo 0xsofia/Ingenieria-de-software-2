@@ -16,10 +16,12 @@ export const endpoints = {
   actividades: '/api/actividades',
   eliminarProfesor: (id) => `/api/profesor/${id}`,
   reservaEspontanea: '/api/reservas/espontanea',
+  reservaAbonada: '/api/reservas/abonada',
   reservaEspontaneaListaEspera: '/api/reservas/espontanea/lista-espera',
   reservaEspontaneaPagoRetorno: '/api/reservas/espontanea/pago-retorno',
   misClases: '/api/reservas/mis-clases',
   reservaEspontaneaCancelar: '/api/reservas/espontanea/cancelar',
+  reservaAbonadaCancelar: '/api/reservas/abonada/cancelar',
   abandonarListaEspera: '/api/reservas/lista-espera/abandonar',
   ofertasActivas: '/api/reservas/ofertas-activas',
   confirmarTurno: '/api/reservas/confirmar',
@@ -34,4 +36,3 @@ export const endpoints = {
 
 endpoints.confirmacionTurno = (token) => `/api/confirmaciones/turno/${token}`
 endpoints.confirmarTurnoToken = (token) => `/api/confirmaciones/turno/${token}/confirmar`
-

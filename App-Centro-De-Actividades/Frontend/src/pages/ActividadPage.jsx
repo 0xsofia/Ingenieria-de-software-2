@@ -15,8 +15,6 @@ export default function ActividadPage() {
   const [successMessage, setSuccessMessage] = useState('')
   const [pendingWaitlistClaseId, setPendingWaitlistClaseId] = useState(null)
 
-  console.debug('ActividadPage - clase:', clase)
-
   async function handleReservar() {
     if (!clase || !Number.isFinite(claseId)) {
       setRequestError('Necesitás seleccionar una clase válida para reservar.')
@@ -37,12 +35,6 @@ export default function ActividadPage() {
 
     try {
       const result = await reservarEspontanea({ clase_id: claseId })
-      
-      // 🚀 INYECTÁ ESTOS LOGS DE CONTROL ACÁ:
-      console.log("=== DEBUG RESERVA ===")
-      console.log("Objeto result completo:", result)
-      console.log("status que viene del backend:", result?.status)
-      console.log("payment_url que viene del backend:", result?.payment_url)
 
       if (result.status === 'no_cupo') {
         setSuccessMessage(result.message)

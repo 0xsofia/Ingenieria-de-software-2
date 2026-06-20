@@ -287,6 +287,9 @@ def _ensure_seed_reservas_for_socio_centro(seed_datetime=None):
         return
 
     for clase_data in _build_dynamic_clases_to_seed(seed_datetime):
+        if clase_data.get("reservar_socio_centro") is False:
+            continue
+
         profesor = Profesor.query.filter_by(dni=clase_data["profesor_dni"]).first()
         if profesor is None:
             continue
