@@ -24,7 +24,9 @@ def listar_usuarios(filters=None):
         query = query.filter(Persona.dni == normalized_filters["dni"])
 
     if normalized_filters["email"]:
-        query = query.filter(db.func.lower(Persona.email) == normalized_filters["email"])
+        query = query.filter(
+            db.func.lower(Persona.email) == normalized_filters["email"]
+        )
 
     if normalized_filters["nombre"]:
         nombre_completo = db.func.lower(Persona.nombre + " " + Persona.apellido)
@@ -61,10 +63,13 @@ def actualizar_usuario(persona_id, payload):
         Persona.persona_id != persona.persona_id,
     ).first()
     if existing_email_owner is not None:
-        return _validation_error(
-            "email",
-            "El email ya se encuentra registrado en el sistema.",
-        ), 400
+        return (
+            _validation_error(
+                "email",
+                "El email ya se encuentra registrado en el sistema.",
+            ),
+            400,
+        )
 
     persona.email = normalized_payload["email"]
     persona.nombre = normalized_payload["nombre"]
@@ -94,7 +99,9 @@ def _validar_payload_actualizacion(persona, payload):
     if not str(payload_with_current_dni.get("dni") or "").strip():
         payload_with_current_dni["dni"] = persona.dni
 
-    normalized_payload, errors = validar_payload_registro_empleado(payload_with_current_dni)
+    normalized_payload, errors = validar_payload_registro_empleado(
+        payload_with_current_dni
+    )
 
     if normalized_payload["dni"] != persona.dni:
         errors["dni"] = "El DNI no puede modificarse."
@@ -171,36 +178,49 @@ def _integrity_error_response(error):
     detail = str(getattr(error, "orig", error)).lower()
 
     if "dni" in detail:
-        return _validation_error(
-            "dni",
-            "El DNI ya se encuentra registrado en el sistema.",
-        ), 400
+        return (
+            _validation_error(
+                "dni",
+                "El DNI ya se encuentra registrado en el sistema.",
+            ),
+            400,
+        )
 
     if "email" in detail:
-        return _validation_error(
-            "email",
-            "El email ya se encuentra registrado en el sistema.",
-        ), 400
+        return (
+            _validation_error(
+                "email",
+                "El email ya se encuentra registrado en el sistema.",
+            ),
+            400,
+        )
 
     return {
         "status": "error",
         "message": "No se pudo actualizar el usuario por un conflicto de datos.",
     }, 409
 
+
 from src.core.models.reserva import Reserva
 from src.core.models.clase import Clase
 from src.core.models.pago import Pago
-from src.core.services.reservas import _ofrecer_cupo_a_primero, _reintegrar_mercadopago, RESERVA_ESTADOS_OCUPAN_CUPO
+from src.core.services.reservas import (
+    _ofrecer_cupo_a_primero,
+    _reintegrar_mercadopago,
+    RESERVA_ESTADOS_OCUPAN_CUPO,
+)
 from datetime import datetime, timezone
+
 
 def _now():
     return datetime.now(timezone.utc)
+
 
 def bloquear_usuario_service(persona_id, motivo, devolver_dinero=False):
     persona = _obtener_persona_modificable(persona_id)
     if persona is None:
         return _not_found_response()
-        
+
     motivo = (motivo or "").strip()
     if not motivo:
         return {
@@ -224,20 +244,26 @@ def bloquear_usuario_service(persona_id, motivo, devolver_dinero=False):
         .all()
     )
 
-    messages = [_build_block_success_message(persona, motivo, bool(reservas), devolver_dinero)]
+    messages = [
+        _build_block_success_message(persona, motivo, bool(reservas), devolver_dinero)
+    ]
 
     for reserva in reservas:
         reserva.estado = "cancelada"
         reserva.cancelada_en = _now()
         db.session.flush()
-        
+
         clase = db.session.get(Clase, reserva.clase_id)
         promoted_entry = None
         if clase is not None:
             promoted_entry = _ofrecer_cupo_a_primero(clase)
 
         if devolver_dinero:
-            pago = Pago.query.filter_by(reserva_id=reserva.reserva_id).order_by(Pago.pago_id.desc()).first()
+            pago = (
+                Pago.query.filter_by(reserva_id=reserva.reserva_id)
+                .order_by(Pago.pago_id.desc())
+                .first()
+            )
             if pago and getattr(pago, "estado", "") in {"aprobado", "approved"}:
                 _reintegrar_mercadopago(pago, pago.monto_pagado)
                 messages.append(_build_refund_message(clase, pago.monto_pagado))
@@ -255,8 +281,9 @@ def bloquear_usuario_service(persona_id, motivo, devolver_dinero=False):
         "status": "ok",
         "message": "\n".join(messages),
         "messages": messages,
-        "user": _serializar_usuario(persona)
+        "user": _serializar_usuario(persona),
     }, 200
+
 
 def desbloquear_usuario_service(persona_id):
     persona = _obtener_persona_modificable(persona_id)
@@ -270,7 +297,7 @@ def desbloquear_usuario_service(persona_id):
 
     persona.estado = "activo"
     persona.motivo_bloqueo = None
-    
+
     if persona.socio is not None:
         persona.socio.descuento_bloqueado_hasta = None
 
@@ -283,11 +310,11 @@ def desbloquear_usuario_service(persona_id):
     return {
         "status": "ok",
         "message": (
-            "El usuario ha sido desbloqueado exitosamente. Presentaba sanciones"
+            "El usuario ha sido desbloqueado exitosamente. Presentaba sanciones."
             if presentaba_sanciones
             else "El usuario ha sido desbloqueado exitosamente. No presentaba sanciones."
         ),
-        "user": _serializar_usuario(persona)
+        "user": _serializar_usuario(persona),
     }, 200
 
 
