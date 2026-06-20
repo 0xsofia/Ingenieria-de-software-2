@@ -9,12 +9,25 @@ import { ACTIVIDADES } from '../constants/actividades'
 import './ActividadPage.css'
 
 const NIVELES = ['Principiante', 'Intermedio', 'Avanzado']
-const HORARIOS = Array.from({ length: 24 }, (_, hour) => ({
-  value: String(hour),
-  label: `${String(hour).padStart(2, '0')}:00`,
+const DIAS_SEMANA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+const HORARIOS = Array.from({ length: 24 }, (_, hora) => ({
+  label: `${String(hora).padStart(2, '0')}:00`,
+  value: hora,
 }))
-
-const hoy = new Date().toISOString().split('T')[0]
+const MESES = [
+  { label: 'Enero', value: 1 },
+  { label: 'Febrero', value: 2 },
+  { label: 'Marzo', value: 3 },
+  { label: 'Abril', value: 4 },
+  { label: 'Mayo', value: 5 },
+  { label: 'Junio', value: 6 },
+  { label: 'Julio', value: 7 },
+  { label: 'Agosto', value: 8 },
+  { label: 'Septiembre', value: 9 },
+  { label: 'Octubre', value: 10 },
+  { label: 'Noviembre', value: 11 },
+  { label: 'Diciembre', value: 12 },
+]
 
 export default function ClasePage() {
   const navigate = useNavigate()
@@ -59,27 +72,24 @@ export default function ClasePage() {
             (value) => ACTIVIDADES.includes(value),
             'La actividad seleccionada no es válida.'
           ),
-        fecha: z
+        dia_semana: z
           .string()
           .trim()
-          .min(1, 'La fecha es obligatoria.')
+          .min(1, 'El día de la semana es obligatorio.')
           .refine(
-            (value) => {
-              try {
-                const fecha = new Date(value)
-                const hoyDate = new Date(hoy)
-                return fecha >= hoyDate
-              } catch {
-                return false
-              }
-            },
-            'La fecha no puede ser en el pasado.'
+            (value) => DIAS_SEMANA.includes(value),
+            'El día de la semana seleccionado no es válido.'
           ),
-        horario_inicio: z
-          .string()
-          .trim()
-          .min(1, 'El horario de inicio es obligatorio.')
-          .regex(/^(?:[01]?\d|2[0-3])$/, 'El horario de inicio debe estar entre 00:00 y 23:00.'),
+        mes: z.coerce
+          .number()
+          .int()
+          .min(1, 'El mes es obligatorio.')
+          .max(12, 'El mes seleccionado no es válido.'),
+        horario_inicio: z.coerce
+          .number()
+          .int()
+          .min(0, 'El horario de inicio es obligatorio.')
+          .max(23),
         cancha: z
           .string()
           .trim()
@@ -121,11 +131,21 @@ export default function ClasePage() {
         })),
       },
       {
-        name: 'fecha',
-        label: 'Fecha',
-        type: 'date',
+        name: 'dia_semana',
+        label: 'Día de la semana',
+        type: 'select',
         required: true,
-        min: hoy,
+        options: DIAS_SEMANA.map((dia) => ({
+          label: dia,
+          value: dia,
+        })),
+      },
+      {
+        name: 'mes',
+        label: 'Mes',
+        type: 'select',
+        required: true,
+        options: MESES,
       },
       {
         name: 'horario_inicio',
@@ -184,7 +204,8 @@ export default function ClasePage() {
   const initialValues = useMemo(
     () => ({
       actividad: '',
-      fecha: '',
+      dia_semana: '',
+      mes: '',
       horario_inicio: '',
       cancha: '',
       nivel: '',
@@ -204,6 +225,7 @@ export default function ClasePage() {
     try {
       const result = await crearClase({
         ...values,
+        mes: Number(values.mes),
         horario_inicio: Number(values.horario_inicio),
         cupos: Number(values.cupos),
         precio: Number(values.precio),

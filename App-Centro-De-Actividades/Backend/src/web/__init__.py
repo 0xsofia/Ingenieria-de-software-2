@@ -49,6 +49,7 @@ def create_app(env=None, static_folder="../../static"):
         origin
         for origin in {
             "http://localhost:5173",
+            "https://0hhjzltn-5173.brs.devtunnels.ms",
             "http://127.0.0.1:5173",
             frontend_origin,
         }
@@ -62,6 +63,7 @@ def create_app(env=None, static_folder="../../static"):
             r"/api/*": {
                 "origins": [
                     "https://ingenieria-de-software-2-1.onrender.com",
+                    "https://0hhjzltn-5173.brs.devtunnels.ms",
                     "http://localhost:5173",
                     "http://127.0.0.1:5173"
                 ],
