@@ -21,6 +21,8 @@ from src.core.models.lista_espera import ListaEspera
 from src.core.models.pago import Pago
 from src.core.models.persona import Socio
 from src.core.models.reserva import Reserva
+from src.core.models.abono_mensual import AbonoMensual
+from src.core.models.actividad import Actividad
 from src.core.services import telegram
 
 
@@ -237,7 +239,11 @@ def iniciar_reserva_abonada(clase_id):
 
     ahora = _now()
     sancionado = _socio_sancionado_para_descuento(socio_id, ahora)
-    descuento_pct = DESCUENTO_ABONO_PCT if _en_ventana_descuento(ahora) and not sancionado else Decimal("0.00")
+    descuento_pct = (
+        DESCUENTO_ABONO_PCT
+        if _en_ventana_descuento(ahora, clase_base.fecha) and not sancionado
+        else Decimal("0.00")
+    )
     monto_bruto = sum((_decimal_precio_clase(clase) for clase in clases_abono), Decimal("0.00"))
     monto_a_cobrar = _aplicar_descuento(monto_bruto, descuento_pct)
     requiere_pago = monto_a_cobrar > 0
@@ -743,7 +749,7 @@ def _build_espontanea_reserva(clase, socio_id):
     return reserva, credito, requiere_pago, precio
 
 
-def procesar_retorno_pago(reserva_id, pago_status):
+def procesar_retorno_pago(reserva_id, pago_status, payment_id=None, external_reference=None):
     socio_id, error = _require_socio()
     if error is not None:
         return error
@@ -762,7 +768,12 @@ def procesar_retorno_pago(reserva_id, pago_status):
             "message": "No se encontró un pago asociado a la reserva.",
         }, 409
 
-    normalized = (pago_status or "").strip().lower()
+    normalized = _estado_pago_retorno(
+        pago,
+        pago_status,
+        payment_id=payment_id,
+        external_reference=external_reference,
+    )
 
     if reserva.estado == "confirmada":
         return {
@@ -771,7 +782,7 @@ def procesar_retorno_pago(reserva_id, pago_status):
             "reserva_id": reserva.reserva_id,
         }, 200
 
-    if normalized in {"approved", "aprobado", "success"}:
+    if normalized in {"approved", "aprobado", "success", "accredited"}:
         ahora = _now()
         reservas_a_confirmar = _reservas_del_mismo_abono(reserva)
         for reserva_abono in reservas_a_confirmar:
@@ -803,7 +814,9 @@ def procesar_retorno_pago(reserva_id, pago_status):
             "reserva_id": reserva.reserva_id,
         }, 200
 
-    if normalized in {"pending", "in_process"}:
+    if normalized in {"pending", "in_process", "in_mediation"}:
+        pago.estado = "pendiente"
+        db.session.commit()
         return {
             "status": "payment_pending",
             "message": "El pago quedó pendiente. Cuando se acredite, se confirmará la inscripción.",
@@ -848,15 +861,41 @@ def listar_reservas_socio():
         return {"status": "ok", "reservas": [], "lista_espera":lista_espera_data}, 200
 
     reserva_ids = [reserva.reserva_id for reserva in reservas]
+    abono_ids = [
+        reserva.abono_mensual_id
+        for reserva in reservas
+        if reserva.abono_mensual_id is not None
+    ]
     pagos = (
-        Pago.query.filter(Pago.reserva_id.in_(reserva_ids))
+        Pago.query.filter(
+            db.or_(
+                Pago.reserva_id.in_(reserva_ids),
+                Pago.abono_mensual_id.in_(abono_ids) if abono_ids else db.false(),
+            )
+        )
         .order_by(Pago.pago_id.desc())
         .all()
     )
     pagos_por_reserva = {}
+    pagos_por_abono = {}
     for pago in pagos:
         if pago.reserva_id not in pagos_por_reserva:
             pagos_por_reserva[pago.reserva_id] = pago
+        if pago.abono_mensual_id is not None and pago.abono_mensual_id not in pagos_por_abono:
+            pagos_por_abono[pago.abono_mensual_id] = pago
+
+    cantidad_reservas_por_abono = {}
+    if abono_ids:
+        cantidades = (
+            db.session.query(Reserva.abono_mensual_id, db.func.count(Reserva.reserva_id))
+            .filter(Reserva.abono_mensual_id.in_(abono_ids))
+            .group_by(Reserva.abono_mensual_id)
+            .all()
+        )
+        cantidad_reservas_por_abono = {
+            abono_id: int(cantidad)
+            for abono_id, cantidad in cantidades
+        }
 
     ahora = _now()
     reservas_data = []
@@ -865,6 +904,8 @@ def listar_reservas_socio():
         clase_inicio = _clase_inicio(clase)
         puede_cancelar = _puede_cancelar_reserva(reserva, clase_inicio, ahora)
         pago = pagos_por_reserva.get(reserva.reserva_id)
+        if pago is None and reserva.abono_mensual_id is not None:
+            pago = pagos_por_abono.get(reserva.abono_mensual_id)
 
         # print("puede cancelar "+ str(puede_cancelar))
 
@@ -874,8 +915,13 @@ def listar_reservas_socio():
 
         # print("puede cancelar "+ str(puede_cancelar))
 
-        reintegro_estimado = _calcular_reintegro_estimada(pago, clase_inicio, ahora)
+        reintegro_estimado = _calcular_reintegro_estimado_reserva(reserva, pago, clase_inicio, ahora)
         reintegro_aplica = reintegro_estimado is not None
+        monto_pagado_reserva = _monto_pagado_para_reserva(
+            pago,
+            reserva,
+            cantidad_reservas_por_abono,
+        )
 
         reservas_data.append(
             {
@@ -890,7 +936,7 @@ def listar_reservas_socio():
                 "tipo_reserva": reserva.tipo_reserva,
                 "precio": float(clase.precio) if clase and clase.precio is not None else None,
                 "pago_estado": pago.estado if pago else None,
-                "monto_pagado": str(pago.monto_pagado) if pago and pago.monto_pagado is not None else None,
+                "monto_pagado": str(monto_pagado_reserva) if monto_pagado_reserva is not None else None,
                 "puede_cancelar": puede_cancelar,
                 "reintegro_aplica": reintegro_aplica,
                 "reintegro_estimado": str(reintegro_estimado) if reintegro_estimado is not None else None,
@@ -898,7 +944,163 @@ def listar_reservas_socio():
         )
 
     
-    return {"status": "ok", "reservas": reservas_data, "lista_espera": lista_espera_data}, 200
+    abonos_body, abonos_status = listar_abonos_mensuales_socio()
+    if abonos_status != 200:
+        return abonos_body, abonos_status
+
+    return {
+        "status": "ok",
+        "reservas": reservas_data,
+        "lista_espera": lista_espera_data,
+        "abonos": abonos_body.get("abonos", []),
+    }, 200
+
+
+def listar_abonos_mensuales_socio():
+    socio_id, error = _require_socio()
+    if error is not None:
+        return error
+
+    abonos = (
+        AbonoMensual.query.filter_by(socio_id=socio_id)
+        .order_by(AbonoMensual.periodo_inicio.desc())
+        .all()
+    )
+
+    hoy = date.today()
+    abonos_data = []
+    for abono in abonos:
+        actividad = db.session.get(Actividad, abono.actividad_id)
+        fecha_limite = abono.fecha_limite_renovacion
+        renovable = (
+            abono.estado == "activo"
+            and 1 <= hoy.day <= 10
+            and (fecha_limite is None or hoy <= fecha_limite)
+        )
+
+        abonos_data.append(
+            {
+                "abono_mensual_id": abono.abono_mensual_id,
+                "actividad": actividad.nombre if actividad else None,
+                "periodo_inicio": abono.periodo_inicio.isoformat() if abono.periodo_inicio else None,
+                "periodo_fin": abono.periodo_fin.isoformat() if abono.periodo_fin else None,
+                "hora_inicio": abono.hora_inicio.strftime("%H:%M") if abono.hora_inicio else None,
+                "dia_semana": abono.dia_semana,
+                "fecha_limite_renovacion": fecha_limite.isoformat() if fecha_limite else None,
+                "estado": abono.estado,
+                "renovable": renovable,
+                "cancelable": abono.estado == "activo",
+            }
+        )
+
+    return {"status": "ok", "abonos": abonos_data}, 200
+
+
+def cancelar_abono_mensual(abono_id):
+    socio_id, error = _require_socio()
+    if error is not None:
+        return error
+
+    abono = db.session.get(AbonoMensual, abono_id)
+    if abono is None or abono.socio_id != socio_id:
+        return {
+            "status": "error",
+            "message": "El abono mensual no existe o no te pertenece.",
+        }, 404
+
+    if abono.estado != "activo":
+        return {
+            "status": "error",
+            "message": "El abono mensual no está activo.",
+        }, 409
+
+    abono.estado = "cancelado"
+    db.session.commit()
+
+    return {
+        "status": "ok",
+        "message": "Abono mensual cancelado.",
+        "abono_mensual_id": abono.abono_mensual_id,
+    }, 200
+
+
+def renovar_abono_mensual(abono_id):
+    socio_id, error = _require_socio()
+    if error is not None:
+        return error
+
+    abono = db.session.get(AbonoMensual, abono_id)
+    if abono is None or abono.socio_id != socio_id:
+        return {
+            "status": "error",
+            "message": "El abono mensual no existe o no te pertenece.",
+        }, 404
+
+    if abono.estado != "activo":
+        return {
+            "status": "error",
+            "message": "Solo se pueden renovar abonos activos.",
+        }, 409
+
+    hoy = date.today()
+    if not (1 <= hoy.day <= 10):
+        return {
+            "status": "error",
+            "message": "Solo se puede renovar entre el 1 y 10 del mes.",
+        }, 409
+
+    if abono.fecha_limite_renovacion is not None and hoy > abono.fecha_limite_renovacion:
+        return {
+            "status": "error",
+            "message": "La fecha límite de renovación ya pasó.",
+        }, 409
+
+    siguiente_inicio = abono.periodo_fin + timedelta(days=1)
+    siguiente_ultimo_dia = calendar.monthrange(siguiente_inicio.year, siguiente_inicio.month)[1]
+    siguiente_fin = date(siguiente_inicio.year, siguiente_inicio.month, siguiente_ultimo_dia)
+    abono.periodo_inicio = siguiente_inicio
+    abono.periodo_fin = siguiente_fin
+    abono.fecha_limite_renovacion = date(
+        siguiente_inicio.year,
+        siguiente_inicio.month,
+        min(10, siguiente_ultimo_dia),
+    )
+
+    db.session.commit()
+
+    return {
+        "status": "ok",
+        "message": "Abono mensual renovado.",
+        "abono_mensual_id": abono.abono_mensual_id,
+        "periodo_inicio": abono.periodo_inicio.isoformat(),
+        "periodo_fin": abono.periodo_fin.isoformat(),
+        "fecha_limite_renovacion": abono.fecha_limite_renovacion.isoformat(),
+    }, 200
+
+
+def _monto_pagado_para_reserva(pago, reserva, cantidad_reservas_por_abono):
+    if pago is None or pago.monto_pagado is None:
+        return None
+
+    monto_pagado = Decimal(str(pago.monto_pagado))
+    if reserva.abono_mensual_id is None:
+        return monto_pagado
+
+    cantidad_reservas = cantidad_reservas_por_abono.get(reserva.abono_mensual_id, CLASES_POR_ABONO)
+    if cantidad_reservas <= 0:
+        cantidad_reservas = CLASES_POR_ABONO
+
+    return (monto_pagado / Decimal(cantidad_reservas)).quantize(Decimal("0.01"))
+
+
+def _calcular_reintegro_estimado_reserva(reserva, pago, clase_inicio, ahora):
+    if reserva.tipo_reserva == "abonada":
+        if clase_inicio is not None and clase_inicio - ahora > timedelta(hours=24):
+            return "1 credito"
+
+        return None
+
+    return _calcular_reintegro_estimada(pago, clase_inicio, ahora)
 
 
 def _listar_lista_espera_socio(socio_id):
@@ -1052,6 +1254,129 @@ def cancelar_reserva_espontanea(reserva_id):
     }, 200
 
 
+def cancelar_reserva_abonada(reserva_id, confirmar_sancion=False):
+    socio_id, error = _require_socio()
+    if error is not None:
+        return error
+
+    reserva = db.session.get(Reserva, reserva_id)
+    if reserva is None or reserva.socio_id != socio_id:
+        return {
+            "status": "error",
+            "message": "La reserva indicada no existe o no te pertenece.",
+        }, 404
+
+    if reserva.tipo_reserva != "abonada" or reserva.abono_mensual_id is None:
+        return {
+            "status": "error",
+            "message": "Solo se pueden cancelar reservas abonadas.",
+        }, 409
+
+    if reserva.estado != "confirmada":
+        return {
+            "status": "error",
+            "message": "Solo se pueden cancelar reservas abonadas confirmadas.",
+        }, 409
+
+    abono = db.session.get(AbonoMensual, reserva.abono_mensual_id)
+    if abono is None or abono.estado != "activo":
+        return {
+            "status": "error",
+            "message": "No se encontro un abono mensual activo para la reserva.",
+        }, 409
+
+    clase = reserva.clase or db.session.get(Clase, reserva.clase_id)
+    clase_inicio = _clase_inicio(clase)
+    ahora = _now()
+    if clase_inicio is None:
+        return {
+            "status": "error",
+            "message": "No se pudo identificar la clase asociada a la reserva.",
+        }, 409
+
+    if clase_inicio <= ahora:
+        return {
+            "status": "error",
+            "message": "La clase ya comenzo o finalizo, no puede cancelarse.",
+        }, 409
+
+    cancelaciones_previas_mes = _contar_cancelaciones_mes(socio_id, ahora)
+    sancion_aplicaria = cancelaciones_previas_mes + 1 >= 3
+    if sancion_aplicaria and not confirmar_sancion:
+        return {
+            "status": "requires_sanction_confirmation",
+            "message": "Esta cancelacion aplica una sancion: perderas el beneficio del 20% de descuento para el abono del mes siguiente.",
+            "reserva_id": reserva.reserva_id,
+            "cancelaciones_mes": cancelaciones_previas_mes,
+        }, 409
+
+    credito_info = {
+        "aplica": False,
+        "credito_id": None,
+        "message": "No se otorga credito porque faltan menos de 24 horas para el inicio de la clase.",
+    }
+    if clase_inicio - ahora > timedelta(hours=24):
+        credito = Credito(
+            socio_id=socio_id,
+            cancelacion_reserva_origen_id=reserva.reserva_id,
+            clase_cancelada_origen_id=reserva.clase_id,
+            otorgado_en=ahora,
+            estado="disponible",
+        )
+        db.session.add(credito)
+        db.session.flush()
+        credito_info = {
+            "aplica": True,
+            "credito_id": credito.credito_id,
+            "message": "Se otorgo un credito equivalente a una clase.",
+        }
+
+    reserva.estado = "cancelada"
+    reserva.cancelada_en = ahora
+    db.session.flush()
+
+    if clase is not None:
+        _ofrecer_cupo_a_primero(clase)
+
+    cancelaciones_mes = _contar_cancelaciones_mes(socio_id, ahora)
+    sancion_aplicada = cancelaciones_mes >= 3
+    descuento_bloqueado_hasta = None
+    if sancion_aplicada:
+        socio = db.session.get(Socio, socio_id)
+        if socio is not None:
+            descuento_bloqueado_hasta = _fin_mes_siguiente(ahora)
+            socio.descuento_bloqueado_hasta = descuento_bloqueado_hasta
+
+    db.session.commit()
+
+    if credito_info["aplica"] and not sancion_aplicada:
+        scenario_code = "escenario_1"
+        scenario_message = "Se otorgo un credito equivalente a una clase."
+    elif not credito_info["aplica"] and not sancion_aplicada:
+        scenario_code = "escenario_2"
+        scenario_message = "No recibiras reintegro ni credito por cancelar con menos de 24 horas de anticipacion."
+    elif credito_info["aplica"] and sancion_aplicada:
+        scenario_code = "escenario_3"
+        scenario_message = "Se otorgo un credito equivalente a una clase. Se aplico una sancion por cancelar 3 o mas clases en el mes."
+    else:
+        scenario_code = "escenario_4"
+        scenario_message = "No recibiras reintegro ni credito por cancelar con menos de 24 horas de anticipacion. Se aplico una sancion por cancelar 3 o mas clases en el mes."
+
+    return {
+        "status": "cancelled",
+        "message": "Cancelacion de reserva abonada correcta.",
+        "scenario": scenario_code,
+        "scenario_message": scenario_message,
+        "reserva_id": reserva.reserva_id,
+        "credito": credito_info,
+        "cancelaciones_mes": cancelaciones_mes,
+        "sancion_aplicada": sancion_aplicada,
+        "descuento_bloqueado_hasta": descuento_bloqueado_hasta.isoformat()
+        if descuento_bloqueado_hasta is not None
+        else None,
+    }, 200
+
+
 def _require_socio():
     if not current_user.is_authenticated:
         return None, ({"status": "error", "message": "Debes iniciar sesión."}, 401)
@@ -1121,6 +1446,11 @@ def _crear_checkout_mercadopago(pago, reserva, clase):
         preference_payload["auto_return"] = "approved"
 
     try:
+        print(
+            "Mercado Pago preference payload:",
+            json.dumps(preference_payload, ensure_ascii=False),
+        )
+
         request = Request(
             "https://api.mercadopago.com/checkout/preferences",
             data=json.dumps(preference_payload).encode("utf-8"),
@@ -1135,7 +1465,23 @@ def _crear_checkout_mercadopago(pago, reserva, clase):
             raw = response.read().decode("utf-8")
             preference = json.loads(raw)
 
-        init_point =  preference.get("sandbox_init_point")
+        print(
+            "Mercado Pago preference response:",
+            json.dumps(
+                {
+                    "id": preference.get("id"),
+                    "init_point": preference.get("init_point"),
+                    "sandbox_init_point": preference.get("sandbox_init_point"),
+                    "external_reference": preference.get("external_reference"),
+                    "auto_return": preference.get("auto_return"),
+                    "back_urls": preference.get("back_urls"),
+                    "items": preference.get("items"),
+                },
+                ensure_ascii=False,
+            ),
+        )
+
+        init_point = _checkout_url_from_preference(preference, access_token)
         if init_point:
             return init_point
 
@@ -1158,6 +1504,17 @@ def _clase_inicio(clase):
         return None
 
     return datetime.combine(clase.fecha, clase.horario_inicio).replace(tzinfo=timezone.utc)
+
+
+def _checkout_url_from_preference(preference, access_token):
+    if not preference:
+        return None
+
+    is_test_token = str(access_token or "").upper().startswith("TEST-")
+    if is_test_token:
+        return preference.get("sandbox_init_point") or preference.get("init_point")
+
+    return preference.get("init_point") or preference.get("sandbox_init_point")
 
 
 def _puede_cancelar_reserva(reserva, clase_inicio, ahora):
@@ -1290,6 +1647,59 @@ def _buscar_pago_mp_id(external_ref, access_token):
     return chosen.get("id")
 
 
+def _estado_pago_retorno(pago, pago_status, payment_id=None, external_reference=None):
+    if payment_id or external_reference:
+        estado_mp = _consultar_estado_pago_mp(
+            payment_id=payment_id,
+            external_reference=external_reference or pago.external_ref,
+        )
+        if estado_mp:
+            return estado_mp
+
+    return (pago_status or "").strip().lower()
+
+
+def _consultar_estado_pago_mp(payment_id=None, external_reference=None):
+    access_token = (os.environ.get("MP_ACCESS_TOKEN") or "").strip()
+    if not access_token:
+        return None
+
+    if payment_id:
+        status = _consultar_estado_pago_mp_por_id(payment_id, access_token)
+        if status:
+            return status
+
+    payment_id_from_ref = _buscar_pago_mp_id(external_reference, access_token)
+    if payment_id_from_ref:
+        return _consultar_estado_pago_mp_por_id(payment_id_from_ref, access_token)
+
+    return None
+
+
+def _consultar_estado_pago_mp_por_id(payment_id, access_token):
+    try:
+        request = Request(
+            f"https://api.mercadopago.com/v1/payments/{payment_id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+            method="GET",
+        )
+        with urlopen(request, timeout=10) as response:
+            raw = response.read().decode("utf-8")
+            payload = json.loads(raw)
+    except HTTPError as exc:
+        try:
+            body = exc.read().decode("utf-8")
+        except Exception:
+            body = ""
+        print("Mercado Pago payment lookup failed:", exc.code, body)
+        return None
+    except (URLError, ValueError, OSError) as exc:
+        print("Mercado Pago payment lookup failed:", str(exc))
+        return None
+
+    return (payload.get("status") or payload.get("status_detail") or "").strip().lower()
+
+
 def _crear_reintegro_mp(payment_id, monto, access_token, idempotency_key=None):
     if payment_id is None:
         return False, "payment_id invalido"
@@ -1413,8 +1823,9 @@ def _decimal_precio_clase(clase):
     return Decimal(str(precio)).quantize(Decimal("0.01"))
 
 
-def _en_ventana_descuento(ahora):
-    return 1 <= ahora.day <= 10
+def _en_ventana_descuento(ahora, fecha_clase):
+    fecha_limite = date(fecha_clase.year, fecha_clase.month, 10)
+    return ahora.date() <= fecha_limite
 
 
 def _socio_sancionado_para_descuento(socio_id, ahora):

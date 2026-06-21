@@ -5,7 +5,7 @@ from src.core.models.persona import Persona
 CREDITOS_TO_SEED = [
     {
         "email": "credito@gmail.com",
-        "cantidad": 1,
+        "cantidad": 8,
     },
 ]
 

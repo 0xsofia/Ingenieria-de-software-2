@@ -1,11 +1,15 @@
 from flask import Blueprint, jsonify, request
 
 from src.core.services.reservas import (
+    cancelar_reserva_abonada,
     cancelar_reserva_espontanea,
     entrar_lista_espera,
     iniciar_reserva_abonada,
     iniciar_reserva_espontanea,
     listar_reservas_socio,
+    listar_abonos_mensuales_socio,
+    renovar_abono_mensual,
+    cancelar_abono_mensual,
     procesar_retorno_pago,
     obtener_ofertas_activas,
     confirmar_turno,
@@ -121,6 +125,8 @@ def payment_return():
 
     reserva_id = payload.get("reserva_id")
     status = payload.get("status")
+    payment_id = payload.get("payment_id") or payload.get("collection_id")
+    external_reference = payload.get("external_reference")
 
     if reserva_id is None:
         return (
@@ -146,13 +152,90 @@ def payment_return():
             400,
         )
 
-    body, status_code = procesar_retorno_pago(reserva_id, status)
+    body, status_code = procesar_retorno_pago(
+        reserva_id,
+        status,
+        payment_id=payment_id,
+        external_reference=external_reference,
+    )
     return jsonify(body), status_code
 
 
 @reservas_bp.get("/reservas/mis-clases")
 def listar_mis_clases():
     body, status_code = listar_reservas_socio()
+    return jsonify(body), status_code
+
+
+@reservas_bp.get("/reservas/mis-abonos")
+def listar_mis_abonos():
+    body, status_code = listar_abonos_mensuales_socio()
+    return jsonify(body), status_code
+
+
+@reservas_bp.post("/reservas/abonos/renovar")
+def renovar_abono():
+    payload = request.get_json(silent=True) or {}
+
+    abono_id = payload.get("abono_mensual_id")
+    if abono_id is None:
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"abono_mensual_id": "El id del abono mensual es obligatorio."},
+                }
+            ),
+            400,
+        )
+
+    try:
+        abono_id = int(abono_id)
+    except (TypeError, ValueError):
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"abono_mensual_id": "El id debe ser un número."},
+                }
+            ),
+            400,
+        )
+
+    body, status_code = renovar_abono_mensual(abono_id)
+    return jsonify(body), status_code
+
+
+@reservas_bp.post("/reservas/abonos/cancelar")
+def cancelar_abono():
+    payload = request.get_json(silent=True) or {}
+
+    abono_id = payload.get("abono_mensual_id")
+    if abono_id is None:
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"abono_mensual_id": "El id del abono mensual es obligatorio."},
+                }
+            ),
+            400,
+        )
+
+    try:
+        abono_id = int(abono_id)
+    except (TypeError, ValueError):
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"abono_mensual_id": "El id debe ser un número."},
+                }
+            ),
+            400,
+        )
+
+    body, status_code = cancelar_abono_mensual(abono_id)
     return jsonify(body), status_code
 
 
@@ -186,6 +269,43 @@ def cancelar_reserva():
         )
 
     body, status_code = cancelar_reserva_espontanea(reserva_id)
+    return jsonify(body), status_code
+
+
+@reservas_bp.post("/reservas/abonada/cancelar")
+def cancelar_reserva_abonada_route():
+    payload = request.get_json(silent=True) or {}
+
+    reserva_id = payload.get("reserva_id")
+    confirmar_sancion = bool(payload.get("confirmar_sancion", False))
+    if reserva_id is None:
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"reserva_id": "La reserva es obligatoria."},
+                }
+            ),
+            400,
+        )
+
+    try:
+        reserva_id = int(reserva_id)
+    except (TypeError, ValueError):
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"reserva_id": "La reserva debe ser un numero."},
+                }
+            ),
+            400,
+        )
+
+    body, status_code = cancelar_reserva_abonada(
+        reserva_id,
+        confirmar_sancion=confirmar_sancion,
+    )
     return jsonify(body), status_code
 
 

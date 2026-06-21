@@ -41,19 +41,22 @@ class SeedClasesTestCase(unittest.TestCase):
 
         clases = Clase.query.order_by(Clase.fecha, Clase.horario_inicio).all()
 
-        self.assertEqual(len(clases), 8)
+        self.assertEqual(len(clases), 9)
         self.assertEqual(
-            [clase.horario_inicio for clase in clases[:6]],
-            [time(7, 0), time(8, 0), time(8, 15), time(8, 30), time(8, 45), time(9, 0)],
+            [clase.horario_inicio for clase in clases[:7]],
+            [time(7, 0), time(8, 0), time(8, 15), time(8, 30), time(8, 45), time(9, 0), time(9, 15)],
         )
         self.assertEqual(clases[0].actividad.value, "Voley")
         self.assertEqual(clases[0].cupos, 1)
         self.assertEqual(clases[1].actividad.value, "Voley")
         self.assertEqual(clases[1].cupos, 8)
         self.assertEqual(clases[5].cupos, 1)
+        self.assertEqual(clases[6].actividad.value, "Padel")
+        self.assertEqual(clases[6].cupos, 9)
         self.assertEqual(
             [clase.fecha.isoformat() for clase in clases],
             [
+                "2026-05-26",
                 "2026-05-26",
                 "2026-05-26",
                 "2026-05-26",
@@ -64,19 +67,20 @@ class SeedClasesTestCase(unittest.TestCase):
                 "2026-05-28",
             ],
         )
-        self.assertEqual(clases[6].horario_inicio, time(8, 30))
-        self.assertEqual(clases[7].horario_inicio, time(20, 0))
+        self.assertEqual(clases[7].horario_inicio, time(8, 30))
+        self.assertEqual(clases[8].horario_inicio, time(20, 0))
 
     def test_seed_clases_toma_horario_argentina_aunque_el_servidor_este_en_utc(self):
         clases = _build_dynamic_clases_to_seed(UTC_EQUIVALENT_SEED_TIME)
 
         self.assertEqual(
             [clase_data["horario_inicio"] for clase_data in clases],
-            ["20:00", "21:00", "21:15", "21:30", "21:45", "22:00", "21:30", "09:00"],
+            ["20:00", "21:00", "21:15", "21:30", "21:45", "22:00", "22:15", "21:30", "09:00"],
         )
         self.assertEqual(
             [clase_data["fecha"] for clase_data in clases],
             [
+                "2026-05-26",
                 "2026-05-26",
                 "2026-05-26",
                 "2026-05-26",
@@ -112,7 +116,7 @@ class SeedClasesTestCase(unittest.TestCase):
         )
         self.assertEqual([clase_data["horario_inicio"] for clase_data in clases], ["19:00"] * 4)
 
-    def test_seed_db_reserva_todas_las_clases_dinamicas_para_socio_centro(self):
+    def test_seed_db_reserva_clases_dinamicas_habilitadas_para_socio_centro(self):
         seed_usuarios()
         seed_profesores()
         seed_clases(SEED_TIME)
@@ -140,4 +144,4 @@ class SeedClasesTestCase(unittest.TestCase):
 
         clases = Clase.query.order_by(Clase.fecha, Clase.horario_inicio).all()
 
-        self.assertEqual(len(clases), 12)
+        self.assertEqual(len(clases), 13)

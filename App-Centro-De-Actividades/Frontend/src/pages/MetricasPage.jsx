@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { default as Chart } from 'react-apexcharts';
+import { default as Chart } from 'apexcharts';
 import { Loader2, DollarSign, Users, Calendar, TrendingUp, AlertCircle, Award } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { getMetricas } from '../api/metricas'; 

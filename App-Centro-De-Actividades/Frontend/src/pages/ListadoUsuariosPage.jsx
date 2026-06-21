@@ -21,7 +21,7 @@ export default function ListadoUsuariosPage() {
   const [submittedFilters, setSubmittedFilters] = useState(INITIAL_USER_FILTERS)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
+  const [successMessages, setSuccessMessages] = useState([])
   
   const [userToBlock, setUserToBlock] = useState(null)
   const [isBlocking, setIsBlocking] = useState(false)
@@ -81,7 +81,7 @@ export default function ListadoUsuariosPage() {
   async function handleFilterSubmit(nextFilters) {
     setIsLoading(true)
     setError('')
-    setSuccessMessage('')
+    setSuccessMessages([])
 
     try {
       const result = await listarUsuarios(nextFilters)
@@ -101,11 +101,11 @@ export default function ListadoUsuariosPage() {
   async function handleConfirmUnblock() {
     setIsUnblocking(true)
     setUnblockError('')
-    setSuccessMessage('')
+    setSuccessMessages([])
 
     try {
-      await desbloquearUsuario(userToUnblock.persona_id)
-      setSuccessMessage(`El usuario ${userToUnblock.nombre_completo} ha sido desbloqueado exitosamente.`)
+      const unblockResult = await desbloquearUsuario(userToUnblock.persona_id)
+      setSuccessMessages([unblockResult.message || `El usuario ${userToUnblock.nombre_completo} ha sido desbloqueado exitosamente.`])
       setUserToUnblock(null)
       // Refresh list
       const result = await listarUsuarios(submittedFilters)
@@ -123,7 +123,7 @@ export default function ListadoUsuariosPage() {
     
     try {
       const result = await bloquearUsuario(userToBlock.persona_id, { motivo, devolver_dinero })
-      setSuccessMessage(result.message || `El usuario ${userToBlock.nombre_completo} ha sido bloqueado exitosamente.`)
+      setSuccessMessages(_normalizeSuccessMessages(result, `El usuario ${userToBlock.nombre_completo} ha sido bloqueado exitosamente.`))
       setUserToBlock(null)
       // Refresh list
       const listResult = await listarUsuarios(submittedFilters)
@@ -176,10 +176,12 @@ export default function ListadoUsuariosPage() {
             </p>
           ) : null}
 
-          {successMessage ? (
-            <p className="banner banner--success" role="status">
-              {successMessage}
-            </p>
+          {successMessages.length ? (
+            <div className="banner banner--success listado-usuarios-page__messages" role="status">
+              {successMessages.map((message, index) => (
+                <p key={`${message}-${index}`}>{message}</p>
+              ))}
+            </div>
           ) : null}
 
           {isLoading ? (
@@ -262,4 +264,16 @@ export default function ListadoUsuariosPage() {
       ) : null}
     </section>
   )
+}
+
+function _normalizeSuccessMessages(result, fallbackMessage) {
+  if (Array.isArray(result?.messages) && result.messages.length) {
+    return result.messages
+  }
+
+  if (result?.message) {
+    return String(result.message).split('\n').filter(Boolean)
+  }
+
+  return [fallbackMessage]
 }

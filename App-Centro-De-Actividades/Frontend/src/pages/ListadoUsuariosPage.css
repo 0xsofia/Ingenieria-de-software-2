@@ -38,6 +38,15 @@
   align-items: center;
 }
 
+.listado-usuarios-page__messages {
+  display: grid;
+  gap: 8px;
+}
+
+.listado-usuarios-page__messages p {
+  margin: 0;
+}
+
 @media (max-width: 640px) {
   .listado-usuarios-page__header-actions {
     width: 100%;
