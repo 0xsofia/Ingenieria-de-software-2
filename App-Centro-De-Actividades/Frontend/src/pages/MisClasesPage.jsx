@@ -6,7 +6,6 @@ import {
   cancelarReservaEspontanea,
   listarMisClases,
   renovarAbonoMensual,
-  cancelarAbonoMensual,
   obtenerOfertasActivas,
   confirmarTurno,
   abandonarListaEspera,
@@ -21,7 +20,6 @@ function MisClasesPage() {
   const [error, setError] = useState('')
   const [feedback, setFeedback] = useState('')
   const [cancelingId, setCancelingId] = useState(null)
-  const [cancelingAbonoId, setCancelingAbonoId] = useState(null)
   const [renewingAbonoId, setRenewingAbonoId] = useState(null)
   const [pendingCancelReserva, setPendingCancelReserva] = useState(null)
   const [ofertas, setOfertas] = useState([])
@@ -172,31 +170,6 @@ function MisClasesPage() {
       setError(err.data?.message || 'No se pudo renovar el abono mensual.')
     } finally {
       setRenewingAbonoId(null)
-    }
-  }
-
-  async function handleCancelarAbono(abono) {
-    if (!abono?.abono_mensual_id || !abono.cancelable) {
-      return
-    }
-
-    const confirmation = window.confirm('¿Desea cancelar este abono mensual?')
-    if (!confirmation) {
-      return
-    }
-
-    setError('')
-    setFeedback('')
-    setCancelingAbonoId(abono.abono_mensual_id)
-
-    try {
-      const result = await cancelarAbonoMensual({ abono_mensual_id: abono.abono_mensual_id })
-      setFeedback(result.message || 'Abono mensual cancelado.')
-      await fetchReservas()
-    } catch (err) {
-      setError(err.data?.message || 'No se pudo cancelar el abono mensual.')
-    } finally {
-      setCancelingAbonoId(null)
     }
   }
 
@@ -356,14 +329,6 @@ function MisClasesPage() {
                               disabled={!abono.renovable || renewingAbonoId === abono.abono_mensual_id}
                             >
                               {renewingAbonoId === abono.abono_mensual_id ? 'Renovando...' : 'Renovar'}
-                            </button>
-                            <button
-                              type="button"
-                              className="secondary-action"
-                              onClick={() => handleCancelarAbono(abono)}
-                              disabled={!abono.cancelable || cancelingAbonoId === abono.abono_mensual_id}
-                            >
-                              {cancelingAbonoId === abono.abono_mensual_id ? 'Cancelando...' : 'Cancelar'}
                             </button>
                           </div>
                         </td>
