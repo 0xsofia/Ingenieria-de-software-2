@@ -13,6 +13,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
 from src.core.database import db
+from src.core.models.abono_mensual import AbonoMensual
+from src.core.models.actividad import Actividad
 from src.core.models.clase import Clase
 from src.core.models.credito import Credito
 from src.core.models.lista_espera import ListaEspera
@@ -25,6 +27,8 @@ from src.core.services import telegram
 
 
 RESERVA_ESTADOS_OCUPAN_CUPO = {"pendiente_pago", "confirmada"}
+CLASES_POR_ABONO = 4
+DESCUENTO_ABONO_PCT = Decimal("20.00")
 
 
 def iniciar_reserva_espontanea(clase_id):
@@ -189,6 +193,153 @@ def iniciar_reserva_espontanea(clase_id):
         "pago_id": pago.pago_id,
         "payment_required": True,
         "payment_url": payment_url,
+    }, 200
+
+
+def iniciar_reserva_abonada(clase_id):
+    socio_id, error = _require_socio()
+    if error is not None:
+        return error
+
+    clase_base = db.session.get(Clase, clase_id)
+    if clase_base is None:
+        return {
+            "status": "error",
+            "message": "La clase seleccionada no existe.",
+        }, 404
+
+    if _clase_estado(clase_base) != "activa":
+        return {
+            "status": "error",
+            "message": "La clase seleccionada no está disponible para reservas.",
+        }, 409
+
+    clases_abono = _buscar_clases_consecutivas(clase_base)
+    if len(clases_abono) != CLASES_POR_ABONO:
+        return {
+            "status": "no_cupo",
+            "message": "No se puede realizar la reserva abonada porque no existen las 4 clases consecutivas en ese día y horario.",
+            "clase_id": clase_base.clase_id,
+        }, 409
+
+    for clase in clases_abono:
+        if _cupo_disponible(clase) <= 0:
+            return {
+                "status": "no_cupo",
+                "message": "No se puede realizar la reserva abonada por falta de cupo en alguna de las próximas 4 clases.",
+                "clase_id": clase.clase_id,
+            }, 409
+
+        if _tiene_reserva_activa(socio_id, clase.clase_id):
+            return {
+                "status": "already_reserved",
+                "message": "Ya tenés una reserva activa en una de las clases del abono.",
+                "clase_id": clase.clase_id,
+            }, 409
+
+    ahora = _now()
+    sancionado = _socio_sancionado_para_descuento(socio_id, ahora)
+    descuento_pct = DESCUENTO_ABONO_PCT if _en_ventana_descuento(ahora) and not sancionado else Decimal("0.00")
+    monto_bruto = sum((_decimal_precio_clase(clase) for clase in clases_abono), Decimal("0.00"))
+    monto_a_cobrar = _aplicar_descuento(monto_bruto, descuento_pct)
+    requiere_pago = monto_a_cobrar > 0
+
+    actividad = _get_or_create_actividad(_clase_actividad_label(clase_base))
+    abono = AbonoMensual(
+        socio_id=socio_id,
+        actividad_id=actividad.actividad_id,
+        periodo_inicio=clases_abono[0].fecha,
+        periodo_fin=clases_abono[-1].fecha,
+        hora_inicio=clase_base.horario_inicio,
+        dia_semana=_dia_semana_label(clase_base.fecha),
+        descuento_aplicado_pct=descuento_pct,
+        prioridad_renovacion=False,
+        fecha_limite_renovacion=_fin_mes_siguiente(ahora) if descuento_pct > 0 else None,
+        estado="pendiente_pago" if requiere_pago else "activo",
+    )
+    db.session.add(abono)
+    db.session.flush()
+
+    reservas = []
+    for clase in clases_abono:
+        reserva = Reserva(
+            clase_id=clase.clase_id,
+            socio_id=socio_id,
+            abono_mensual_id=abono.abono_mensual_id,
+            tipo_reserva="abonada",
+            estado="pendiente_pago" if requiere_pago else "confirmada",
+            confirmada_en=None if requiere_pago else ahora,
+        )
+        db.session.add(reserva)
+        reservas.append(reserva)
+
+    try:
+        db.session.flush()
+    except IntegrityError:
+        db.session.rollback()
+        return {
+            "status": "already_reserved",
+            "message": "Ya tenés una reserva activa en una de las clases del abono.",
+            "clase_id": clase_base.clase_id,
+        }, 409
+
+    if not requiere_pago:
+        db.session.commit()
+        return {
+            "status": "reserved",
+            "message": "Reserva abonada confirmada.",
+            "abono_mensual_id": abono.abono_mensual_id,
+            "reserva_ids": [reserva.reserva_id for reserva in reservas],
+            "payment_required": False,
+        }, 200
+
+    pago = Pago(
+        socio_id=socio_id,
+        reserva_id=reservas[0].reserva_id,
+        abono_mensual_id=abono.abono_mensual_id,
+        proveedor="mercadopago",
+        external_ref=str(uuid.uuid4()),
+        monto_bruto=monto_bruto,
+        descuento_pct=descuento_pct,
+        estado="pendiente",
+    )
+    db.session.add(pago)
+    db.session.commit()
+
+    payment_url = _crear_checkout_mercadopago(pago=pago, reserva=reservas[0], clase=clase_base)
+
+    if payment_url is None:
+        pago.estado = "error"
+        for reserva in reservas:
+            reserva.estado = "pago_fallido"
+        abono.estado = "pago_fallido"
+        db.session.commit()
+
+        return {
+            "status": "error",
+            "message": "No pudimos iniciar el pago en Mercado Pago. Verificá el MP_ACCESS_TOKEN y la conexión.",
+            "abono_mensual_id": abono.abono_mensual_id,
+            "pago_id": pago.pago_id,
+        }, 502
+
+    message = "Redirigiendo a Mercado Pago para completar el pago."
+    if descuento_pct > 0:
+        message = "Se aplicó el 20% de descuento. Redirigiendo a Mercado Pago."
+    elif sancionado:
+        message = "No se aplicó descuento por sanción. Redirigiendo a Mercado Pago."
+
+    return {
+        "status": "payment_required",
+        "message": message,
+        "abono_mensual_id": abono.abono_mensual_id,
+        "reserva_id": reservas[0].reserva_id,
+        "reserva_ids": [reserva.reserva_id for reserva in reservas],
+        "pago_id": pago.pago_id,
+        "payment_required": True,
+        "payment_url": payment_url,
+        "monto_bruto": str(monto_bruto),
+        "descuento_pct": str(descuento_pct),
+        "monto_a_cobrar": str(monto_a_cobrar),
     }, 200
 
 
@@ -623,14 +774,30 @@ def procesar_retorno_pago(reserva_id, pago_status):
         }, 200
 
     if normalized in {"approved", "aprobado", "success"}:
-        reserva.estado = "confirmada"
-        reserva.confirmada_en = _now()
+        ahora = _now()
+        reservas_a_confirmar = _reservas_del_mismo_abono(reserva)
+        for reserva_abono in reservas_a_confirmar:
+            reserva_abono.estado = "confirmada"
+            reserva_abono.confirmada_en = ahora
+
+        if reserva.abono_mensual_id is not None:
+            abono = db.session.get(AbonoMensual, reserva.abono_mensual_id)
+            if abono is not None:
+                abono.estado = "activo"
 
         pago.estado = "aprobado"
-        pago.fecha_pago = _now()
-        pago.monto_pagado = pago.monto_bruto
+        pago.fecha_pago = ahora
+        pago.monto_pagado = _importe_a_cobrar(pago)
 
         db.session.commit()
+
+        if reserva.abono_mensual_id is not None:
+            return {
+                "status": "reserved",
+                "message": "Reserva abonada confirmada.",
+                "reserva_id": reserva.reserva_id,
+                "abono_mensual_id": reserva.abono_mensual_id,
+            }, 200
 
         return {
             "status": "reserved",
@@ -645,7 +812,15 @@ def procesar_retorno_pago(reserva_id, pago_status):
             "reserva_id": reserva.reserva_id,
         }, 200
 
-    reserva.estado = "pago_fallido"
+    reservas_a_rechazar = _reservas_del_mismo_abono(reserva)
+    for reserva_abono in reservas_a_rechazar:
+        reserva_abono.estado = "pago_fallido"
+
+    if reserva.abono_mensual_id is not None:
+        abono = db.session.get(AbonoMensual, reserva.abono_mensual_id)
+        if abono is not None:
+            abono.estado = "pago_fallido"
+
     pago.estado = "rechazado"
     db.session.commit()
 
@@ -1065,10 +1240,10 @@ def _crear_checkout_mercadopago(pago, reserva, clase):
     preference_payload = {
         "items": [
             {
-                "title": f"Clase {_clase_actividad_label(clase)}",
+                "title": _titulo_pago(pago, clase),
                 "quantity": 1,
                 "currency_id": "ARS",
-                "unit_price": float(pago.monto_bruto),
+                "unit_price": float(_importe_a_cobrar(pago)),
             }
         ],
         "external_reference": pago.external_ref,
@@ -1335,3 +1510,93 @@ def _clase_actividad_label(clase):
         return "actividad"
 
     return getattr(actividad, "value", getattr(actividad, "nombre", str(actividad)))
+
+
+def _buscar_clases_consecutivas(clase_base):
+    clases = []
+    for offset in range(CLASES_POR_ABONO):
+        clase = (
+            Clase.query.filter(Clase.actividad == clase_base.actividad)
+            .filter(Clase.fecha == clase_base.fecha + timedelta(days=7 * offset))
+            .filter(Clase.horario_inicio == clase_base.horario_inicio)
+            .order_by(Clase.clase_id.asc())
+            .first()
+        )
+        if clase is None:
+            return []
+        clases.append(clase)
+
+    return clases
+
+
+def _tiene_reserva_activa(socio_id, clase_id):
+    return (
+        Reserva.query.filter_by(clase_id=clase_id, socio_id=socio_id)
+        .filter(Reserva.estado.in_(sorted(RESERVA_ESTADOS_OCUPAN_CUPO)))
+        .first()
+        is not None
+    )
+
+
+def _decimal_precio_clase(clase):
+    precio = getattr(clase, "precio", None)
+    if precio is None:
+        return Decimal("0.00")
+
+    return Decimal(str(precio)).quantize(Decimal("0.01"))
+
+
+def _en_ventana_descuento(ahora):
+    return 1 <= ahora.day <= 10
+
+
+def _socio_sancionado_para_descuento(socio_id, ahora):
+    socio = db.session.get(Socio, socio_id)
+    if socio is None or socio.descuento_bloqueado_hasta is None:
+        return False
+
+    return socio.descuento_bloqueado_hasta >= ahora.date()
+
+
+def _aplicar_descuento(monto, descuento_pct):
+    descuento = Decimal(str(descuento_pct or 0))
+    multiplier = Decimal("1.00") - (descuento / Decimal("100.00"))
+    return (Decimal(str(monto)) * multiplier).quantize(Decimal("0.01"))
+
+
+def _importe_a_cobrar(pago):
+    return _aplicar_descuento(_monto_base_pago(pago), getattr(pago, "descuento_pct", 0))
+
+
+def _get_or_create_actividad(nombre):
+    actividad = Actividad.query.filter_by(nombre=nombre).first()
+    if actividad is not None:
+        return actividad
+
+    actividad = Actividad(nombre=nombre)
+    db.session.add(actividad)
+    db.session.flush()
+    return actividad
+
+
+def _dia_semana_label(fecha):
+    dias = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+    return dias[fecha.weekday()]
+
+
+def _reservas_del_mismo_abono(reserva):
+    if reserva.abono_mensual_id is None:
+        return [reserva]
+
+    return (
+        Reserva.query.filter_by(abono_mensual_id=reserva.abono_mensual_id)
+        .order_by(Reserva.reserva_id.asc())
+        .all()
+    )
+
+
+def _titulo_pago(pago, clase):
+    if getattr(pago, "abono_mensual_id", None) is not None:
+        return f"Reserva abonada {_clase_actividad_label(clase)} x4"
+
+    return f"Clase {_clase_actividad_label(clase)}"

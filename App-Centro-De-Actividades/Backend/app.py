@@ -15,6 +15,9 @@ class CORSMiddleware(object):
 
         allowed_origins = [
             "https://ingenieria-de-software-2-1.onrender.com",
+            "https://pcverde-linux.tail9449ba.ts.net",
+            "http://localhost:5137",
+            "http://127.0.0.1:5137",
             "http://localhost:5173",
             "http://127.0.0.1:5173",
             # Tu túnel actual (con y sin el puerto explícito por si el navegador lo manda de ambas formas)
