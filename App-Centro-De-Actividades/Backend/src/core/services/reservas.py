@@ -19,6 +19,8 @@ from src.core.models.lista_espera import ListaEspera
 from src.core.models.pago import Pago
 from src.core.models.persona import Socio
 from src.core.models.reserva import Reserva
+from src.core.models.abono_mensual import AbonoMensual
+from src.core.models.actividad import Actividad
 from src.core.services import telegram
 
 
@@ -723,7 +725,138 @@ def listar_reservas_socio():
         )
 
     
-    return {"status": "ok", "reservas": reservas_data, "lista_espera": lista_espera_data}, 200
+    abonos_body, abonos_status = listar_abonos_mensuales_socio()
+    if abonos_status != 200:
+        return abonos_body, abonos_status
+
+    return {
+        "status": "ok",
+        "reservas": reservas_data,
+        "lista_espera": lista_espera_data,
+        "abonos": abonos_body.get("abonos", []),
+    }, 200
+
+
+def listar_abonos_mensuales_socio():
+    socio_id, error = _require_socio()
+    if error is not None:
+        return error
+
+    abonos = (
+        AbonoMensual.query.filter_by(socio_id=socio_id)
+        .order_by(AbonoMensual.periodo_inicio.desc())
+        .all()
+    )
+
+    hoy = date.today()
+    abonos_data = []
+    for abono in abonos:
+        actividad = db.session.get(Actividad, abono.actividad_id)
+        fecha_limite = abono.fecha_limite_renovacion
+        renovable = (
+            abono.estado == "activo"
+            and 1 <= hoy.day <= 10
+            and (fecha_limite is None or hoy <= fecha_limite)
+        )
+
+        abonos_data.append(
+            {
+                "abono_mensual_id": abono.abono_mensual_id,
+                "actividad": actividad.nombre if actividad else None,
+                "periodo_inicio": abono.periodo_inicio.isoformat() if abono.periodo_inicio else None,
+                "periodo_fin": abono.periodo_fin.isoformat() if abono.periodo_fin else None,
+                "hora_inicio": abono.hora_inicio.strftime("%H:%M") if abono.hora_inicio else None,
+                "dia_semana": abono.dia_semana,
+                "fecha_limite_renovacion": fecha_limite.isoformat() if fecha_limite else None,
+                "estado": abono.estado,
+                "renovable": renovable,
+                "cancelable": abono.estado == "activo",
+            }
+        )
+
+    return {"status": "ok", "abonos": abonos_data}, 200
+
+
+def cancelar_abono_mensual(abono_id):
+    socio_id, error = _require_socio()
+    if error is not None:
+        return error
+
+    abono = db.session.get(AbonoMensual, abono_id)
+    if abono is None or abono.socio_id != socio_id:
+        return {
+            "status": "error",
+            "message": "El abono mensual no existe o no te pertenece.",
+        }, 404
+
+    if abono.estado != "activo":
+        return {
+            "status": "error",
+            "message": "El abono mensual no está activo.",
+        }, 409
+
+    abono.estado = "cancelado"
+    db.session.commit()
+
+    return {
+        "status": "ok",
+        "message": "Abono mensual cancelado.",
+        "abono_mensual_id": abono.abono_mensual_id,
+    }, 200
+
+
+def renovar_abono_mensual(abono_id):
+    socio_id, error = _require_socio()
+    if error is not None:
+        return error
+
+    abono = db.session.get(AbonoMensual, abono_id)
+    if abono is None or abono.socio_id != socio_id:
+        return {
+            "status": "error",
+            "message": "El abono mensual no existe o no te pertenece.",
+        }, 404
+
+    if abono.estado != "activo":
+        return {
+            "status": "error",
+            "message": "Solo se pueden renovar abonos activos.",
+        }, 409
+
+    hoy = date.today()
+    if not (1 <= hoy.day <= 10):
+        return {
+            "status": "error",
+            "message": "Solo se puede renovar entre el 1 y 10 del mes.",
+        }, 409
+
+    if abono.fecha_limite_renovacion is not None and hoy > abono.fecha_limite_renovacion:
+        return {
+            "status": "error",
+            "message": "La fecha límite de renovación ya pasó.",
+        }, 409
+
+    siguiente_inicio = abono.periodo_fin + timedelta(days=1)
+    siguiente_ultimo_dia = calendar.monthrange(siguiente_inicio.year, siguiente_inicio.month)[1]
+    siguiente_fin = date(siguiente_inicio.year, siguiente_inicio.month, siguiente_ultimo_dia)
+    abono.periodo_inicio = siguiente_inicio
+    abono.periodo_fin = siguiente_fin
+    abono.fecha_limite_renovacion = date(
+        siguiente_inicio.year,
+        siguiente_inicio.month,
+        min(10, siguiente_ultimo_dia),
+    )
+
+    db.session.commit()
+
+    return {
+        "status": "ok",
+        "message": "Abono mensual renovado.",
+        "abono_mensual_id": abono.abono_mensual_id,
+        "periodo_inicio": abono.periodo_inicio.isoformat(),
+        "periodo_fin": abono.periodo_fin.isoformat(),
+        "fecha_limite_renovacion": abono.fecha_limite_renovacion.isoformat(),
+    }, 200
 
 
 def _listar_lista_espera_socio(socio_id):

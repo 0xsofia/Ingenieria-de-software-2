@@ -5,6 +5,9 @@ from src.core.services.reservas import (
     entrar_lista_espera,
     iniciar_reserva_espontanea,
     listar_reservas_socio,
+    listar_abonos_mensuales_socio,
+    renovar_abono_mensual,
+    cancelar_abono_mensual,
     procesar_retorno_pago,
     obtener_ofertas_activas,
     confirmar_turno,
@@ -119,6 +122,78 @@ def payment_return():
 @reservas_bp.get("/reservas/mis-clases")
 def listar_mis_clases():
     body, status_code = listar_reservas_socio()
+    return jsonify(body), status_code
+
+
+@reservas_bp.get("/reservas/mis-abonos")
+def listar_mis_abonos():
+    body, status_code = listar_abonos_mensuales_socio()
+    return jsonify(body), status_code
+
+
+@reservas_bp.post("/reservas/abonos/renovar")
+def renovar_abono():
+    payload = request.get_json(silent=True) or {}
+
+    abono_id = payload.get("abono_mensual_id")
+    if abono_id is None:
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"abono_mensual_id": "El id del abono mensual es obligatorio."},
+                }
+            ),
+            400,
+        )
+
+    try:
+        abono_id = int(abono_id)
+    except (TypeError, ValueError):
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"abono_mensual_id": "El id debe ser un número."},
+                }
+            ),
+            400,
+        )
+
+    body, status_code = renovar_abono_mensual(abono_id)
+    return jsonify(body), status_code
+
+
+@reservas_bp.post("/reservas/abonos/cancelar")
+def cancelar_abono():
+    payload = request.get_json(silent=True) or {}
+
+    abono_id = payload.get("abono_mensual_id")
+    if abono_id is None:
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"abono_mensual_id": "El id del abono mensual es obligatorio."},
+                }
+            ),
+            400,
+        )
+
+    try:
+        abono_id = int(abono_id)
+    except (TypeError, ValueError):
+        return (
+            jsonify(
+                {
+                    "status": "validation_error",
+                    "errors": {"abono_mensual_id": "El id debe ser un número."},
+                }
+            ),
+            400,
+        )
+
+    body, status_code = cancelar_abono_mensual(abono_id)
     return jsonify(body), status_code
 
 
