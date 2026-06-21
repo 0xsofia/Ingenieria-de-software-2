@@ -8,6 +8,13 @@
   margin: 0;
 }
 
+.actividades-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .actividades-page__content {
   display: grid;
   gap: 22px;
@@ -21,4 +28,41 @@
 
 .actividades-page .primary-action {
   margin-top: 0;
+}
+
+.actividades-page .secondary-action {
+  margin-top: 0;
+}
+
+.abono-price {
+  display: grid;
+  gap: 4px;
+}
+
+.abono-price__original {
+  color: var(--text-soft);
+  font-size: 0.86rem;
+  text-decoration: line-through;
+}
+
+.abono-price__discounted {
+  color: var(--text-strong);
+  font-weight: 800;
+}
+
+.abono-price__tag {
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .actividades-page__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .actividades-page__header .secondary-action {
+    width: 100%;
+  }
 }

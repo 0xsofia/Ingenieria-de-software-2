@@ -7,6 +7,7 @@ from src.core.database import db
 from src.core.enums.clase_enum import ActividadEnum, NivelEnum, TipoClaseEnum
 from src.core.models.abono_mensual import AbonoMensual
 from src.core.models.clase import Clase
+from src.core.models.credito import Credito
 from src.core.models.pago import Pago
 from src.core.models.persona import Persona, PersonaRolPuente, Rol, Socio
 from src.core.models.profesor import Profesor
@@ -24,10 +25,15 @@ class ReservasAbonadasTestCase(unittest.TestCase):
         db.create_all()
         self.client = self.app.test_client()
         self.original_now = reservas_service._now
+        self.original_consultar_estado_pago_mp = reservas_service._consultar_estado_pago_mp
+        self.original_crear_checkout_mercadopago = reservas_service._crear_checkout_mercadopago
         reservas_service._now = lambda: datetime(2026, 6, 5, 12, 0, tzinfo=timezone.utc)
+        reservas_service._crear_checkout_mercadopago = lambda **kwargs: "https://mp.test/checkout"
 
     def tearDown(self):
         reservas_service._now = self.original_now
+        reservas_service._consultar_estado_pago_mp = self.original_consultar_estado_pago_mp
+        reservas_service._crear_checkout_mercadopago = self.original_crear_checkout_mercadopago
         db.session.remove()
         db.drop_all()
         self.ctx.pop()
@@ -69,6 +75,53 @@ class ReservasAbonadasTestCase(unittest.TestCase):
         self.assertEqual(pago.estado, "aprobado")
         self.assertEqual(pago.monto_pagado, Decimal("3200.00"))
 
+    def test_reserva_abonada_confirma_si_mercado_pago_informa_aprobado(self):
+        socio = self._crear_socio("retorno-mp@centro.test", "40555555")
+        clases = self._crear_clases_consecutivas()
+        self._login(socio.email)
+
+        response = self.client.post("/api/reservas/abonada", json={"clase_id": clases[0].clase_id})
+        reservas_service._consultar_estado_pago_mp = lambda **kwargs: "approved"
+
+        retorno = self.client.post(
+            "/api/reservas/espontanea/pago-retorno",
+            json={
+                "reserva_id": response.json["reserva_id"],
+                "status": "pending",
+                "payment_id": "123456789",
+            },
+        )
+
+        self.assertEqual(retorno.status_code, 200)
+        self.assertEqual(retorno.json["message"], "Reserva abonada confirmada.")
+        self.assertTrue(all(reserva.estado == "confirmada" for reserva in Reserva.query.all()))
+        self.assertEqual(Pago.query.one().estado, "aprobado")
+
+    def test_mis_clases_muestra_monto_prorrateado_del_abono_en_cada_reserva(self):
+        socio = self._crear_socio("listado-abono@centro.test", "40666666")
+        clases = self._crear_clases_consecutivas()
+        self._login(socio.email)
+
+        response = self.client.post("/api/reservas/abonada", json={"clase_id": clases[0].clase_id})
+        self.client.post(
+            "/api/reservas/espontanea/pago-retorno",
+            json={"reserva_id": response.json["reserva_id"], "status": "approved"},
+        )
+
+        listado = self.client.get("/api/reservas/mis-clases")
+
+        self.assertEqual(listado.status_code, 200)
+        self.assertEqual(len(listado.json["reservas"]), 4)
+        self.assertTrue(
+            all(reserva["pago_estado"] == "aprobado" for reserva in listado.json["reservas"])
+        )
+        self.assertTrue(
+            all(reserva["monto_pagado"] == "800.00" for reserva in listado.json["reservas"])
+        )
+        self.assertTrue(
+            all(reserva["reintegro_estimado"] == "1 credito" for reserva in listado.json["reservas"])
+        )
+
     def test_reserva_abonada_sancionada_no_aplica_descuento(self):
         socio = self._crear_socio("sancionado@centro.test", "40222222")
         socio.socio.descuento_bloqueado_hasta = date(2026, 6, 30)
@@ -82,6 +135,32 @@ class ReservasAbonadasTestCase(unittest.TestCase):
         self.assertEqual(response.json["descuento_pct"], "0.00")
         self.assertEqual(response.json["monto_a_cobrar"], "4000.00")
         self.assertIn("No se aplicó descuento por sanción", response.json["message"])
+
+    def test_checkout_url_usa_init_point_con_token_productivo(self):
+        preference = {
+            "init_point": "https://www.mercadopago.com.ar/checkout/v1/redirect",
+            "sandbox_init_point": "https://sandbox.mercadopago.com.ar/checkout/v1/redirect",
+        }
+
+        checkout_url = reservas_service._checkout_url_from_preference(
+            preference,
+            "APP_USR-token",
+        )
+
+        self.assertEqual(checkout_url, preference["init_point"])
+
+    def test_checkout_url_usa_sandbox_con_token_de_prueba(self):
+        preference = {
+            "init_point": "https://www.mercadopago.com.ar/checkout/v1/redirect",
+            "sandbox_init_point": "https://sandbox.mercadopago.com.ar/checkout/v1/redirect",
+        }
+
+        checkout_url = reservas_service._checkout_url_from_preference(
+            preference,
+            "TEST-token",
+        )
+
+        self.assertEqual(checkout_url, preference["sandbox_init_point"])
 
     def test_reserva_abonada_falla_si_alguna_clase_no_tiene_cupo(self):
         socio = self._crear_socio("sin-cupo@centro.test", "40333333")
@@ -103,6 +182,92 @@ class ReservasAbonadasTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 409)
         self.assertEqual(response.json["status"], "no_cupo")
         self.assertEqual(Reserva.query.filter_by(socio_id=socio.persona_id).count(), 0)
+
+    def test_cancelar_reserva_abonada_con_credito_sin_sancion(self):
+        socio = self._crear_socio("cancel-abono-credito@centro.test", "40777777")
+        reserva_id = self._crear_abono_confirmado(socio)
+        self._login(socio.email)
+
+        response = self.client.post(
+            "/api/reservas/abonada/cancelar",
+            json={"reserva_id": reserva_id},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["scenario"], "escenario_1")
+        self.assertTrue(response.json["credito"]["aplica"])
+        self.assertFalse(response.json["sancion_aplicada"])
+
+        reserva = db.session.get(Reserva, reserva_id)
+        self.assertEqual(reserva.estado, "cancelada")
+        self.assertEqual(Credito.query.filter_by(socio_id=socio.persona_id).count(), 1)
+        self.assertEqual(self._cupo_disponible(reserva.clase_id), 8)
+
+    def test_cancelar_reserva_abonada_sin_credito_sin_sancion(self):
+        socio = self._crear_socio("cancel-abono-sin-credito@centro.test", "40888888")
+        reserva_id = self._crear_abono_confirmado(socio)
+        reservas_service._now = lambda: datetime(2026, 6, 10, 0, 30, tzinfo=timezone.utc)
+        self._login(socio.email)
+
+        response = self.client.post(
+            "/api/reservas/abonada/cancelar",
+            json={"reserva_id": reserva_id},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["scenario"], "escenario_2")
+        self.assertFalse(response.json["credito"]["aplica"])
+        self.assertFalse(response.json["sancion_aplicada"])
+        self.assertIn("No recibiras reintegro", response.json["scenario_message"])
+        self.assertEqual(Credito.query.filter_by(socio_id=socio.persona_id).count(), 0)
+
+    def test_cancelar_reserva_abonada_con_credito_con_sancion_requiere_confirmacion(self):
+        socio = self._crear_socio("cancel-abono-credito-sancion@centro.test", "40999999")
+        reserva_id = self._crear_abono_confirmado(socio)
+        self._crear_cancelaciones_previas(socio.persona_id, cantidad=2)
+        self._login(socio.email)
+
+        preconfirmacion = self.client.post(
+            "/api/reservas/abonada/cancelar",
+            json={"reserva_id": reserva_id},
+        )
+
+        self.assertEqual(preconfirmacion.status_code, 409)
+        self.assertEqual(preconfirmacion.json["status"], "requires_sanction_confirmation")
+        self.assertEqual(db.session.get(Reserva, reserva_id).estado, "confirmada")
+
+        response = self.client.post(
+            "/api/reservas/abonada/cancelar",
+            json={"reserva_id": reserva_id, "confirmar_sancion": True},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["scenario"], "escenario_3")
+        self.assertTrue(response.json["credito"]["aplica"])
+        self.assertTrue(response.json["sancion_aplicada"])
+        self.assertEqual(response.json["descuento_bloqueado_hasta"], "2026-07-31")
+        db.session.refresh(socio.socio)
+        self.assertEqual(socio.socio.descuento_bloqueado_hasta, date(2026, 7, 31))
+        self.assertEqual(Credito.query.filter_by(socio_id=socio.persona_id).count(), 1)
+
+    def test_cancelar_reserva_abonada_sin_credito_con_sancion(self):
+        socio = self._crear_socio("cancel-abono-sin-credito-sancion@centro.test", "41000000")
+        reserva_id = self._crear_abono_confirmado(socio)
+        self._crear_cancelaciones_previas(socio.persona_id, cantidad=2)
+        reservas_service._now = lambda: datetime(2026, 6, 10, 0, 30, tzinfo=timezone.utc)
+        self._login(socio.email)
+
+        response = self.client.post(
+            "/api/reservas/abonada/cancelar",
+            json={"reserva_id": reserva_id, "confirmar_sancion": True},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["scenario"], "escenario_4")
+        self.assertFalse(response.json["credito"]["aplica"])
+        self.assertTrue(response.json["sancion_aplicada"])
+        self.assertEqual(response.json["descuento_bloqueado_hasta"], "2026-07-31")
+        self.assertEqual(Credito.query.filter_by(socio_id=socio.persona_id).count(), 0)
 
     def _crear_socio(self, email, dni):
         persona = Persona(
@@ -156,6 +321,58 @@ class ReservasAbonadasTestCase(unittest.TestCase):
 
         db.session.commit()
         return clases
+
+    def _crear_abono_confirmado(self, socio):
+        clases = self._crear_clases_consecutivas()
+        self._login(socio.email)
+        response = self.client.post("/api/reservas/abonada", json={"clase_id": clases[0].clase_id})
+        self.client.post(
+            "/api/reservas/espontanea/pago-retorno",
+            json={"reserva_id": response.json["reserva_id"], "status": "approved"},
+        )
+        return response.json["reserva_id"]
+
+    def _crear_cancelaciones_previas(self, socio_id, cantidad):
+        profesor = Profesor(
+            nombre=f"Profesor Cancelaciones {Persona.query.count()}",
+            dni=f"8877{Persona.query.count():04d}",
+            telefono=f"22151{Persona.query.count():05d}",
+        )
+        db.session.add(profesor)
+        db.session.flush()
+
+        for index in range(cantidad):
+            clase = Clase(
+                actividad=ActividadEnum.BASQUET,
+                fecha=date(2026, 6, index + 1),
+                horario_inicio=time(8 + index, 0),
+                horario_fin=time(9 + index, 0),
+                cancha=f"Cancha previa {index}",
+                nivel=NivelEnum.PRINCIPIANTE,
+                cupos=8,
+                precio=Decimal("1000.00"),
+                tipo_clase=TipoClaseEnum.GRUPAL,
+                profesor_id=profesor.profesor_id,
+            )
+            db.session.add(clase)
+            db.session.flush()
+            db.session.add(
+                Reserva(
+                    clase_id=clase.clase_id,
+                    socio_id=socio_id,
+                    tipo_reserva="abonada",
+                    estado="cancelada",
+                    confirmada_en=datetime(2026, 6, index + 1, 8, 0, tzinfo=timezone.utc),
+                    cancelada_en=datetime(2026, 6, index + 1, 9, 0, tzinfo=timezone.utc),
+                )
+            )
+
+        db.session.commit()
+
+    def _cupo_disponible(self, clase_id):
+        clase = db.session.get(Clase, clase_id)
+        ocupadas = Reserva.query.filter_by(clase_id=clase_id, estado="confirmada").count()
+        return clase.cupos - ocupadas
 
     def _login(self, email):
         self.client.post("/api/login", json={"email": email, "password": DEFAULT_PASSWORD})

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 
-import { entrarListaEspera, reservarAbonada, reservarEspontanea } from '../api/reservas'
+import { entrarListaEspera, reservarEspontanea } from '../api/reservas'
 import './ActividadPage.css'
 
 export default function ActividadPage() {
@@ -11,7 +11,6 @@ export default function ActividadPage() {
   const claseId = clase ? Number(clase.clase_id) : null
   const actividadTitle = formatActividadTitle(actividadName)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [abonadaSubmitting, setAbonadaSubmitting] = useState(false)
   const [requestError, setRequestError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [pendingWaitlistClaseId, setPendingWaitlistClaseId] = useState(null)
@@ -70,38 +69,6 @@ export default function ActividadPage() {
       } finally {
         setIsSubmitting(false)
       }
-  }
-
-  async function handleReservarAbonada() {
-    if (!clase || !Number.isFinite(claseId)) {
-      setRequestError('Necesitás seleccionar una clase válida para reservar.')
-      return
-    }
-
-    setAbonadaSubmitting(true)
-    setRequestError('')
-    setSuccessMessage('')
-    setPendingWaitlistClaseId(null)
-
-    try {
-      const result = await reservarAbonada({ clase_id: claseId })
-
-      if (result.status === 'payment_required' && result.payment_url) {
-        window.location.assign(result.payment_url)
-        return
-      }
-
-      if (result.status === 'reserved') {
-        setSuccessMessage(result.message)
-        return
-      }
-
-      setSuccessMessage(result.message || 'Reserva abonada procesada.')
-    } catch (error) {
-      setRequestError(error?.data?.message || 'No se pudo realizar la reserva abonada.')
-    } finally {
-      setAbonadaSubmitting(false)
-    }
   }
 
   async function handleEntrarListaEspera() {
@@ -224,17 +191,9 @@ export default function ActividadPage() {
               type="button"
               className="primary-action"
               onClick={handleReservar}
-              disabled={isSubmitting || abonadaSubmitting || !clase}
+              disabled={isSubmitting || !clase}
             >
               {isSubmitting ? 'Procesando...' : 'Confirmar reserva'}
-            </button>
-            <button
-              type="button"
-              className="secondary-action"
-              onClick={handleReservarAbonada}
-              disabled={isSubmitting || abonadaSubmitting || !clase}
-            >
-              {abonadaSubmitting ? 'Procesando...' : 'Abonar reserva de 4 clases'}
             </button>
           </div>
         </div>

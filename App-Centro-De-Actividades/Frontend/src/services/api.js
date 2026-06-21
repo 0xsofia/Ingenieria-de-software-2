@@ -24,6 +24,7 @@ export const endpoints = {
   renovarAbonoMensual: '/api/reservas/abonos/renovar',
   cancelarAbonoMensual: '/api/reservas/abonos/cancelar',
   reservaEspontaneaCancelar: '/api/reservas/espontanea/cancelar',
+  reservaAbonadaCancelar: '/api/reservas/abonada/cancelar',
   abandonarListaEspera: '/api/reservas/lista-espera/abandonar',
   ofertasActivas: '/api/reservas/ofertas-activas',
   confirmarTurno: '/api/reservas/confirmar',

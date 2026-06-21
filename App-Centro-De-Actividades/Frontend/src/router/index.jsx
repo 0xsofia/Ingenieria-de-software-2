@@ -11,7 +11,9 @@ import PagoRetornoPage from '../pages/PagoRetornoPage.jsx'
 import PerfilPage from '../pages/PerfilPage.jsx'
 import RegistrarsePage from '../pages/RegistrarsePage.jsx'
 import ActividadesPage from '../pages/ActividadesPage.jsx'
+import AbonosPage from '../pages/AbonosPage.jsx'
 import ActividadPage from '../pages/ActividadPage.jsx'
+import RealizarReservaAbonadaPage from '../pages/RealizarReservaAbonadaPage.jsx'
 import ActualizarPerfilPage from '../pages/ActualizarPerfilPage.jsx'
 import CrearClasePage from '../pages/CrearClasePage.jsx'
 import ErrorPage from '../pages/ErrorPage.jsx'
@@ -137,6 +139,14 @@ const router = createBrowserRouter([
       {
         path: '/actividades',
         element: <ActividadesPage />,
+      },
+      {
+        path: '/abonos',
+        element: <AbonosPage />,
+      },
+      {
+        path: '/abonos/:actividadName/reservar',
+        element: <RealizarReservaAbonadaPage />,
       },
       {
         path: '/actividad/:actividadName',

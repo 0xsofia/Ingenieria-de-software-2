@@ -56,9 +56,18 @@ CLASES_BASE_TEMPLATE = [
         "profesor_dni": "44332211",
         "precio": 500,
     },
+    {
+        "actividad": "Padel",
+        "cancha": "Cancha Padel 1",
+        "nivel": "Principiante",
+        "cupos": 9,
+        "profesor_dni": "11223344",
+        "precio": 750,
+        "reservar_socio_centro": False,
+    },
 ]
 
-CLASES_OFFSET_MINUTES = (0, 15, 30, 45, 60)
+CLASES_OFFSET_MINUTES = (0, 15, 30, 45, 60, 75)
 CLASES_FUTURAS_TEMPLATE = [
     {
         "actividad": "Basquet",

@@ -14,6 +14,7 @@ class CORSMiddleware(object):
         env_origin = os.getenv("FRONTEND_BASE_URL")
 
         allowed_origins = [
+            "https://0hhjzltn-5173.brs.devtunnels.ms",
             "https://ingenieria-de-software-2-1.onrender.com",
             "https://pcverde-linux.tail9449ba.ts.net",
             "http://localhost:5137",
