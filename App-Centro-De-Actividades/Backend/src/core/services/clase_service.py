@@ -1,11 +1,9 @@
-import json
-import re
-from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 
 from sqlalchemy.exc import IntegrityError
- 
+
 from src.core.database import db
+from src.core.enums.clase_enum import ActividadEnum, NivelEnum, TipoClaseEnum
 from src.core.models.clase import Clase
 from src.core.models.profesor import Profesor
 from src.core.models.reserva import Reserva
@@ -16,13 +14,40 @@ from src.core.services import telegram
 ACTIVIDADES_VALIDAS = {e.value for e in ActividadEnum}
 NIVELES_VALIDOS = {e.value for e in NivelEnum}
 
+DIAS_SEMANA = {
+    "Lunes": 0,
+    "Martes": 1,
+    "Miercoles": 2,
+    "Miércoles": 2,
+    "Jueves": 3,
+    "Viernes": 4,
+    "Sabado": 5,
+    "Sábado": 5,
+    "Domingo": 6,
+}
+
+MESES = {
+    "Enero": 1,
+    "Febrero": 2,
+    "Marzo": 3,
+    "Abril": 4,
+    "Mayo": 5,
+    "Junio": 6,
+    "Julio": 7,
+    "Agosto": 8,
+    "Septiembre": 9,
+    "Octubre": 10,
+    "Noviembre": 11,
+    "Diciembre": 12,
+}
 
 
 def validar_payload_clase(payload):
-    """Valida los datos de una clase con estructura de registro robusto."""
+    """Valida los datos necesarios para crear clases mensuales."""
     normalized_payload = {
         "actividad": (payload.get("actividad") or "").strip(),
-        "fecha": payload.get("fecha"),
+        "dia_semana": (payload.get("dia_semana") or "").strip(),
+        "mes": payload.get("mes"),
         "horario_inicio": payload.get("horario_inicio"),
         "cancha": (payload.get("cancha") or "").strip(),
         "nivel": (payload.get("nivel") or "").strip(),
@@ -32,49 +57,42 @@ def validar_payload_clase(payload):
     }
     errors = {}
 
-    # Validar actividad
     if not normalized_payload["actividad"]:
         errors["actividad"] = "La actividad es obligatoria."
     elif normalized_payload["actividad"] not in ACTIVIDADES_VALIDAS:
         errors["actividad"] = f"La actividad debe ser una de: {', '.join(ACTIVIDADES_VALIDAS)}"
 
-    # Validar fecha
-    if not normalized_payload["fecha"]:
-        errors["fecha"] = "La fecha es obligatoria."
+    if not normalized_payload["dia_semana"]:
+        errors["dia_semana"] = "El día de la semana es obligatorio."
+    elif normalized_payload["dia_semana"] not in DIAS_SEMANA:
+        errors["dia_semana"] = f"El día debe ser uno de: {', '.join(DIAS_SEMANA.keys())}"
+
+    if not normalized_payload["mes"]:
+        errors["mes"] = "El mes es obligatorio."
     else:
         try:
-            fecha_obj = datetime.strptime(normalized_payload["fecha"], "%Y-%m-%d").date()
-            if fecha_obj < datetime.now().date():
-                errors["fecha"] = "La fecha no puede ser en el pasado."
+            normalized_payload["mes"] = _parse_mes(normalized_payload["mes"])
         except ValueError:
-            errors["fecha"] = "La fecha debe tener formato YYYY-MM-DD."
+            errors["mes"] = "El mes seleccionado no es válido."
 
-    # Validar horario_inicio
-    if normalized_payload["horario_inicio"] is None or str(normalized_payload["horario_inicio"]).strip() == "":
+    if normalized_payload["horario_inicio"] in (None, ""):
         errors["horario_inicio"] = "El horario de inicio es obligatorio."
     else:
         try:
-            horario_inicio_int = int(normalized_payload["horario_inicio"])
-            if horario_inicio_int < 0 or horario_inicio_int > 23:
-                errors["horario_inicio"] = "El horario debe estar entre 00:00 y 23:00."
-            else:
-                datetime.strptime(f"{horario_inicio_int:02d}:00", "%H:%M").time()
-        except (TypeError, ValueError):
+            _parse_horario_inicio(normalized_payload["horario_inicio"])
+        except ValueError:
             errors["horario_inicio"] = "El horario debe tener formato HH:MM."
 
-    # Validar cancha
     if not normalized_payload["cancha"]:
         errors["cancha"] = "La cancha es obligatoria."
     elif len(normalized_payload["cancha"]) > 100:
         errors["cancha"] = "La cancha no puede exceder 100 caracteres."
 
-    # Validar nivel
     if not normalized_payload["nivel"]:
         errors["nivel"] = "El nivel es obligatorio."
     elif normalized_payload["nivel"] not in NIVELES_VALIDOS:
         errors["nivel"] = f"El nivel debe ser uno de: {', '.join(NIVELES_VALIDOS)}"
 
-    # Validar cupos
     if normalized_payload["cupos"] is None:
         errors["cupos"] = "Los cupos son obligatorios."
     else:
@@ -98,7 +116,6 @@ def validar_payload_clase(payload):
         except (ValueError, TypeError):
             errors["precio"] = "El precio debe ser un número válido."
 
-    # Validar profesor_id
     if not normalized_payload["profesor_id"]:
         errors["profesor_id"] = "El profesor es obligatorio."
     else:
@@ -113,63 +130,72 @@ def validar_payload_clase(payload):
     return normalized_payload, errors
 
 
-def crear_clase_completa(payload):
-    """Crea una clase con validación completa."""
-    # Verificar duplicados
+def crear_clase_completa(payload, fecha_actual=None):
+    """Crea las clases semanales vigentes del mes seleccionado."""
     try:
-        fecha_obj = datetime.strptime(payload["fecha"], "%Y-%m-%d").date()
-        horario_obj = datetime.strptime(f"{payload["horario_inicio"]:02d}:00", "%H:%M").time()
-
-        # calcular fin de la nueva clase (1 hora)
-        horario_fin = (datetime.combine(fecha_obj, horario_obj) + timedelta(hours=1)).time()
-
-        # Buscar cualquier clase del mismo profesor en la misma fecha cuyo intervalo se solape
-        clase_existente = Clase.query.filter(
-            Clase.profesor_id == int(payload["profesor_id"]),
-            Clase.fecha == fecha_obj,
-            Clase.horario_inicio < horario_fin,
-            Clase.horario_fin > horario_obj,
-        ).first()
-
-        if clase_existente:
-            return (
-                {
-                    "status":"error", 
-                    "message": "No se puede registrar la clase, el profesor tiene superposición horaria con otra clase"
-                },
-                400,
-            )
-    except Exception as e:
+        ahora = fecha_actual or datetime.now()
+        horario_obj = _parse_horario_inicio(payload["horario_inicio"])
+        fechas_clase = _fechas_de_clases_del_mes(
+            dia_semana=DIAS_SEMANA[payload["dia_semana"]],
+            mes=int(payload["mes"]),
+            horario_inicio=horario_obj,
+            ahora=ahora,
+        )
+    except Exception:
         return (
             {
                 "status": "error",
-                "message": "Error al procesar los datos de la clase."
+                "message": "Error al procesar los datos de la clase.",
             },
             400,
         )
 
-    # Crear tipo de clase basado en cupos
-    cupos_int = int(payload["cupos"])
-    tipo_clase = TipoClaseEnum.PARTICULAR if cupos_int == 1 else TipoClaseEnum.GRUPAL
-
-    # Calcular horario_fin (1 hora después del inicio)
-    horario_fin = (datetime.combine(fecha_obj, horario_obj) + timedelta(hours=1)).time()
-
-    try:
-        nueva_clase = Clase(
-            actividad=ActividadEnum(payload["actividad"]),
-            fecha=fecha_obj,
-            horario_inicio=horario_obj,
-            horario_fin=horario_fin,
-            cancha=payload["cancha"],
-            nivel=NivelEnum(payload["nivel"]),
-            cupos=cupos_int,
-            precio=payload.get("precio"),
-            tipo_clase=tipo_clase,
-            profesor_id=int(payload["profesor_id"])
+    if not fechas_clase:
+        return (
+            {
+                "status": "error",
+                "message": "No se pudo registrar la clase, el día y horario seleccionados ya no son vigentes",
+            },
+            400,
         )
 
-        db.session.add(nueva_clase)
+    clase_existente = Clase.query.filter(
+        Clase.profesor_id == int(payload["profesor_id"]),
+        Clase.fecha.in_(fechas_clase),
+        Clase.horario_inicio == horario_obj,
+    ).first()
+
+    if clase_existente:
+        return (
+            {
+                "status": "error",
+                "message": "No se puede registrar la clase, el profesor tiene superposición horaria con otra clase",
+            },
+            400,
+        )
+
+    cupos_int = int(payload["cupos"])
+    tipo_clase = TipoClaseEnum.PARTICULAR if cupos_int == 1 else TipoClaseEnum.GRUPAL
+    horario_fin = (datetime.combine(fechas_clase[0], horario_obj) + timedelta(hours=1)).time()
+
+    try:
+        nuevas_clases = [
+            Clase(
+                actividad=ActividadEnum(payload["actividad"]),
+                fecha=fecha_clase,
+                horario_inicio=horario_obj,
+                horario_fin=horario_fin,
+                cancha=payload["cancha"],
+                nivel=NivelEnum(payload["nivel"]),
+                cupos=cupos_int,
+                precio=payload.get("precio"),
+                tipo_clase=tipo_clase,
+                profesor_id=int(payload["profesor_id"]),
+            )
+            for fecha_clase in fechas_clase
+        ]
+
+        db.session.add_all(nuevas_clases)
         db.session.flush()
         db.session.commit()
     except IntegrityError as error:
@@ -180,7 +206,8 @@ def crear_clase_completa(payload):
         "status": "created",
         "message": "La clase ha sido creada con éxito.",
         "redirect_to": "/clases",
-        "clase_id": nueva_clase.clase_id
+        "clase_id": nuevas_clases[0].clase_id,
+        "clases_creadas": len(nuevas_clases),
     }, 201
 
 
@@ -357,6 +384,57 @@ def actualizar_clase(clase_id, payload):
 #     # return query.order_by(Clase.fecha, Clase.horario_inicio).all()
 #     # Para que ordene de fechas más cercanas
 #     return query.order_by(Clase.fecha.asc(), Clase.horario_inicio.asc()).all()
+def _parse_mes(value):
+    if isinstance(value, int):
+        if 1 <= value <= 12:
+            return value
+        raise ValueError
+
+    value_str = str(value).strip()
+    if value_str.isdigit():
+        mes = int(value_str)
+        if 1 <= mes <= 12:
+            return mes
+        raise ValueError
+
+    value_title = value_str.capitalize()
+    if value_title in MESES:
+        return MESES[value_title]
+
+    raise ValueError
+
+
+def _parse_horario_inicio(value):
+    if isinstance(value, time):
+        return value
+
+    if isinstance(value, int):
+        return time(hour=value)
+
+    if isinstance(value, float) and value.is_integer():
+        return time(hour=int(value))
+
+    value_str = str(value).strip()
+    if value_str.isdigit():
+        return time(hour=int(value_str))
+
+    return datetime.strptime(value_str, "%H:%M").time()
+
+
+def _fechas_de_clases_del_mes(dia_semana, mes, horario_inicio, ahora):
+    fecha = datetime(ahora.year, mes, 1).date()
+    fechas = []
+
+    while fecha.month == mes:
+        if fecha.weekday() == dia_semana:
+            inicio_clase = datetime.combine(fecha, horario_inicio)
+            if inicio_clase > ahora:
+                fechas.append(fecha)
+                if len(fechas) == 4:
+                    break
+        fecha += timedelta(days=1)
+
+    return fechas
 
 
 def _validation_error(field, message):
