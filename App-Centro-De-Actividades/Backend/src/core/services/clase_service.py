@@ -213,6 +213,101 @@ def obtener_clases(actividad=None, fecha=None, horario=None):
     return query.order_by(Clase.fecha, Clase.horario_inicio).all()
 
 
+def validar_payload_actualizar_clase(payload):
+    """Valida los datos de una clase con estructura de registro robusto."""
+    normalized_payload = {
+        "actividad": (payload.get("actividad") or "").strip(),
+        "fecha": payload.get("fecha"),
+        "horario_inicio": payload.get("horario_inicio"),
+        "cancha": (payload.get("cancha") or "").strip(),
+        "nivel": (payload.get("nivel") or "").strip(),
+        "cupos": payload.get("cupos"),
+        "precio": payload.get("precio"),
+        "profesor_id": payload.get("profesor_id"),
+    }
+    errors = {}
+
+    # Validar actividad
+    if not normalized_payload["actividad"]:
+        errors["actividad"] = "La actividad es obligatoria."
+    elif normalized_payload["actividad"] not in ACTIVIDADES_VALIDAS:
+        errors["actividad"] = f"La actividad debe ser una de: {', '.join(ACTIVIDADES_VALIDAS)}"
+
+    # Validar fecha
+    if not normalized_payload["fecha"]:
+        errors["fecha"] = "La fecha es obligatoria."
+    else:
+        try:
+            fecha_obj = datetime.strptime(normalized_payload["fecha"], "%Y-%m-%d").date()
+            if fecha_obj < datetime.now().date():
+                errors["fecha"] = "La fecha no puede ser en el pasado."
+        except ValueError:
+            errors["fecha"] = "La fecha debe tener formato YYYY-MM-DD."
+
+    # Validar horario_inicio
+    if normalized_payload["horario_inicio"] is None or str(normalized_payload["horario_inicio"]).strip() == "":
+        errors["horario_inicio"] = "El horario de inicio es obligatorio."
+    else:
+        try:
+            horario_inicio_int = int(normalized_payload["horario_inicio"])
+            if horario_inicio_int < 0 or horario_inicio_int > 23:
+                errors["horario_inicio"] = "El horario debe estar entre 00:00 y 23:00."
+            else:
+                datetime.strptime(f"{horario_inicio_int:02d}:00", "%H:%M").time()
+        except (TypeError, ValueError):
+            errors["horario_inicio"] = "El horario debe tener formato HH:MM."
+
+    # Validar cancha
+    if not normalized_payload["cancha"]:
+        errors["cancha"] = "La cancha es obligatoria."
+    elif len(normalized_payload["cancha"]) > 100:
+        errors["cancha"] = "La cancha no puede exceder 100 caracteres."
+
+    # Validar nivel
+    if not normalized_payload["nivel"]:
+        errors["nivel"] = "El nivel es obligatorio."
+    elif normalized_payload["nivel"] not in NIVELES_VALIDOS:
+        errors["nivel"] = f"El nivel debe ser uno de: {', '.join(NIVELES_VALIDOS)}"
+
+    # Validar cupos
+    if normalized_payload["cupos"] is None:
+        errors["cupos"] = "Los cupos son obligatorios."
+    else:
+        try:
+            cupos_int = int(normalized_payload["cupos"])
+            if cupos_int < 1:
+                errors["cupos"] = "Los cupos deben ser al menos 1."
+        except (ValueError, TypeError):
+            errors["cupos"] = "Los cupos deben ser un número válido."
+
+    precio_raw = normalized_payload.get("precio")
+    if precio_raw is None or str(precio_raw).strip() == "":
+        errors["precio"] = "El precio es obligatorio."
+    else:
+        try:
+            precio_value = float(precio_raw)
+            if precio_value < 0:
+                errors["precio"] = "El precio no puede ser negativo."
+            else:
+                normalized_payload["precio"] = precio_value
+        except (ValueError, TypeError):
+            errors["precio"] = "El precio debe ser un número válido."
+
+    # Validar profesor_id
+    if not normalized_payload["profesor_id"]:
+        errors["profesor_id"] = "El profesor es obligatorio."
+    else:
+        try:
+            profesor_id = int(normalized_payload["profesor_id"])
+            profesor = Profesor.query.get(profesor_id)
+            if not profesor:
+                errors["profesor_id"] = "El profesor seleccionado no existe."
+        except (ValueError, TypeError):
+            errors["profesor_id"] = "El profesor_id debe ser un número válido."
+
+    return normalized_payload, errors
+
+
 def actualizar_clase(clase_id, payload):
     clase = Clase.query.get(clase_id)
     if not clase:

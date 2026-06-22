@@ -5,6 +5,7 @@ from src.core.models.clase import Clase
 from src.core.models.reserva import Reserva
 from src.core.services.clase_service import (
     validar_payload_clase,
+    validar_payload_actualizar_clase,
     crear_clase_completa,
     obtener_clases,
     obtener_detalle_clase_con_socios,
@@ -60,7 +61,7 @@ def listar_clases():
 def actualizar_clase_controller(clase_id):
     payload = request.get_json(silent=True) or {}
     
-    normalized_payload, errors = validar_payload_clase(payload)
+    normalized_payload, errors = validar_payload_actualizar_clase(payload)
     print("Payload recibido despues de validar:", normalized_payload, errors)   
     if errors:
         return jsonify({"status": "validation_error", "errors": errors}), 400
