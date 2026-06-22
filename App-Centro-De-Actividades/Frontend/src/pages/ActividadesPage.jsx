@@ -254,6 +254,10 @@ function getSlug(nombre) {
 }
 
 function isClaseDisponible(clase, currentTime) {
+  if (clase?.ya_reservado) {
+    return false
+  }
+
   if (!clase?.fecha || !clase?.horario_inicio) {
     return true
   }
