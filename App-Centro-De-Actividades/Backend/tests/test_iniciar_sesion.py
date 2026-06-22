@@ -103,12 +103,15 @@ class IniciarSesionTestCase(unittest.TestCase):
         )
 
     def test_login_como_socio_sin_credenciales_de_empleado_autentica(self):
-        self._crear_persona(
+        persona = self._crear_persona(
             email="socio@centro.test",
             password=DEFAULT_PASSWORD,
             como_socio=True,
             roles={"socio": ["reservas:crear"]},
         )
+        db.session.add(Credito(socio_id=persona.persona_id, estado="disponible"))
+        db.session.add(Credito(socio_id=persona.persona_id, estado="consumido"))
+        db.session.commit()
 
         response = self.client.post(
             "/api/login",
@@ -118,6 +121,7 @@ class IniciarSesionTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json["status"], "authenticated")
         self.assertEqual(response.json["session"]["role"], "socio")
+        self.assertEqual(response.json["session"]["creditos_disponibles"], 1)
 
     def test_login_falla_si_email_no_existe(self):
         response = self.client.post(

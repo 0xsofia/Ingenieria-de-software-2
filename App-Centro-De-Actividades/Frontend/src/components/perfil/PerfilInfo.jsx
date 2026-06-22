@@ -26,6 +26,11 @@ function PerfilInfo() {
         <li>
           <strong>Email:</strong> {session.email}
         </li>
+        {session.role === 'socio' ? (
+          <li>
+            <strong>Créditos disponibles:</strong> {session.creditos_disponibles ?? 0}
+          </li>
+        ) : null}
        
       </ul>
       <div>
