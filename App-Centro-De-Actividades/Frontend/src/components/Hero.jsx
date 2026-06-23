@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 
 import logoCad from '../assets/logo-cad.png'
 
 function Hero({ role, onLogout, isLoggingOut = false }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const location = useLocation()
 
   const navigationItems = [
     { to: '/inicio', label: 'Inicio' },
@@ -25,8 +26,14 @@ function Hero({ role, onLogout, isLoggingOut = false }) {
   }
 
   if (role === 'socio') {
-    navigationItems.splice(2, 0, { to: '/abonos', label: 'Abonos' })
     navigationItems.splice(2, 0, { to: '/mis-clases', label: 'Mis clases' })
+    navigationItems.splice(1, 1, {
+      label: 'Actividades',
+      children: [
+        { to: '/abonos', label: 'Abonos' },
+        { to: '/actividades', label: 'Reservas espontáneas' },
+      ],
+    })
   }
 
   function closeMenu() {
@@ -46,6 +53,33 @@ function Hero({ role, onLogout, isLoggingOut = false }) {
       ? `${baseClassName} bg-white/18`
       : `${baseClassName} bg-white/6 hover:bg-white/12`
   }
+
+  const navigationGroupButtonClassName = (isActive) => {
+    const baseClassName =
+      'inline-flex min-h-[46px] w-full items-center justify-center border border-white/20 px-4 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-slate-50 transition duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200/70'
+
+    return isActive
+      ? `${baseClassName} bg-white/18`
+      : `${baseClassName} bg-white/6 group-hover:bg-white/12 group-focus-within:bg-white/12`
+  }
+
+  const navigationGroupLinkClassName = ({ isActive }) => {
+    const baseClassName =
+      'inline-flex min-h-[42px] items-center border border-transparent px-4 py-2 text-sm font-semibold uppercase tracking-[0.14em] text-slate-50 transition duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200/70'
+
+    return isActive
+      ? `${baseClassName} bg-white/14`
+      : `${baseClassName} hover:bg-white/10`
+  }
+
+  const isNavigationGroupActive = (item) =>
+    item.children?.some((child) => {
+      if (child.to === '/actividades') {
+        return location.pathname === '/actividades' || location.pathname.startsWith('/actividad/')
+      }
+
+      return location.pathname === child.to || location.pathname.startsWith(`${child.to}/`)
+    })
 
   return (
     <header className="border-b border-slate-950/15 bg-[linear-gradient(125deg,#0f2236_0%,#14324f_42%,#1f5d91_100%)] text-slate-50 shadow-[0_24px_72px_-42px_rgba(2,8,23,0.95)]">
@@ -100,16 +134,43 @@ function Hero({ role, onLogout, isLoggingOut = false }) {
           } w-full gap-3 border-t border-white/12 pt-4 lg:ml-auto lg:flex lg:w-auto lg:flex-wrap lg:items-center lg:justify-end lg:border-t-0 lg:pt-0`}
           aria-label="Navegación principal"
         >
-          {navigationItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={navigationItemClassName}
-              onClick={closeMenu}
-            >
-              {item.label}
-            </NavLink>
-          ))}
+          {navigationItems.map((item) => {
+            if (item.children) {
+              const isGroupActive = isNavigationGroupActive(item)
+
+              return (
+                <div key={item.label} className="group relative grid gap-2 lg:block">
+                  <button type="button" className={navigationGroupButtonClassName(isGroupActive)}>
+                    {item.label}
+                  </button>
+
+                  <div className="grid gap-2 pl-3 lg:invisible lg:absolute lg:left-0 lg:top-full lg:z-20 lg:min-w-[252px] lg:origin-top lg:translate-y-[-6px] lg:scale-y-95 lg:gap-1 lg:border lg:border-white/18 lg:bg-[linear-gradient(180deg,#173a5c_0%,#102940_100%)] lg:p-2 lg:pl-2 lg:opacity-0 lg:shadow-[0_18px_38px_-20px_rgba(2,8,23,0.95)] lg:transition lg:duration-150 lg:ease-out lg:group-hover:visible lg:group-hover:translate-y-0 lg:group-hover:scale-y-100 lg:group-hover:opacity-100 lg:group-focus-within:visible lg:group-focus-within:translate-y-0 lg:group-focus-within:scale-y-100 lg:group-focus-within:opacity-100">
+                    {item.children.map((child) => (
+                      <NavLink
+                        key={child.to}
+                        to={child.to}
+                        className={navigationGroupLinkClassName}
+                        onClick={closeMenu}
+                      >
+                        {child.label}
+                      </NavLink>
+                    ))}
+                  </div>
+                </div>
+              )
+            }
+
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={navigationItemClassName}
+                onClick={closeMenu}
+              >
+                {item.label}
+              </NavLink>
+            )
+          })}
 
           <button
             type="button"
