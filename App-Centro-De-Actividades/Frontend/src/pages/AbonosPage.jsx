@@ -393,6 +393,10 @@ function findConsecutiveMonthlyWindowStart(fechas) {
 }
 
 function isClaseDisponible(clase, currentDateTimeKey) {
+  if (clase?.ya_reservado) {
+    return false
+  }
+
   if (!clase?.fecha || !clase?.horario_inicio || !currentDateTimeKey) {
     return true
   }

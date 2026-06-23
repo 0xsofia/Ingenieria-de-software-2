@@ -28,6 +28,16 @@ def seed_abonos_mensuales(seed_datetime=None):
         return
 
     created = 0
+    day_names_es = {
+        'Monday': 'Lunes',
+        'Tuesday': 'Martes',
+        'Wednesday': 'Miércoles',
+        'Thursday': 'Jueves',
+        'Friday': 'Viernes',
+        'Saturday': 'Sábado',
+        'Sunday': 'Domingo',
+    }
+
     for i, socio in enumerate(socios):
         actividad = actividades[i % len(actividades)]
 
@@ -44,13 +54,15 @@ def seed_abonos_mensuales(seed_datetime=None):
         if existing:
             continue
 
+        dia_semana = day_names_es.get(periodo_inicio.strftime('%A'), periodo_inicio.strftime('%A'))
+
         abono = AbonoMensual(
             socio_id=socio_id,
             actividad_id=actividad.actividad_id,
             periodo_inicio=periodo_inicio,
             periodo_fin=periodo_fin,
             hora_inicio=time(19, 0),
-            dia_semana=periodo_inicio.strftime('%A'),
+            dia_semana=dia_semana,
             fecha_limite_renovacion=fecha_limite_renovacion,
             estado='activo',
         )

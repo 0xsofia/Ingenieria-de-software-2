@@ -27,6 +27,7 @@ function MisClasesPage() {
   const [abonos, setAbonos] = useState([])
   const [confirmingId, setConfirmingId] = useState(null)
   const [abandoningId, setAbandoningId] = useState(null)
+  const [currentDate] = useState(() => new Date())
 
   const currencyFormatter = useMemo(
     () =>
@@ -265,6 +266,13 @@ function handleRenovarAbono(abono) {
     return currencyFormatter.format(numeric)
   }
 
+  const isAbonoExpired = (abono) => {
+    if (!abono?.fecha_limite_renovacion) return false
+
+    const limite = new Date(`${abono.fecha_limite_renovacion}T23:59:59`)
+    return currentDate > limite
+  }
+
   function getSlug(text) {
     return String(text || '')
       .toLowerCase()
@@ -341,7 +349,7 @@ function handleRenovarAbono(abono) {
                     <th scope="col">Hora</th>
                     <th scope="col">Día</th>
                     <th scope="col">Fecha Lim. Renovación</th>
-                    <th scope="col">Acción</th>
+                    <th scope="col">Renovación</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -370,8 +378,13 @@ function handleRenovarAbono(abono) {
                               className="primary-action"
                               onClick={() => handleRenovarAbono(abono)}
                               // disabled={!abono.renovable || renewingAbonoId === abono.abono_mensual_id}
+                              disabled={isAbonoExpired(abono) || !abono.renovable || renewingAbonoId === abono.abono_mensual_id}
                             >
-                              {renewingAbonoId === abono.abono_mensual_id ? 'Renovando...' : 'Renovar'}
+                              {renewingAbonoId === abono.abono_mensual_id
+                                ? 'Renovando...'
+                                : isAbonoExpired(abono)
+                                ? 'Expirado'
+                                : 'Renovar'}
                             </button>
                           </div>
                         </td>
@@ -476,14 +489,6 @@ function handleRenovarAbono(abono) {
                         </td>
                         <td data-label="Acciones">
                           <div className="mis-clases-table__actions">
-                            <button
-                              type="button"
-                              className="secondary-action"
-                              onClick={() => handleAbandonarListaEspera(reserva)}
-                            >
-                              Abandonar lista de espera
-                            </button>
-
                             <button
                               type="button"
                               className="secondary-action"
