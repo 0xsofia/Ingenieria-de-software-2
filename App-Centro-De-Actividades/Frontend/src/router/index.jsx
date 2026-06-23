@@ -30,6 +30,7 @@ import ListadoProfesoresPage from '../pages/ListadoProfesoresPage.jsx'
 import ListadoPagosPage from '../pages/ListadoPagosPage.jsx'
 import ConfirmarTurnoPage from '../pages/ConfirmarTurnoPage.jsx'
 import MetricasPage from '../pages/MetricasPage.jsx'
+import RealizarRenovacionAbonoPage from '../pages/RenovarAbonoMensualPage.jsx'
 
 
 const router = createBrowserRouter([
@@ -156,6 +157,11 @@ const router = createBrowserRouter([
         path: '/metricas',
         element: <MetricasPage />,
       },
+      {
+        path: "/abonos/renovar/:actividadName", 
+        element: <RealizarRenovacionAbonoPage />
+      }
+      
     ],
   },
   {

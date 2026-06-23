@@ -174,25 +174,47 @@ function MisClasesPage() {
     }
   }
 
-  async function handleRenovarAbono(abono) {
-    if (!abono?.abono_mensual_id || !abono.renovable) {
-      return
-    }
+  // async function handleRenovarAbono(abono) {
+  //   if (!abono?.abono_mensual_id || !abono.renovable) {
+  //     return
+  //   }
 
-    setError('')
-    setFeedback('')
-    setRenewingAbonoId(abono.abono_mensual_id)
+  //   setError('')
+  //   setFeedback('')
+  //   setRenewingAbonoId(abono.abono_mensual_id)
 
-    try {
-      const result = await renovarAbonoMensual({ abono_mensual_id: abono.abono_mensual_id })
-      setFeedback(result.message || 'Abono mensual renovado.')
-      await fetchReservas()
-    } catch (err) {
-      setError(err.data?.message || 'No se pudo renovar el abono mensual.')
-    } finally {
-      setRenewingAbonoId(null)
-    }
+  //   try {
+  //     const result = await renovarAbonoMensual({ abono_mensual_id: abono.abono_mensual_id })
+  //     setFeedback(result.message || 'Abono mensual renovado.')
+  //     await fetchReservas()
+  //   } catch (err) {
+  //     setError(err.data?.message || 'No se pudo renovar el abono mensual.')
+  //   } finally {
+  //     setRenewingAbonoId(null)
+  //   }
+  // }
+function handleRenovarAbono(abono) {
+  if (!abono?.abono_mensual_id) {
+    return
   }
+
+  const coincidenciaActividad = ofertas.find(
+    (o) => String(o.actividad).toLowerCase() === String(abono.actividad).toLowerCase()
+  );
+
+  const precioUnitarioConfigurado = coincidenciaActividad?.precio ?? coincidenciaActividad?.clase?.precio;
+
+  const abonoConPrecio = {
+    ...abono,
+    precio_total: precioUnitarioConfigurado ? Number(precioUnitarioConfigurado) * 4 : abono.precio_total
+  };
+
+  const actividadSlug = getSlug(abono.actividad || 'actividad')
+
+  navigate(`/abonos/renovar/${actividadSlug}`, {
+    state: { abono }
+  })
+}
 
   async function handleConfirmarTurno(oferta) {
     if (!oferta?.lista_espera_id) return
@@ -347,7 +369,7 @@ function MisClasesPage() {
                               type="button"
                               className="primary-action"
                               onClick={() => handleRenovarAbono(abono)}
-                              disabled={!abono.renovable || renewingAbonoId === abono.abono_mensual_id}
+                              // disabled={!abono.renovable || renewingAbonoId === abono.abono_mensual_id}
                             >
                               {renewingAbonoId === abono.abono_mensual_id ? 'Renovando...' : 'Renovar'}
                             </button>

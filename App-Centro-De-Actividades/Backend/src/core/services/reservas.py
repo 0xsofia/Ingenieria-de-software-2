@@ -1878,3 +1878,179 @@ def _titulo_pago(pago, clase):
         return f"Reserva abonada {_clase_actividad_label(clase)} x4"
 
     return f"Clase {_clase_actividad_label(clase)}"
+
+def renovar_abono_mensual(abono_mensual_id):
+    """
+    Procesa la renovación de un abono mensual para el socio autenticado.
+    - Busca la primera clase correspondiente 7 días después del fin del período anterior.
+    - Aplica un 20% de descuento si hoy se encuentra entre los días 1 y 10 del mes.
+    - Enlaza el abono con el anterior mediante 'abono_anterior_id'.
+    """
+  
+    socio_id, error = _require_socio()
+    if error is not None:
+        return error
+
+    # 2. Obtener y validar el abono previo
+    abono_previo = db.session.get(AbonoMensual, abono_mensual_id)
+    if abono_previo is None:
+        return {
+            "status": "error",
+            "message": "El abono mensual que intentás renovar no existe.",
+        }, 404
+
+    if abono_previo.socio_id != socio_id:
+        return {
+            "status": "error",
+            "message": "No tenés permisos para renovar este abono.",
+        }, 403
+
+    fecha_primera_clase_nueva = abono_previo.periodo_fin + timedelta(days=7)
+    
+    clase_base_nueva = (
+        Clase.query.filter(Clase.actividad_id == abono_previo.actividad_id)  
+        .filter(Clase.fecha == fecha_primera_clase_nueva)
+        .filter(Clase.horario_inicio == abono_previo.hora_inicio)
+        .first()
+    )
+
+    if clase_base_nueva is None:
+        return {
+            "status": "error",
+            "message": "No se encontró la primera clase programada para el período siguiente.",
+        }, 404
+
+    clases_abono = _buscar_clases_consecutivas(clase_base_nueva)
+    if len(clases_abono) != CLASES_POR_ABONO:
+        return {
+            "status": "no_cupo",
+            "message": "No se puede renovar el abono porque no existen las 4 clases consecutivas en el nuevo período.",
+            "clase_id": clase_base_nueva.clase_id,
+        }, 409
+
+    for clase in clases_abono:
+        if _cupo_disponible(clase) <= 0:
+            return {
+                "status": "no_cupo",
+                "message": f"Falta de cupo en la clase del día {clase.fecha.strftime('%d/%m/%Y')}.",
+                "clase_id": clase.clase_id,
+            }, 409
+
+        if _tiene_reserva_activa(socio_id, clase.clase_id):
+            return {
+                "status": "already_reserved",
+                "message": f"Ya tenés una reserva activa para la clase del día {clase.fecha.strftime('%d/%m/%Y')}.",
+                "clase_id": clase.clase_id,
+            }, 409
+
+    # 5. Cálculo de montos y regla comercial del descuento (Pagar entre el 1 y el 10)
+    ahora = _now()
+    sancionado = _socio_sancionado_para_descuento(socio_id, ahora)
+    
+    # El descuento se mantiene si hoy está en la ventana del 1 al 10 y no está sancionado
+    descuento_pct = (
+        DESCUENTO_ABONO_PCT
+        if (1 <= ahora.day <= 10) and not sancionado
+        else Decimal("0.00")
+    )
+    
+    monto_bruto = sum((_decimal_precio_clase(clase) for clase in clases_abono), Decimal("0.00"))
+    monto_a_cobrar = _aplicar_descuento(monto_bruto, descuento_pct)
+    requiere_pago = monto_a_cobrar > 0
+
+    # 6. Instanciar el nuevo Abono Mensual encadenado relacionalmente
+    nuevo_abono = AbonoMensual(
+        socio_id=socio_id,
+        actividad_id=abono_previo.actividad_id,
+        abono_anterior_id=abono_previo.abono_mensual_id,  # 👈 Enlace relacional para tracking de la cola
+        periodo_inicio=clases_abono[0].fecha,
+        periodo_fin=clases_abono[-1].fecha,
+        hora_inicio=abono_previo.hora_inicio,
+        dia_semana=abono_previo.dia_semana,
+        descuento_aplicado_pct=descuento_pct,
+        prioridad_renovacion=True,
+        fecha_limite_renovacion=_fin_mes_siguiente(ahora) if descuento_pct > 0 else None,
+        estado="pendiente_pago" if requiere_pago else "activo",
+    )
+    db.session.add(nuevo_abono)
+    db.session.flush()
+
+    # 7. Crear el lote de reservas asociadas al nuevo abono mensual
+    reservas = []
+    for clase in clases_abono:
+        reserva = Reserva(
+            clase_id=clase.clase_id,
+            socio_id=socio_id,
+            abono_mensual_id=nuevo_abono.abono_mensual_id,
+            tipo_reserva="abonada",
+            estado="pendiente_pago" if requiere_pago else "confirmada",
+            confirmada_en=None if requiere_pago else ahora,
+        )
+        db.session.add(reserva)
+        reservas.append(reserva)
+
+    try:
+        db.session.flush()
+    except IntegrityError:
+        db.session.rollback()
+        return {
+            "status": "already_reserved",
+            "message": "Ya tenés una reserva activa en una de las clases del nuevo período.",
+            "clase_id": clase_base_nueva.clase_id,
+        }, 409
+
+    # 8. Flujo final transaccional (Confirmación directa o Pasarela de Pago)
+    if not requiere_pago:
+        db.session.commit()
+        return {
+            "status": "reserved",
+            "message": "Renovación de abono mensual confirmada con éxito.",
+            "abono_mensual_id": nuevo_abono.abono_mensual_id,
+            "reserva_ids": [r.reserva_id for r in reservas],
+            "payment_required": False,
+        }, 200
+
+    # Registrar orden transaccional en tabla de Pagos
+    pago = Pago(
+        socio_id=socio_id,
+        reserva_id=reservas[0].reserva_id,
+        abono_mensual_id=nuevo_abono.abono_mensual_id,
+        proveedor="mercadopago",
+        external_ref=str(uuid.uuid4()),
+        monto_bruto=monto_bruto,
+        descuento_pct=descuento_pct,
+        estado="pendiente",
+    )
+    db.session.add(pago)
+    db.session.commit()
+
+    payment_url = _crear_checkout_mercadopago(pago=pago, reserva=reservas[0], clase=clase_base_nueva)
+
+    if payment_url is None:
+        pago.estado = "error"
+        for r in reservas:
+            r.estado = "pago_fallido"
+        nuevo_abono.estado = "pago_fallido"
+        db.session.commit()
+
+        return {
+            "status": "error",
+            "message": "No se pudo iniciar el checkout en Mercado Pago.",
+            "abono_mensual_id": nuevo_abono.abono_mensual_id,
+        }, 502
+
+    message = "Se aplicó el 20% de descuento por renovación en fecha. Redirigiendo a Mercado Pago." if descuento_pct > 0 else "Redirigiendo a Mercado Pago para completar el pago de renovación."
+
+    return {
+        "status": "payment_required",
+        "message": message,
+        "abono_mensual_id": nuevo_abono.abono_mensual_id,
+        "reserva_id": reservas[0].reserva_id,
+        "reserva_ids": [r.reserva_id for r in reservas],
+        "pago_id": pago.pago_id,
+        "payment_required": True,
+        "payment_url": payment_url,
+        "monto_bruto": str(monto_bruto),
+        "descuento_pct": str(descuento_pct),
+        "monto_a_cobrar": str(monto_a_cobrar),
+    }, 200
