@@ -3,8 +3,10 @@ import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 
 import {
+  cancelarReservaAbonada,
   cancelarReservaEspontanea,
   listarMisClases,
+  renovarAbonoMensual,
   obtenerOfertasActivas,
   confirmarTurno,
   abandonarListaEspera,
@@ -19,8 +21,10 @@ function MisClasesPage() {
   const [error, setError] = useState('')
   const [feedback, setFeedback] = useState('')
   const [cancelingId, setCancelingId] = useState(null)
+  const [renewingAbonoId, setRenewingAbonoId] = useState(null)
   const [pendingCancelReserva, setPendingCancelReserva] = useState(null)
   const [ofertas, setOfertas] = useState([])
+  const [abonos, setAbonos] = useState([])
   const [confirmingId, setConfirmingId] = useState(null)
   const [abandoningId, setAbandoningId] = useState(null)
 
@@ -65,11 +69,6 @@ function MisClasesPage() {
     navigate(`/reservas/${reserva.reserva_id}/qr`)
   }
 
-  useEffect(() => {
-    fetchReservas()
-    fetchOfertas()
-  }, [])
-
   async function fetchReservas() {
     setIsLoading(true)
     setError('')
@@ -78,6 +77,7 @@ function MisClasesPage() {
       const data = await listarMisClases()
       setReservas(data.reservas || [])
       setListaEspera(data.lista_espera || [])
+      setAbonos(data.abonos || [])
     } catch (err) {
       setError(err.data?.message || 'No se pudieron cargar las reservas.')
     } finally {
@@ -93,6 +93,15 @@ function MisClasesPage() {
       console.warn('No se pudieron cargar ofertas', err)
     }
   }
+
+  useEffect(() => {
+    async function fetchAll() {
+      await fetchReservas()
+      await fetchOfertas()
+    }
+
+    fetchAll()
+  }, [])
 
   async function handleCancelarReserva(reserva) {
     if (!reserva?.reserva_id) return
@@ -114,8 +123,13 @@ function MisClasesPage() {
     setFeedback('')
 
     try {
-      const result = await cancelarReservaEspontanea({
+      const cancelarReserva = pendingCancelReserva.tipo_reserva === 'abonada'
+        ? cancelarReservaAbonada
+        : cancelarReservaEspontanea
+
+      const result = await cancelarReserva({
         reserva_id: pendingCancelReserva.reserva_id,
+        confirmar_sancion: Boolean(pendingCancelReserva.requiereConfirmarSancion),
       })
 
       console.log(result)
@@ -129,6 +143,11 @@ function MisClasesPage() {
       } else if (result.reintegro?.estado === 'pendiente') {
         message += ' El reintegro quedo pendiente de configuracion.'
       }
+      if (result.credito?.aplica) {
+        message += ' Se acredito una clase a favor.'
+      } else if (result.credito && !result.credito.aplica) {
+        message += ' No recibiras credito por esta cancelacion.'
+      }
 
       if (!result.scenario_message && result.sancion_aplicada) {
         message += ' Se aplico una sancion por cancelaciones repetidas.'
@@ -139,9 +158,39 @@ function MisClasesPage() {
       await fetchReservas()
       await fetchOfertas()
     } catch (err) {
+      if (err.data?.status === 'requires_sanction_confirmation') {
+        setPendingCancelReserva((current) => ({
+          ...current,
+          requiereConfirmarSancion: true,
+          sancionMessage: err.data.message,
+        }))
+        setError('')
+        return
+      }
+
       setError(err.data?.message || 'No se pudo cancelar la reserva.')
     } finally {
       setCancelingId(null)
+    }
+  }
+
+  async function handleRenovarAbono(abono) {
+    if (!abono?.abono_mensual_id || !abono.renovable) {
+      return
+    }
+
+    setError('')
+    setFeedback('')
+    setRenewingAbonoId(abono.abono_mensual_id)
+
+    try {
+      const result = await renovarAbonoMensual({ abono_mensual_id: abono.abono_mensual_id })
+      setFeedback(result.message || 'Abono mensual renovado.')
+      await fetchReservas()
+    } catch (err) {
+      setError(err.data?.message || 'No se pudo renovar el abono mensual.')
+    } finally {
+      setRenewingAbonoId(null)
     }
   }
 
@@ -261,6 +310,57 @@ function MisClasesPage() {
             ) : null}
 
             <div className="mis-clases-table-wrapper">
+              <h2>Abonos Mensuales</h2>
+              <table className="mis-clases-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Actividad</th>
+                    <th scope="col">Inicio y Fin</th>
+                    <th scope="col">Hora</th>
+                    <th scope="col">Día</th>
+                    <th scope="col">Fecha Lim. Renovación</th>
+                    <th scope="col">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {abonos.length === 0 ? (
+                    <tr>
+                      <td className="mis-clases-table__empty" colSpan={6}>
+                        Aún no hay abonos mensuales registrados.
+                      </td>
+                    </tr>
+                  ) : (
+                    abonos.map((abono) => (
+                      <tr key={`abono-${abono.abono_mensual_id}`}>
+                        <td data-label="Actividad">{abono.actividad || '-'}</td>
+                        <td data-label="Inicio y Fin">
+                          {abono.periodo_inicio ? abono.periodo_inicio.split('-').reverse().join('/') : '-'} - {abono.periodo_fin ? abono.periodo_fin.split('-').reverse().join('/') : '-'}
+                        </td>
+                        <td data-label="Hora">{abono.hora_inicio || '--:--'}</td>
+                        <td data-label="Día">{abono.dia_semana || '-'}</td>
+                        <td data-label="Fecha Lim. Renovación">
+                          {abono.fecha_limite_renovacion ? abono.fecha_limite_renovacion.split('-').reverse().join('/') : '-'}
+                        </td>
+                        <td data-label="Acción">
+                          <div className="mis-clases-table__actions">
+                            <button
+                              type="button"
+                              className="primary-action"
+                              onClick={() => handleRenovarAbono(abono)}
+                              disabled={!abono.renovable || renewingAbonoId === abono.abono_mensual_id}
+                            >
+                              {renewingAbonoId === abono.abono_mensual_id ? 'Renovando...' : 'Renovar'}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mis-clases-table-wrapper">
               <h2>En lista de espera</h2>
               <table className="mis-clases-table">
                 <thead>
@@ -378,7 +478,9 @@ function MisClasesPage() {
                             >
                               {cancelingId === reserva.reserva_id
                                 ? 'Cancelando...'
-                                : 'Cancelar reserva'}
+                                : reserva.tipo_reserva === 'abonada'
+                                  ? 'Cancelar reserva abonada'
+                                  : 'Cancelar reserva'}
                             </button>
 
                             {!reserva.puede_cancelar ? (
@@ -408,7 +510,18 @@ function MisClasesPage() {
                   aria-labelledby="cancelar-reserva-title"
                 >
                   <h2 id="cancelar-reserva-title">Confirmar cancelacion</h2>
-                  <p>¿Seguro que quiere cancelar la reserva?</p>
+                  {pendingCancelReserva.requiereConfirmarSancion ? (
+                    <p>
+                      {pendingCancelReserva.sancionMessage ||
+                        'Esta cancelacion aplica una sancion y perderas el descuento del abono del mes siguiente.'}
+                    </p>
+                  ) : pendingCancelReserva.tipo_reserva === 'abonada' ? (
+                    <p>
+                      ¿Seguro que quiere cancelar la reserva abonada?
+                    </p>
+                  ) : (
+                    <p>¿Seguro que quiere cancelar la reserva?</p>
+                  )}
                   <div className="mis-clases-modal__actions">
                     <button
                       type="button"
@@ -424,7 +537,11 @@ function MisClasesPage() {
                       onClick={handleConfirmCancelReserva}
                       disabled={Boolean(cancelingId)}
                     >
-                      {cancelingId ? 'Cancelando...' : 'Aceptar'}
+                      {cancelingId
+                        ? 'Cancelando...'
+                        : pendingCancelReserva.requiereConfirmarSancion
+                          ? 'Confirmar sancion'
+                          : 'Aceptar'}
                     </button>
                   </div>
                 </section>

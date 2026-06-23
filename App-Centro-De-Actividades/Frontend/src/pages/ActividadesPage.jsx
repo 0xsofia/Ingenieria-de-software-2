@@ -141,6 +141,11 @@ export default function ActividadesPage() {
             <p className="auth-subtitle">Reservas</p>
             <h1>Actividades y horarios</h1>
           </div>
+          {canReserve ? (
+            <Link className="secondary-action" to="/abonos">
+              Ver abonos
+            </Link>
+          ) : null}
         </div>
 
         <div className="actividades-page__content">
@@ -249,6 +254,10 @@ function getSlug(nombre) {
 }
 
 function isClaseDisponible(clase, currentTime) {
+  if (clase?.ya_reservado) {
+    return false
+  }
+
   if (!clase?.fecha || !clase?.horario_inicio) {
     return true
   }

@@ -25,6 +25,15 @@ const USER_COLUMNS = [
     header: 'Teléfono',
   },
   {
+    key: 'estado',
+    header: 'Estado',
+    render: (user) => (
+      <span className={`sectioned-table-list__badge ${user.estado === 'bloqueado' ? 'banner--error' : ''}`}>
+        {user.estado === 'bloqueado' ? 'Bloqueado' : 'Activo'}
+      </span>
+    ),
+  },
+  {
     key: 'roles',
     header: 'Roles',
     render: (user) => (
@@ -39,7 +48,7 @@ const USER_COLUMNS = [
   },
 ]
 
-export default function ListadoUsuarios({ users, emptyMessage, canManageUsers }) {
+export default function ListadoUsuarios({ users, emptyMessage, canManageUsers, onBlockUser, onUnblockUser }) {
   const sections = [
     {
       key: 'usuarios',
@@ -65,6 +74,22 @@ export default function ListadoUsuarios({ users, emptyMessage, canManageUsers })
                 >
                   Modificar
                 </Link>
+                {user.estado === 'bloqueado' ? (
+                  <button
+                    className="primary-action"
+                    onClick={() => onUnblockUser(user)}
+                  >
+                    Desbloquear
+                  </button>
+                ) : (
+                  <button
+                    className="primary-action danger"
+                    style={{ backgroundColor: '#ef4444', borderColor: '#dc2626' }}
+                    onClick={() => onBlockUser(user)}
+                  >
+                    Bloquear
+                  </button>
+                )}
               </div>
             )
           : undefined

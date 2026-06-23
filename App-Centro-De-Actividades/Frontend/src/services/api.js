@@ -10,15 +10,21 @@ export const endpoints = {
   crearClase: '/api/clase/crear',
   listarClases: '/api/clase/lista', 
   actualizarClase:  (claseId) => `/api/clase/actualizar/${claseId}`,
+  cancelarClase: (claseId) => `/api/clase/cancelar/${claseId}`,
   obtenerProfesores: '/api/profesor/lista',
   crearProfesor: '/api/profesor/crear',
   actividades: '/api/actividades',
   eliminarProfesor: (id) => `/api/profesor/${id}`,
   reservaEspontanea: '/api/reservas/espontanea',
+  reservaAbonada: '/api/reservas/abonada',
   reservaEspontaneaListaEspera: '/api/reservas/espontanea/lista-espera',
   reservaEspontaneaPagoRetorno: '/api/reservas/espontanea/pago-retorno',
   misClases: '/api/reservas/mis-clases',
+  misAbonos: '/api/reservas/mis-abonos',
+  renovarAbonoMensual: '/api/reservas/abonos/renovar',
+  cancelarAbonoMensual: '/api/reservas/abonos/cancelar',
   reservaEspontaneaCancelar: '/api/reservas/espontanea/cancelar',
+  reservaAbonadaCancelar: '/api/reservas/abonada/cancelar',
   abandonarListaEspera: '/api/reservas/lista-espera/abandonar',
   ofertasActivas: '/api/reservas/ofertas-activas',
   confirmarTurno: '/api/reservas/confirmar',
@@ -27,9 +33,9 @@ export const endpoints = {
   GenerarQR: '/api/asistencia/generarQR/<int:reserva_id>',
   listarPagos: '/api/pagos/lista',
   recuperarContrasena: '/api/recuperar-contrasena',
-  cambiarContrasena: '/api/cambiar-contrasena'
+  cambiarContrasena: '/api/cambiar-contrasena',
+  metricas : 'api/metricas'
 }
 
 endpoints.confirmacionTurno = (token) => `/api/confirmaciones/turno/${token}`
 endpoints.confirmarTurnoToken = (token) => `/api/confirmaciones/turno/${token}/confirmar`
-

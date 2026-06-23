@@ -3,6 +3,7 @@ from flask_login import UserMixin, current_user, login_user, logout_user
 
 from src.core.bcrypt_and_session import bcrypt, login_manager
 from src.core.database import db
+from src.core.models.credito import Credito
 from src.core.models.persona import Persona, Rol
 
 PENDING_LOGIN_KEY = "pending_login"
@@ -25,6 +26,10 @@ class AuthenticatedUser(UserMixin):
         self.apellido = persona.apellido
         self.dni = persona.dni
         self.intereses = getattr(persona, "intereses", "")
+        self.descuento_bloqueado_hasta = (
+            persona.socio.descuento_bloqueado_hasta if persona.socio is not None else None
+        )
+        self.creditos_disponibles = _contar_creditos_disponibles(persona.persona_id)
         self.display_name = persona.nombre_completo
         self.role_id = role.rol_id
         self.role = normalized_role
@@ -272,7 +277,23 @@ def _build_auth_payload(authenticated_user):
         "role": authenticated_user.role,
         "role_label": authenticated_user.role_label,
         "permissions": authenticated_user.permissions,
+        "descuento_bloqueado_hasta": (
+            authenticated_user.descuento_bloqueado_hasta.isoformat()
+            if authenticated_user.descuento_bloqueado_hasta is not None
+            else None
+        ),
+        "creditos_disponibles": authenticated_user.creditos_disponibles,
     }
+
+
+def _contar_creditos_disponibles(socio_id):
+    return (
+        Credito.query.filter_by(socio_id=socio_id)
+        .filter(Credito.reserva_que_consume_id.is_(None))
+        .filter(Credito.consumido_en.is_(None))
+        .filter(db.func.lower(Credito.estado) == "disponible")
+        .count()
+    )
 
 
 def _build_identity(persona):

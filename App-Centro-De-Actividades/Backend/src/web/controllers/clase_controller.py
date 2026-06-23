@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from flask_login import current_user
 
 from src.core.database import db
 from src.core.models.clase import Clase
@@ -10,6 +11,7 @@ from src.core.services.clase_service import (
     obtener_clases,
     obtener_detalle_clase_con_socios,
     actualizar_clase,
+    cancelar_clase,
 )
 
 clase_bp = Blueprint("clase", __name__, url_prefix="/api/clase")
@@ -35,6 +37,7 @@ def listar_clases():
     horario = (request.args.get("horario") or "").strip()
     clases = obtener_clases(actividad, fecha, horario)
     cupos_ocupados = _obtener_cupos_ocupados(clases)
+    clases_reservadas = _obtener_clases_reservadas_por_socio(clases)
     clases_data = [
         {
             "clase_id": clase.clase_id,
@@ -50,6 +53,7 @@ def listar_clases():
             "tipo_clase": clase.tipo_clase.value,
             "profesor_id": clase.profesor_id,
             "profesor_nombre": clase.profesor.nombre if clase.profesor else None,
+            "ya_reservado": clase.clase_id in clases_reservadas,
         }
         for clase in clases
     ]
@@ -86,6 +90,25 @@ def _obtener_cupos_ocupados(clases):
     return {clase_id: int(total) for clase_id, total in rows}
 
 
+def _obtener_clases_reservadas_por_socio(clases):
+    if not current_user.is_authenticated or getattr(current_user, "role", None) != "socio":
+        return set()
+
+    clase_ids = [clase.clase_id for clase in clases]
+    if not clase_ids:
+        return set()
+
+    rows = (
+        db.session.query(Reserva.clase_id)
+        .filter(Reserva.clase_id.in_(clase_ids))
+        .filter(Reserva.socio_id == current_user.persona_id)
+        .filter(Reserva.estado == "confirmada")
+        .all()
+    )
+
+    return {clase_id for (clase_id,) in rows}
+
+
 @clase_bp.get("/<int:clase_id>/detalle")
 def obtener_detalle_clase(clase_id):
     """Obtiene el detalle de una clase con los socios registrados y su estado de asistencia."""
@@ -97,3 +120,9 @@ def obtener_detalle_clase(clase_id):
         return jsonify({"status": "error", "message": "La clase no fue encontrada."}), 404
 
     return jsonify(clase_data), status_code
+
+
+@clase_bp.post('/cancelar/<int:clase_id>')
+def cancelar_clase_controller(clase_id):
+    body, status_code = cancelar_clase(clase_id)
+    return jsonify(body), status_code

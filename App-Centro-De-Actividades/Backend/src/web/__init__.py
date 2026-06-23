@@ -23,6 +23,7 @@ from src.web.controllers.pagos_controller import pagos_bp
 from src.web.controllers.confirmaciones import confirmaciones_bp
 from src.web.controllers.recuperar_contrasena import recuperar_contrasena_bp
 from src.web.controllers.cambiar_contrasena import cambiar_contrasena_bp
+from src.web.controllers.metricas_controller import metricas_bp
 
 from src.core.bcrypt_and_session import bcrypt, cipher, login_manager
 
@@ -47,8 +48,12 @@ def create_app(env=None, static_folder="../../static"):
     allowed_origins = [
         origin
         for origin in {
+            "http://localhost:5137",
+            "http://127.0.0.1:5137",
             "http://localhost:5173",
+            "https://xthzck49-5173.brs.devtunnels.ms",
             "http://127.0.0.1:5173",
+            "https://pcverde-linux.tail9449ba.ts.net:8443",
             frontend_origin,
         }
         if origin
@@ -59,11 +64,7 @@ def create_app(env=None, static_folder="../../static"):
         supports_credentials=True,  
         resources={
             r"/api/*": {
-                "origins": [
-                    "https://ingenieria-de-software-2-1.onrender.com",
-                    "http://localhost:5173",
-                    "http://127.0.0.1:5173"
-                ],
+                "origins": allowed_origins + ["https://ingenieria-de-software-2-1.onrender.com"],
                 "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
                 "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
                 "expose_headers": ["Set-Cookie"],
@@ -94,6 +95,7 @@ def create_app(env=None, static_folder="../../static"):
     app.register_blueprint(confirmaciones_bp)
     app.register_blueprint(recuperar_contrasena_bp)
     app.register_blueprint(cambiar_contrasena_bp)
+    app.register_blueprint(metricas_bp)
     
     @app.cli.command(name="reset_db")
     def reset_db():

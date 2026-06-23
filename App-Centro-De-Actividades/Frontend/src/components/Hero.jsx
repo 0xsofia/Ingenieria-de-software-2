@@ -13,8 +13,10 @@ function Hero({ role, onLogout, isLoggingOut = false }) {
   ]
 
   if (role === 'administrador') {
+    navigationItems.splice(2, 0, { to: '/metricas', label: 'Métricas' })  
     navigationItems.splice(1, 0, { to: '/usuarios', label: 'Usuarios' })
     navigationItems.splice(2, 0, { to: '/pagos', label: 'Pagos' })  
+
   }
 
   if (role === 'empleado') {
@@ -23,6 +25,7 @@ function Hero({ role, onLogout, isLoggingOut = false }) {
   }
 
   if (role === 'socio') {
+    navigationItems.splice(2, 0, { to: '/abonos', label: 'Abonos' })
     navigationItems.splice(2, 0, { to: '/mis-clases', label: 'Mis clases' })
   }
 

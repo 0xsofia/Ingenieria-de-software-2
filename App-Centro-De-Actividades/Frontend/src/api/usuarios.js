@@ -23,3 +23,13 @@ export async function modificarUsuario(personaId, payload) {
   const { data } = await http.put(`${endpoints.users}/${personaId}`, payload)
   return data
 }
+
+export async function bloquearUsuario(personaId, payload) {
+  const { data } = await http.put(`${endpoints.users}/${personaId}/bloquear`, payload)
+  return data
+}
+
+export async function desbloquearUsuario(personaId) {
+  const { data } = await http.put(`${endpoints.users}/${personaId}/desbloquear`)
+  return data
+}

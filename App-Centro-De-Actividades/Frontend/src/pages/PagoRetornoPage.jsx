@@ -10,10 +10,12 @@ function PagoRetornoPage() {
   const params = useMemo(() => new URLSearchParams(location.search), [location.search])
   const reservaIdParam = params.get('reserva_id')
   const statusParam =
-    params.get('status') ||
     params.get('collection_status') ||
     params.get('payment_status') ||
-    params.get('status_detail')
+    params.get('status_detail') ||
+    params.get('status')
+  const paymentIdParam = params.get('payment_id') || params.get('collection_id')
+  const externalReferenceParam = params.get('external_reference')
 
   const [isSubmitting, setIsSubmitting] = useState(true)
   const [result, setResult] = useState(null)
@@ -39,6 +41,8 @@ function PagoRetornoPage() {
         const response = await confirmarPagoRetorno({
           reserva_id,
           status: statusParam,
+          payment_id: paymentIdParam,
+          external_reference: externalReferenceParam,
         })
 
         if (cancelled) return
@@ -63,7 +67,7 @@ function PagoRetornoPage() {
     return () => {
       cancelled = true
     }
-  }, [reservaIdParam, statusParam])
+  }, [reservaIdParam, statusParam, paymentIdParam, externalReferenceParam])
 
   function handleBackHome() {
     startTransition(() => {
