@@ -6,13 +6,73 @@ import uuid
 
 from src.core.bcrypt_and_session import bcrypt
 from src.core.database import db
+from src.core.enums.clase_enum import ActividadEnum, NivelEnum, TipoClaseEnum
 from src.core.models.clase import Clase
 from src.core.models.pago import Pago
 from src.core.models.persona import Persona, PersonaRolPuente, Rol, Socio
+from src.core.models.profesor import Profesor
 from src.core.models.reserva import Reserva
+from src.core.seeds.clases import get_seed_reference_datetime
 
 DEFAULT_PASSWORD = "123456."
 
+REINTEGROS_CLASS_TEMPLATES = {
+    "refund": {
+        "actividad": "Basquet",
+        "cancha": "Cancha Reintegro 1",
+        "nivel": "Principiante",
+        "cupos": 10,
+        "profesor_dni": "12345678",
+        "precio": Decimal("5000.00"),
+        "dias_despues": 3,
+        "hora": 10,
+        "minuto": 0,
+    },
+    "no_refund": {
+        "actividad": "Voley",
+        "cancha": "Cancha Reintegro 2",
+        "nivel": "Intermedio",
+        "cupos": 10,
+        "profesor_dni": "87654321",
+        "precio": Decimal("5000.00"),
+        "dias_despues": 1,
+        "hora": 10,
+        "minuto": 0,
+    },
+    "cancelled_1": {
+        "actividad": "Futbol",
+        "cancha": "Cancha Reintegro 3",
+        "nivel": "Principiante",
+        "cupos": 10,
+        "profesor_dni": "12345678",
+        "precio": Decimal("5000.00"),
+        "dias_despues": 5,
+        "hora": 10,
+        "minuto": 0,
+    },
+    "cancelled_2": {
+        "actividad": "Futbol",
+        "cancha": "Cancha Reintegro 4",
+        "nivel": "Intermedio",
+        "cupos": 10,
+        "profesor_dni": "87654321",
+        "precio": Decimal("5000.00"),
+        "dias_despues": 6,
+        "hora": 10,
+        "minuto": 0,
+    },
+    "cancelled_3": {
+        "actividad": "Futbol",
+        "cancha": "Cancha Reintegro 5",
+        "nivel": "Avanzado",
+        "cupos": 10,
+        "profesor_dni": "12345678",
+        "precio": Decimal("5000.00"),
+        "dias_despues": 7,
+        "hora": 10,
+        "minuto": 0,
+    },
+}
 
 def seed_reintegros_escenarios(seed_datetime=None):
     """Crea datos semilla para probar los 4 escenarios de reintegro.
@@ -33,9 +93,9 @@ def seed_reintegros_escenarios(seed_datetime=None):
     else:
         now = seed_datetime.astimezone(timezone.utc)
 
-    target_classes = _resolve_target_classes(now)
+    target_classes = _ensure_reintegros_classes(seed_datetime)
     if target_classes is None:
-        print("⚠️  [SEED] No hay clases base suficientes; se omiten seeds de reintegros.")
+        print("⚠️  [SEED] Error generando clases de reintegro.")
         return
 
     rol_socio = _get_or_create_role("socio")
@@ -185,47 +245,86 @@ def _ensure_socio_user(*, email: str, dni: str, nombre: str, apellido: str, rol:
     return persona.persona_id
 
 
-def _resolve_target_classes(now: datetime):
-    all_classes = Clase.query.order_by(Clase.fecha.asc(), Clase.horario_inicio.asc()).all()
-    future_classes = [
-        clase
-        for clase in all_classes
-        if _clase_inicio(clase) > now
-    ]
+def _ensure_reintegros_classes(seed_datetime=None):
+    reference = get_seed_reference_datetime(seed_datetime)
+    classes = {}
 
-    refund_class = next(
-        (
-            clase
-            for clase in future_classes
-            if _clase_inicio(clase) - now > timedelta(hours=48)
-        ),
-        None,
-    )
-    no_refund_class = next(
-        (
-            clase
-            for clase in future_classes
-            if timedelta(0) < _clase_inicio(clase) - now <= timedelta(hours=48)
-        ),
-        None,
-    )
-
-    if refund_class is None or no_refund_class is None:
-        return None
-
-    excluded_ids = {refund_class.clase_id, no_refund_class.clase_id}
-    cancelled_classes = [
-        clase for clase in all_classes if clase.clase_id not in excluded_ids
-    ][:3]
-
-    if len(cancelled_classes) < 3:
-        return None
+    for key, template in REINTEGROS_CLASS_TEMPLATES.items():
+        class_datetime = (
+            reference.replace(
+                hour=template["hora"],
+                minute=template["minuto"],
+                second=0,
+                microsecond=0,
+            )
+            + timedelta(days=template["dias_despues"])
+        )
+        classes[key] = _get_or_create_clase(
+            {
+                **template,
+                "fecha": class_datetime.date(),
+                "horario_inicio": class_datetime.time(),
+            }
+        )
 
     return {
-        "refund": refund_class,
-        "no_refund": no_refund_class,
-        "cancelled": cancelled_classes,
+        "refund": classes["refund"],
+        "no_refund": classes["no_refund"],
+        "cancelled": [classes["cancelled_1"], classes["cancelled_2"], classes["cancelled_3"]],
     }
+
+
+def _get_or_create_clase(clase_data):
+    profesor = Profesor.query.filter_by(dni=clase_data["profesor_dni"]).first()
+    if profesor is None:
+        raise RuntimeError(
+            f"No existe el profesor con DNI {clase_data['profesor_dni']} para el seed de reintegros."
+        )
+
+    actividad = ActividadEnum(clase_data["actividad"])
+    nivel = NivelEnum(clase_data["nivel"])
+    fecha = clase_data["fecha"]
+    horario_inicio = clase_data["horario_inicio"]
+    horario_fin = (datetime.combine(fecha, horario_inicio) + timedelta(hours=1)).time()
+
+    clase = Clase.query.filter_by(
+        profesor_id=profesor.profesor_id,
+        fecha=fecha,
+        horario_inicio=horario_inicio,
+        actividad=actividad,
+    ).first()
+
+    tipo_clase = (
+        TipoClaseEnum.PARTICULAR
+        if int(clase_data["cupos"]) == 1
+        else TipoClaseEnum.GRUPAL
+    )
+
+    if clase is None:
+        clase = Clase(
+            actividad=actividad,
+            fecha=fecha,
+            horario_inicio=horario_inicio,
+            horario_fin=horario_fin,
+            cancha=clase_data["cancha"],
+            nivel=nivel,
+            cupos=clase_data["cupos"],
+            precio=clase_data["precio"],
+            tipo_clase=tipo_clase,
+            profesor_id=profesor.profesor_id,
+        )
+        db.session.add(clase)
+    else:
+        clase.cancha = clase_data["cancha"]
+        clase.nivel = nivel
+        clase.cupos = clase_data["cupos"]
+        clase.precio = clase_data["precio"]
+        clase.tipo_clase = tipo_clase
+        clase.horario_fin = horario_fin
+        clase.is_eliminated = False
+
+    db.session.flush()
+    return clase
 
 
 def _clase_inicio(clase: Clase) -> datetime:
