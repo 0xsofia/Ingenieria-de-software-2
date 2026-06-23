@@ -213,7 +213,7 @@ export default function ActividadesPage() {
                   {
                     key: 'cupos',
                     header: 'Cupos',
-                    render: (clase) => `${clase.cupos_ocupados || 0}/${clase.cupos}`,
+                    render: (clase) => `${Math.max(Number(clase.cupos || 0) - Number(clase.cupos_ocupados || 0), 0)} disponibles`,
                   },
                 ]}
                 getRowKey={(clase) => clase.clase_id}
