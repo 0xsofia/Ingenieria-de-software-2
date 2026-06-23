@@ -469,14 +469,6 @@ function MisClasesPage() {
                             <button
                               type="button"
                               className="secondary-action"
-                              onClick={() => handleAbandonarListaEspera(reserva)}
-                            >
-                              Abandonar lista de espera
-                            </button>
-
-                            <button
-                              type="button"
-                              className="secondary-action"
                               onClick={() => handleGenerarQR(reserva)}
                             >
                               Generar QR
