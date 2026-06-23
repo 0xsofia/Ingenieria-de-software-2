@@ -69,7 +69,7 @@ def send_employee_access_email(*, recipient_email, recipient_name, temporary_pas
 
 def send_password_recovery_email(*, recipient_email, recipient_name, token):
     mail_settings = _load_mailjet_settings()
-    frontend_url = current_app.config.get('FRONTEND_BASE_URL') or 'http://localhost:5173'
+    frontend_url = current_app.config.get('FRONTEND_BASE_URL', 'http://localhost:5173').rstrip('/')
     recovery_url = f"{frontend_url}/cambiar-contrasena/{token}"
     
     subject = 'Recuperación de contraseña - Centro de Actividades'
