@@ -280,7 +280,7 @@ function handleRenovarAbono(abono) {
     if (canRenovarAbono(abono)) return 'Renovar'
     if (abono?.renovado) return 'Abono pago'
     if (isAbonoExpired(abono)) return 'Expirado'
-    return 'Renovar'
+    return 'Próximo'
   }
 
   function getSlug(text) {
