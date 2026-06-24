@@ -62,6 +62,8 @@ def enviar_mensaje_telegram(socio_id, lista_espera_id, clase_data, token):
     telegram_bot_token = (os.environ.get('TELEGRAM_BOT_TOKEN') or '').strip()
     telegram_chat_id = (os.environ.get('TELEGRAM_CHAT_ID') or '').strip()
     frontend_base_url = (os.environ.get('FRONTEND_BASE_URL') or 'http://localhost:5173').strip()
+    if not frontend_base_url.endswith('/'):
+        frontend_base_url += '/'
     
     if not telegram_bot_token:
         print("WARNING: TELEGRAM_BOT_TOKEN no configurado, saltando envío")
@@ -79,7 +81,8 @@ def enviar_mensaje_telegram(socio_id, lista_espera_id, clase_data, token):
         cancha = clase_data.get('cancha', '')
         
         confirmacion_url = f"{frontend_base_url}confirmar-turno/{token}"
-        
+
+        print(f"Enviando mensaje Telegram a socio {socio_id} con URL de confirmación: {confirmacion_url}")    
        
         persona = Persona.query.get(socio_id)
         socio_nombre = persona.nombre_completo if persona else 'socio'
@@ -195,6 +198,8 @@ def notificar_cancelacion_clase(socio_id, lista_espera_id, clase_data, token):
     telegram_bot_token = (os.environ.get('TELEGRAM_BOT_TOKEN') or '').strip()
     telegram_chat_id = (os.environ.get('TELEGRAM_CHAT_ID') or '').strip()
     frontend_base_url = (os.environ.get('FRONTEND_BASE_URL') or 'http://localhost:5173').strip()
+    if not frontend_base_url.endswith('/'):
+        frontend_base_url += '/'
     
     if not telegram_bot_token:
         print("WARNING: TELEGRAM_BOT_TOKEN no configurado, saltando envío")
