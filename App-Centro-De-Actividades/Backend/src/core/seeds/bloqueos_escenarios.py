@@ -40,6 +40,17 @@ BLOQUEO_CLASS_TEMPLATES = {
         "hora": 18,
         "minuto": 0,
     },
+    "abandonar_espera": {
+        "actividad": "Basquet",
+        "cancha": "Cancha Bloqueo 3",
+        "nivel": "Principiante",
+        "cupos": 1,
+        "profesor_dni": "12345678",
+        "precio": Decimal("5000.00"),
+        "dias_despues": 5,
+        "hora": 19,
+        "minuto": 0,
+    },
 }
 
 
@@ -56,7 +67,7 @@ def seed_bloqueos_escenarios(seed_datetime=None):
         apellido="Perez",
         rol=rol_socio,
     )
-    _set_sancion(bloqueo1_id, now.date() + timedelta(days=30))
+    _set_sancion(bloqueo1_id, None)
 
     # bloqueo2: escenarios 2 y 4, con reserva paga y sin lista de espera.
     bloqueo2_id = _ensure_socio_user(
@@ -66,7 +77,7 @@ def seed_bloqueos_escenarios(seed_datetime=None):
         apellido="Perez",
         rol=rol_socio,
     )
-    _set_sancion(bloqueo2_id, None)
+    _set_sancion(bloqueo2_id, now.date() + timedelta(days=30))
     _ensure_reserva_confirmada(
         reserva_id=8102,
         clase_id=clases["sin_lista_espera"].clase_id,
@@ -100,28 +111,58 @@ def seed_bloqueos_escenarios(seed_datetime=None):
         monto=Decimal("5000.00"),
     )
 
-    espera_id = _ensure_socio_user(
-        email="espera_bloqueo@centro.test",
+    mate_id = _ensure_socio_user(
+        email="mate@centro.test",
         dni="40000004",
-        nombre="Jorge",
-        apellido="Fernandez",
+        nombre="Mateo",
+        apellido="Centro",
         rol=rol_socio,
+        password="123456.",
     )
-    _set_sancion(espera_id, None)
+    _set_sancion(mate_id, None)
+
+    # 1) Waitlist test "confirmar turno" (Waitlist 2)
     _ensure_lista_espera(
         clase_id=clases["con_lista_espera"].clase_id,
-        socio_id=espera_id,
+        socio_id=mate_id,
+        posicion=1,
+    )
+
+    # 2) Waitlist test "abandonar lista de espera" (Waitlist 1)
+    dummy_id = _ensure_socio_user(
+        email="dummy_abandonar@centro.test",
+        dni="40000005",
+        nombre="Dummy",
+        apellido="Ocupa",
+        rol=rol_socio,
+    )
+    _set_sancion(dummy_id, None)
+    _ensure_reserva_confirmada(
+        reserva_id=8104,
+        clase_id=clases["abandonar_espera"].clase_id,
+        socio_id=dummy_id,
+        confirmada_en=now,
+    )
+    _ensure_pago_aprobado(
+        socio_id=dummy_id,
+        reserva_id=8104,
+        monto=Decimal("5000.00"),
+    )
+
+    _ensure_lista_espera(
+        clase_id=clases["abandonar_espera"].clase_id,
+        socio_id=mate_id,
         posicion=1,
     )
 
     db.session.commit()
 
     print("[SEED] Escenarios de bloqueo/desbloqueo listos:")
-    print("   Password para todos: 123456.")
-    print("   - bloqueo1@centro.test (sin reservas, con sanciones)")
-    print("   - bloqueo2@centro.test (reserva paga, sin lista de espera)")
+    print("   Password general: 123456. (mate@centro.com usa 123456 sin punto)")
+    print("   - bloqueo1@centro.test (sin reservas, sin sanciones)")
+    print("   - bloqueo2@centro.test (reserva paga, sin lista de espera, con sanciones)")
     print("   - bloqueo3@centro.test (reserva paga, con lista de espera)")
-    print("   - espera_bloqueo@centro.test (siguiente en lista de espera)")
+    print("   - mate@centro.com (siguiente en 2 listas de espera)")
 
 
 def _as_utc(seed_datetime=None):
@@ -139,15 +180,12 @@ def _ensure_bloqueo_classes(seed_datetime=None):
     classes = {}
 
     for key, template in BLOQUEO_CLASS_TEMPLATES.items():
-        class_datetime = (
-            reference.replace(
-                hour=template["hora"],
-                minute=template["minuto"],
-                second=0,
-                microsecond=0,
-            )
-            + timedelta(days=template["dias_despues"])
-        )
+        class_datetime = reference.replace(
+            hour=template["hora"],
+            minute=template["minuto"],
+            second=0,
+            microsecond=0,
+        ) + timedelta(days=template["dias_despues"])
         classes[key] = _get_or_create_clase(
             {
                 **template,
@@ -224,7 +262,15 @@ def _get_or_create_role(role_name: str) -> Rol:
     return role
 
 
-def _ensure_socio_user(*, email: str, dni: str, nombre: str, apellido: str, rol: Rol) -> int:
+def _ensure_socio_user(
+    *,
+    email: str,
+    dni: str,
+    nombre: str,
+    apellido: str,
+    rol: Rol,
+    password: str = DEFAULT_PASSWORD,
+) -> int:
     normalized_email = (email or "").strip().lower()
     normalized_dni = (dni or "").strip()
 
@@ -232,7 +278,7 @@ def _ensure_socio_user(*, email: str, dni: str, nombre: str, apellido: str, rol:
     if persona is None:
         persona = Persona.query.filter_by(dni=normalized_dni).first()
 
-    password_hash = bcrypt.generate_password_hash(DEFAULT_PASSWORD).decode("utf-8")
+    password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
 
     if persona is None:
         persona = Persona(
@@ -267,7 +313,9 @@ def _ensure_socio_user(*, email: str, dni: str, nombre: str, apellido: str, rol:
 
     existing_roles = {assignment.rol_id for assignment in persona.persona_roles}
     if rol.rol_id not in existing_roles:
-        db.session.add(PersonaRolPuente(persona_id=persona.persona_id, rol_id=rol.rol_id))
+        db.session.add(
+            PersonaRolPuente(persona_id=persona.persona_id, rol_id=rol.rol_id)
+        )
         db.session.flush()
 
     return persona.persona_id
@@ -280,7 +328,9 @@ def _set_sancion(persona_id: int, blocked_until):
         db.session.flush()
 
 
-def _ensure_reserva_confirmada(*, reserva_id: int, clase_id: int, socio_id: int, confirmada_en: datetime):
+def _ensure_reserva_confirmada(
+    *, reserva_id: int, clase_id: int, socio_id: int, confirmada_en: datetime
+):
     reserva = Reserva.query.get(reserva_id)
     if reserva is None:
         reserva = Reserva(

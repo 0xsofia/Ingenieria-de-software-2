@@ -350,9 +350,9 @@ def _build_waitlist_message(clase, promoted_entry):
     socio = db.session.get(Persona, promoted_entry.socio_id)
     socio_nombre = socio.nombre_completo if socio is not None else "Socio"
     return (
-        f'Se ha asignado el cupo de la clase de "{_clase_actividad_label(clase)}" '
-        f'de las "{_clase_hora_label(clase)}" el dia "{_clase_fecha_label(clase)}" '
-        f"al siguiente en la lista de espera. Socio: {socio_nombre}"
+        f'Se ha enviado una notificacion al siguiente en la lista de espera para que confirme el turno de la clase de "{_clase_actividad_label(clase)}" '
+        f'de las "{_clase_hora_label(clase)}" el dia "{_clase_fecha_label(clase)}". '
+        f"Socio: {socio_nombre}"
     )
 
 
