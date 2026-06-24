@@ -51,7 +51,7 @@ def create_app(env=None, static_folder="../../static"):
             "http://localhost:5137",
             "http://127.0.0.1:5137",
             "http://localhost:5173",
-            "https://npz7k88s-5173.brs.devtunnels.ms",
+            "https://xthzck49-5173.brs.devtunnels.ms",
             "http://127.0.0.1:5173",
             "https://pcverde-linux.tail9449ba.ts.net:8443",
             frontend_origin,
