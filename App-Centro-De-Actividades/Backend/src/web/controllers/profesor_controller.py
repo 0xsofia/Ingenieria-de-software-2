@@ -95,10 +95,15 @@ def eliminar_profesor(profesor_id):
             "status": "error",
         }), 404
 
-    ahora = datetime.utcnow()
+    from zoneinfo import ZoneInfo
+    ahora_ar = datetime.now(ZoneInfo("America/Argentina/Buenos_Aires"))
+    ahora = ahora_ar.replace(tzinfo=None)
     tiene_clases_futuras = False
 
     for clase in profesor.clases:
+        if clase.is_eliminated:
+            continue
+            
         if clase.fecha is None or clase.horario_inicio is None:
             continue
 
