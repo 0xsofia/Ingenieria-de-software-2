@@ -76,7 +76,7 @@ RESERVAS_TO_SEED = [
         "socio_nombre": "David",
         "socio_apellido": "Matias",
         "socio_email": "david.matias@carpintech.com",
-        "tipo_reserva": "estandar",
+        "tipo_reserva": "espontanea",
         "estado": "confirmada",  # Éxito Verde en QR
         "fecha_str": "2026-06-01",
         "actividad_str": "Futbol",
@@ -92,7 +92,7 @@ RESERVAS_TO_SEED = [
         "socio_nombre": "Juan",
         "socio_apellido": "Pérez",
         "socio_email": "juan.perez@carpintech.com",
-        "tipo_reserva": "estandar",
+        "tipo_reserva": "espontanea",
         "estado": "asistio",  # Error 409 (Ya escaneado)
         "fecha_str": "2026-06-01",
         "actividad_str": "Voley",
@@ -108,7 +108,7 @@ RESERVAS_TO_SEED = [
         "socio_nombre": "Lautaro",
         "socio_apellido": "Gómez",
         "socio_email": "lau.gomez@carpintech.com",
-        "tipo_reserva": "pase_libre",
+        "tipo_reserva": "espontanea",
         "estado": "pendiente_pago",  # Pasa el unique constraint condicional
         "fecha_str": "2026-06-01",
         "actividad_str": "Futbol",
@@ -124,7 +124,7 @@ RESERVAS_TO_SEED = [
         "socio_nombre": "David",
         "socio_apellido": "Matias",
         "socio_email": "david.matias@carpintech.com",
-        "tipo_reserva": "estandar",
+        "tipo_reserva": "espontanea",
         "estado": "confirmada",
         "fecha_str": "2026-06-12",
         "actividad_str": "Basquet",
@@ -316,7 +316,7 @@ def _ensure_seed_reservas_for_socio_centro(seed_datetime=None):
             reserva = Reserva(
                 clase_id=clase.clase_id,
                 socio_id=persona.persona_id,
-                tipo_reserva="estandar",
+                tipo_reserva="espontanea",
                 estado="confirmada",
                 creada_en=datetime.now(),
                 confirmada_en=datetime.now(),
@@ -325,7 +325,7 @@ def _ensure_seed_reservas_for_socio_centro(seed_datetime=None):
             db.session.flush()
             continue
 
-        reserva.tipo_reserva = "estandar"
+        reserva.tipo_reserva = "espontanea"
         reserva.estado = "confirmada"
         reserva.confirmada_en = reserva.confirmada_en or datetime.now()
         db.session.flush()
