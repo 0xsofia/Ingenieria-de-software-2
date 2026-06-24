@@ -65,9 +65,26 @@ CLASES_BASE_TEMPLATE = [
         "precio": 750,
         "reservar_socio_centro": False,
     },
+    {
+        "actividad": "Voley",
+        "cancha": "Cancha Nueva 1",
+        "nivel": "Intermedio",
+        "cupos": 10,
+        "profesor_dni": "44620873",
+        "precio": 500,
+    },
+    {
+        "actividad": "Voley",
+        "cancha": "Cancha Nueva 2",
+        "nivel": "Intermedio",
+        "cupos": 10,
+        "profesor_dni": "12345678",
+        "precio": 500,
+        "reservar_socio_centro": False,
+    },
 ]
 
-CLASES_OFFSET_MINUTES = (0, 15, 30, 45, 60, 75)
+CLASES_OFFSET_MINUTES = (0, 15, 30, 45, 60, 75, 120, 120)
 CLASES_FUTURAS_TEMPLATE = [
     {
         "actividad": "Basquet",
