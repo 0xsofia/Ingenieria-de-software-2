@@ -54,3 +54,11 @@ export async function obtenerProfesores() {
 
   return await response.data
 }
+
+export async function extenderClasesSiguienteMes(payload) {
+  console.log("Enviando solicitud para extender clase al siguiente mes con payload:", payload);
+  const response = await http.post(endpoints.crearSiguienteClase, payload);
+  console.log("Data de regreso:", response.data);
+  return await response.data
+}
+

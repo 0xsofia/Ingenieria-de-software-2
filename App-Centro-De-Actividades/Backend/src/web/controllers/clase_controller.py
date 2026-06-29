@@ -1,3 +1,6 @@
+import calendar
+from datetime import datetime
+
 from flask import Blueprint, jsonify, request
 from flask_login import current_user
 
@@ -126,3 +129,118 @@ def obtener_detalle_clase(clase_id):
 def cancelar_clase_controller(clase_id):
     body, status_code = cancelar_clase(clase_id)
     return jsonify(body), status_code
+
+@clase_bp.route('/siguiente', methods=['POST'])
+def extender_clase_por_id():
+    data = request.get_json() or {}
+    clase_id = data.get('clase_id')
+    mes_destino = data.get('mes')
+
+    if not clase_id or not mes_destino:
+        return jsonify({
+            "status": "error",
+            "message": "El ID de la clase y el mes de destino son obligatorios."
+        }), 400
+
+    try:
+        clase_base = db.session.get(Clase, clase_id) if hasattr(db.session, 'get') else Clase.query.get(clase_id)
+        if not clase_base:
+            return jsonify({
+                "status": "error",
+                "message": "No se encontró la clase original para extender."
+            }), 404
+
+        dias_espanol = {
+            0: "Lunes", 1: "Martes", 2: "Miércoles", 3: "Jueves", 4: "Viernes", 5: "Sábado", 6: "Domingo"
+        }
+        
+        dia_semana_calculado = dias_espanol[clase_base.fecha.weekday()]
+
+        if hasattr(clase_base.horario_inicio, 'strftime'):
+            horario_str = clase_base.horario_inicio.strftime('%H:%M')
+        else:
+            horario_str = str(clase_base.horario_inicio)[:5]
+
+        actividad_str = clase_base.actividad.value if hasattr(clase_base.actividad, 'value') else str(clase_base.actividad)
+        nivel_str = clase_base.nivel.value if hasattr(clase_base.nivel, 'value') else str(clase_base.nivel)
+        
+        profesor_id_target = clase_base.profesor_id
+        horario_inicio_target = clase_base.horario_inicio
+        cancha_target = clase_base.cancha
+        actividad_label = clase_base.actividad
+
+        reservas_viejas_datos = [{"cliente_id": r.cliente_id} for r in Reserva.query.filter_by(clase_id=clase_id, estado="abonada").all()]
+
+        payload_clase_nueva = {
+            "actividad": actividad_str,
+            "dia_semana": dia_semana_calculado,
+            "mes": int(mes_destino),
+            "horario_inicio": horario_str,
+            "cancha": cancha_target,
+            "nivel": nivel_str,
+            "cupos": clase_base.cupos,
+            "precio": float(clase_base.precio) if clase_base.precio is not None else None,
+            "profesor_id": profesor_id_target,
+        }
+
+        # 1. Obtenemos la fecha real de hoy en el servidor
+        hoy = datetime.now()
+        
+        # 2. Calculamos el año correspondiente
+        # Si el mes destino es menor al mes actual, significa que saltamos al año siguiente (ej: de Dic a Ene)
+        if int(mes_destino) < hoy.month:
+            año_calculado = hoy.year + 1
+        else:
+            año_calculado = hoy.year
+
+        # 3. Armamos la fecha simulada con el año correcto
+        fecha_simulada = datetime(año_calculado, int(mes_destino), 1)
+        
+        resultado_creacion, status_code = crear_clase_completa(payload_clase_nueva, fecha_actual=fecha_simulada)
+
+        if status_code != 201:
+            # ---> ESTE PRINT TE VA A DECIR EN LA CONSOLA DE FLASK QUÉ RECHAZÓ TU SERVICIO <---
+            print(f"\n[RECHAZO DE SERVICIO] Código {status_code}: {resultado_creacion}\n")
+            return jsonify(resultado_creacion), status_code
+
+        if reservas_viejas_datos:
+            fecha_inicio_mes = datetime(año_calculado, int(mes_destino), 1).date()
+            ultimo_dia = calendar.monthrange(año_calculado, int(mes_destino))[1]
+            fecha_fin_mes = datetime(año_calculado, int(mes_destino), ultimo_dia).date()
+
+            clases_nuevas_insertadas = Clase.query.filter(
+                Clase.profesor_id == profesor_id_target,
+                Clase.horario_inicio == horario_inicio_target,
+                Clase.cancha == cancha_target,
+                Clase.fecha >= fecha_inicio_mes,
+                Clase.fecha <= fecha_fin_mes,
+                Clase.is_eliminated == False
+            ).all()
+
+            for nueva_clase in clases_nuevas_insertadas:
+                for res_datos in reservas_viejas_datos:
+                    reserva_existe = Reserva.query.filter_by(
+                        clase_id=nueva_clase.clase_id, 
+                        cliente_id=res_datos['cliente_id']
+                    ).first()
+                    
+                    if not reserva_existe:
+                        nueva_reserva = Reserva(
+                            clase_id=nueva_clase.clase_id,
+                            cliente_id=res_datos['cliente_id'],
+                            estado="abonada"
+                        )
+                        db.session.add(nueva_reserva)
+            
+            db.session.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "Las clases fueron registradas correctamente",
+            "redirect_to": "/clases"
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error crítico al extender clase: {e}")
+        return jsonify({"status": "error", "message": "Hubo un problema interno al procesar la extensión."}), 500

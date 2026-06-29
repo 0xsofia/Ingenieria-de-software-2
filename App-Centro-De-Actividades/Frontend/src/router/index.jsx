@@ -31,6 +31,7 @@ import ListadoPagosPage from '../pages/ListadoPagosPage.jsx'
 import ConfirmarTurnoPage from '../pages/ConfirmarTurnoPage.jsx'
 import MetricasPage from '../pages/MetricasPage.jsx'
 import RealizarRenovacionAbonoPage from '../pages/RenovarAbonoMensualPage.jsx'
+import ExtenderClasesPage from '../pages/CrearSiguienteClasePage.jsx'
 
 
 const router = createBrowserRouter([
@@ -76,6 +77,10 @@ const router = createBrowserRouter([
       {
         path: '/clases/crear',
         element: <CrearClasePage />,
+      },
+      {
+        path: '/clases/siguiente',
+        element: <ExtenderClasesPage />,
       },
       {
         path: '/profesor/crear',
