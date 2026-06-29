@@ -13,6 +13,7 @@ export const endpoints = {
   cancelarClase: (claseId) => `/api/clase/cancelar/${claseId}`,
   obtenerProfesores: '/api/profesor/lista',
   crearProfesor: '/api/profesor/crear',
+  crearSiguienteClase: '/api/clase/siguiente',
   actividades: '/api/actividades',
   eliminarProfesor: (id) => `/api/profesor/${id}`,
   reservaEspontanea: '/api/reservas/espontanea',

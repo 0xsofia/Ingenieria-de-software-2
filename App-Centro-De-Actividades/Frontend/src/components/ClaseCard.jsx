@@ -16,6 +16,9 @@ export default function ClaseCard({
   reserveLabel = 'Inscribirme',
   cancelLabel = 'Cancelar clase',
   viewScanLabel = 'Escanear QR',
+  onExtend,
+  extendLabel = 'Crear siguientes clases', // Prop configurable para mantener consistencia
+
 }) {
   return (
     <article className="clase-card">
@@ -75,6 +78,13 @@ export default function ClaseCard({
               {cancelLabel}
             </button>
           )}
+         {/* Mismo estilo secundario que "Ver detalle", controlado externamente */}
+          {onExtend && (
+            <button type="button" className="secondary-action" onClick={() => onExtend(clase)}>
+              {extendLabel}
+            </button>
+          )}
+
 
         </div>
       </div>

@@ -104,7 +104,15 @@ export default function ListadoClasesPage() {
       state: { clase, from: '/clases' },
     })
   }
-
+  // Nueva función para manejar el flujo de extensión de clases
+  function handleExtendClass(clase) {
+    navigate(`/clases/siguiente`, {
+      state: {
+        extendiendo: true,
+        clase,
+      },
+    })
+  }
   async function handleCancelClass(clase) {
     try {
       setLoading(true)
@@ -199,6 +207,8 @@ export default function ListadoClasesPage() {
                     // viewScanLabel="Escanear QR"
                     viewLabel="Ver detalle"
                     reserveLabel="Modificar"
+                    onExtend={handleExtendClass}
+
                   />
                 ))}
               </div>
