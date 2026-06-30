@@ -376,6 +376,7 @@ export default function ModificarClasePage() {
             serverErrors={serverErrors}
             generalError={generalError}
             errorCycle={errorCycle}
+            disableIfUnchanged={true}
           />
         </div>
       </section>

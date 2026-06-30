@@ -184,7 +184,7 @@ def seed_reintegros_escenarios(seed_datetime=None):
         apellido="Centro",
         rol=rol_socio,
     )
-    for case in cases[:3]:
+    for case in cases:
         _ensure_lista_espera(
             clase_id=case["target_clase"].clase_id,
             socio_id=mate_id,
@@ -199,7 +199,7 @@ def seed_reintegros_escenarios(seed_datetime=None):
         print(
             f"   - {case['scenario']}: user={case['email']} / reserva_id={case['target_reserva_id']}"
         )
-    print("   - mate@centro.test en lista de espera de reintegros 1, 2 y 3")
+    print("   - mate@centro.test en lista de espera de todos los reintegros (1, 2, 3 y 4)")
 
 
 def _get_or_create_role(role_name: str) -> Rol:

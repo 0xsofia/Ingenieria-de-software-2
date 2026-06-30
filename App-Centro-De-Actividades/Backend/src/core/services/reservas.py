@@ -25,6 +25,7 @@ from src.core.models.reserva import Reserva
 from src.core.models.abono_mensual import AbonoMensual
 from src.core.models.actividad import Actividad
 from src.core.services import telegram
+from src.core.services.iniciar_sesion import forzar_login_socio
 
 
 RESERVA_ESTADOS_OCUPAN_CUPO = {"pendiente_pago", "confirmada"}
@@ -661,6 +662,8 @@ def confirmar_turno_desde_token(token):
     
     telegram.marcar_confirmacion_como_confirmada(token)
     
+    session_payload = forzar_login_socio(socio_id)
+    
     db.session.commit()
     
     return {
@@ -672,6 +675,7 @@ def confirmar_turno_desde_token(token):
         "horario_inicio": clase.horario_inicio.strftime("%H:%M"),
         "horario_fin": clase.horario_fin.strftime("%H:%M"),
         "cancha": clase.cancha,
+        "session": session_payload,
     }, 200
 
 

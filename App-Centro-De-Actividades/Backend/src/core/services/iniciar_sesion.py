@@ -199,6 +199,28 @@ def _finalizar_login(persona, role):
     }, 200
 
 
+def forzar_login_socio(socio_id):
+    print(f"[DEBUG] forzar_login_socio called for socio_id={socio_id}")
+    persona = db.session.get(Persona, socio_id)
+    if persona is None:
+        print("[DEBUG] forzar_login_socio: Persona not found")
+        return None
+    if (persona.estado or "activo").lower() != "activo":
+        print("[DEBUG] forzar_login_socio: Persona not active")
+        return None
+    rol = Rol.query.filter(db.func.lower(Rol.nombre) == "socio").first()
+    if rol is None:
+        print("[DEBUG] forzar_login_socio: Role 'socio' not found")
+        return None
+    
+    print(f"[DEBUG] forzar_login_socio: Calling _finalizar_login for {persona.email} as {rol.nombre}")
+    login_result, status = _finalizar_login(persona, rol)
+    print(f"[DEBUG] forzar_login_socio: _finalizar_login returned status {status}")
+    if status == 200:
+        return login_result.get("session")
+    return None
+
+
 def _roles_disponibles(persona):
     roles = {}
     invalid_roles = []
