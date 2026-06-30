@@ -1798,6 +1798,12 @@ def _build_refund_idempotency_key(pago, monto):
 
 
 def _now():
+    forced = os.environ.get("FORCED_MOCK_DATE")
+    if forced:
+        try:
+            return datetime.fromisoformat(forced).replace(tzinfo=timezone.utc)
+        except ValueError:
+            pass
     return datetime.now(timezone.utc)
 
 
