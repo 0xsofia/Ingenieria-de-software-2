@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import date, datetime, time, timedelta, timezone
+import calendar
+from datetime import datetime, time, timedelta, timezone
 from decimal import Decimal
 import uuid
 
@@ -66,13 +67,23 @@ BLOQUEO_CLASS_TEMPLATES = {
     },
 }
 
-RENOVACION_ACTIVIDAD = "Futbol"
-RENOVACION_HORA = time(19, 0)
-RENOVACION_CLASES_JUNIO_2026 = (
-    date(2026, 6, 1),
-    date(2026, 6, 8),
-    date(2026, 6, 15),
-    date(2026, 6, 22),
+ABONOS_RENOVACION_TEMPLATES = (
+    {
+        "actividad": "Voley",
+        "hora_inicio": time(10, 0),
+        "cancha": "Cancha Renovacion Voley",
+        "nivel": "Principiante",
+        "profesor_dni": "12345678",
+        "precio": Decimal("1000.00"),
+    },
+    {
+        "actividad": "Futbol",
+        "hora_inicio": time(18, 0),
+        "cancha": "Cancha Renovacion Futbol",
+        "nivel": "Intermedio",
+        "profesor_dni": "87654321",
+        "precio": Decimal("1000.00"),
+    },
 )
 
 
@@ -172,17 +183,16 @@ def seed_bloqueos_escenarios(seed_datetime=None):
         rol=rol_socio,
         password="123456.",
     )
-    _set_sancion(sancion_id, date(2026, 6, 30))
+    periodo_renovacion = _get_periodo_renovacion(now)
+    _set_sancion(sancion_id, periodo_renovacion["sancion_hasta"])
 
-    renovacion_clases = _ensure_renovacion_classes()
-    _ensure_abono_renovable(
-        socio_id=mate_id,
-        actividad_nombre=RENOVACION_ACTIVIDAD,
-    )
-    _ensure_abono_expirado_mate(mate_id)
-    _ensure_abono_renovable(
-        socio_id=sancion_id,
-        actividad_nombre=RENOVACION_ACTIVIDAD,
+    renovacion_clases = _ensure_abonos_mate_sancion(
+        periodo=periodo_renovacion,
+        socios=(
+            {"socio_id": mate_id, "descuento_pct": Decimal("20.00")},
+            {"socio_id": sancion_id, "descuento_pct": Decimal("0.00")},
+        ),
+        seed_datetime=now,
     )
 
     # 1) Waitlist test "confirmar turno" (Waitlist 2)
@@ -237,7 +247,7 @@ def seed_bloqueos_escenarios(seed_datetime=None):
     print("   - mate@centro.test (siguiente en 3 listas de espera)")
     print(
         "   - mate@centro.test y sancion@centro.test "
-        f"(abonos renovables hacia clase {renovacion_clases[0].fecha:%d/%m/%Y})"
+        f"(abonos del mes anterior y siguiente desde {renovacion_clases[0].fecha:%d/%m/%Y})"
     )
 
 
@@ -415,40 +425,138 @@ def _ensure_actividad(nombre: str) -> Actividad:
     return actividad
 
 
-def _ensure_renovacion_classes():
-    profesor = Profesor.query.filter_by(dni="87654321").first()
-    if profesor is None:
-        raise RuntimeError(
-            "No existe el profesor con DNI 87654321 para el seed de renovación."
-        )
+def _get_periodo_renovacion(seed_datetime):
+    reference = get_seed_reference_datetime(seed_datetime).date()
+    mes_renovacion_inicio = reference.replace(day=1)
+    if reference.day > 10:
+        mes_renovacion_inicio = _add_months(mes_renovacion_inicio, 1)
 
-    clases = []
-    for fecha in RENOVACION_CLASES_JUNIO_2026:
-        clase = _get_or_create_clase(
-            {
-                "actividad": RENOVACION_ACTIVIDAD,
-                "cancha": "Cancha Renovacion",
-                "nivel": "Intermedio",
-                "cupos": 8,
-                "profesor_dni": profesor.dni,
-                "precio": Decimal("1000.00"),
-                "fecha": fecha,
-                "horario_inicio": RENOVACION_HORA,
-            }
+    mes_anterior_inicio = _add_months(mes_renovacion_inicio, -1)
+    mes_anterior_fin = mes_renovacion_inicio - timedelta(days=1)
+    mes_siguiente_inicio = mes_renovacion_inicio
+    mes_siguiente_fin = _last_day_of_month(mes_siguiente_inicio)
+    mes_posterior_inicio = _add_months(mes_siguiente_inicio, 1)
+
+    return {
+        "mes_anterior_inicio": mes_anterior_inicio,
+        "mes_anterior_fin": mes_anterior_fin,
+        "mes_siguiente_inicio": mes_siguiente_inicio,
+        "mes_siguiente_fin": mes_siguiente_fin,
+        "fecha_limite_anterior": mes_renovacion_inicio.replace(day=10),
+        "fecha_limite_siguiente": mes_posterior_inicio.replace(day=10),
+        "sancion_hasta": mes_siguiente_fin,
+        "fechas_mes_anterior": [
+            mes_anterior_fin - timedelta(days=7 * offset)
+            for offset in reversed(range(4))
+        ],
+        "fechas_mes_siguiente": [
+            mes_anterior_fin + timedelta(days=7 * offset)
+            for offset in range(1, 5)
+        ],
+    }
+
+
+def _add_months(value, months):
+    month_index = value.month - 1 + months
+    year = value.year + month_index // 12
+    month = month_index % 12 + 1
+    day = min(value.day, calendar.monthrange(year, month)[1])
+    return value.replace(year=year, month=month, day=day)
+
+
+def _last_day_of_month(value):
+    return value.replace(day=calendar.monthrange(value.year, value.month)[1])
+
+
+def _ensure_abonos_mate_sancion(*, periodo, socios, seed_datetime):
+    clases_siguiente = []
+
+    for template in ABONOS_RENOVACION_TEMPLATES:
+        actividad = _ensure_actividad(template["actividad"])
+        clases_mes_anterior = _ensure_clases_abono_periodo(
+            template, periodo["fechas_mes_anterior"]
         )
-        clases.append(clase)
+        clases_mes_siguiente = _ensure_clases_abono_periodo(
+            template, periodo["fechas_mes_siguiente"]
+        )
+        clases_siguiente.extend(clases_mes_siguiente)
+        dia_semana = _dia_semana_label(periodo["mes_anterior_fin"])
+
+        for socio in socios:
+            abono_anterior = _ensure_abono_periodo(
+                socio_id=socio["socio_id"],
+                actividad_id=actividad.actividad_id,
+                periodo_inicio=periodo["mes_anterior_inicio"],
+                periodo_fin=periodo["mes_anterior_fin"],
+                hora_inicio=template["hora_inicio"],
+                dia_semana=dia_semana,
+                fecha_limite_renovacion=periodo["fecha_limite_anterior"],
+                descuento_aplicado_pct=socio["descuento_pct"],
+                prioridad_renovacion=False,
+            )
+            _ensure_reservas_abonadas_confirmadas(
+                socio_id=socio["socio_id"],
+                abono=abono_anterior,
+                clases=clases_mes_anterior,
+                timestamp=seed_datetime,
+            )
+            _ensure_pago_abono_aprobado(
+                socio_id=socio["socio_id"],
+                abono=abono_anterior,
+                clases=clases_mes_anterior,
+                seed_datetime=seed_datetime,
+            )
+            _remove_seeded_abono_periodo(
+                socio_id=socio["socio_id"],
+                actividad_id=actividad.actividad_id,
+                periodo_inicio=periodo["mes_siguiente_inicio"],
+                hora_inicio=template["hora_inicio"],
+                abono_anterior_id=abono_anterior.abono_mensual_id,
+            )
+
+    return clases_siguiente
+
+
+def _ensure_clases_abono_periodo(template, fechas):
+    clases = []
+    for fecha in fechas:
+        clases.append(
+            _get_or_create_clase(
+                {
+                    "actividad": template["actividad"],
+                    "cancha": template["cancha"],
+                    "nivel": template["nivel"],
+                    "cupos": 8,
+                    "profesor_dni": template["profesor_dni"],
+                    "precio": template["precio"],
+                    "fecha": fecha,
+                    "horario_inicio": template["hora_inicio"],
+                }
+            )
+        )
 
     return clases
 
 
-def _ensure_abono_renovable(*, socio_id: int, actividad_nombre: str):
-    actividad = _ensure_actividad(actividad_nombre)
-
+def _ensure_abono_periodo(
+    *,
+    socio_id,
+    actividad_id,
+    periodo_inicio,
+    periodo_fin,
+    hora_inicio,
+    dia_semana,
+    fecha_limite_renovacion,
+    descuento_aplicado_pct,
+    prioridad_renovacion,
+    abono_anterior_id=None,
+):
     abono = (
         AbonoMensual.query.filter_by(
             socio_id=socio_id,
-            actividad_id=actividad.actividad_id,
-            periodo_inicio=date(2026, 5, 4),
+            actividad_id=actividad_id,
+            periodo_inicio=periodo_inicio,
+            hora_inicio=hora_inicio,
         )
         .first()
     )
@@ -456,61 +564,111 @@ def _ensure_abono_renovable(*, socio_id: int, actividad_nombre: str):
     if abono is None:
         abono = AbonoMensual(
             socio_id=socio_id,
-            actividad_id=actividad.actividad_id,
-            periodo_inicio=date(2026, 5, 4),
-            periodo_fin=date(2026, 5, 25),
-            hora_inicio=RENOVACION_HORA,
-            dia_semana="lunes",
-            fecha_limite_renovacion=date(2026, 6, 10),
-            estado="activo",
+            actividad_id=actividad_id,
+            periodo_inicio=periodo_inicio,
+            hora_inicio=hora_inicio,
         )
         db.session.add(abono)
-    else:
-        abono.periodo_fin = date(2026, 5, 25)
-        abono.hora_inicio = RENOVACION_HORA
-        abono.dia_semana = "lunes"
-        abono.fecha_limite_renovacion = date(2026, 6, 10)
-        abono.estado = "activo"
-        abono.prioridad_renovacion = False
+
+    abono.abono_anterior_id = abono_anterior_id
+    abono.periodo_fin = periodo_fin
+    abono.dia_semana = dia_semana
+    abono.fecha_limite_renovacion = fecha_limite_renovacion
+    abono.descuento_aplicado_pct = descuento_aplicado_pct
+    abono.prioridad_renovacion = prioridad_renovacion
+    abono.estado = "activo"
 
     db.session.flush()
     return abono
 
 
-def _ensure_abono_expirado_mate(socio_id: int):
-    actividad = _ensure_actividad("Voley")
-
+def _remove_seeded_abono_periodo(
+    *, socio_id, actividad_id, periodo_inicio, hora_inicio, abono_anterior_id
+):
     abono = (
         AbonoMensual.query.filter_by(
             socio_id=socio_id,
-            actividad_id=actividad.actividad_id,
-            periodo_inicio=date(2026, 4, 6),
+            actividad_id=actividad_id,
+            periodo_inicio=periodo_inicio,
+            hora_inicio=hora_inicio,
+            abono_anterior_id=abono_anterior_id,
         )
         .first()
     )
-
     if abono is None:
-        abono = AbonoMensual(
+        return
+
+    Pago.query.filter_by(abono_mensual_id=abono.abono_mensual_id).delete(
+        synchronize_session=False
+    )
+    Reserva.query.filter_by(abono_mensual_id=abono.abono_mensual_id).delete(
+        synchronize_session=False
+    )
+    db.session.delete(abono)
+    db.session.flush()
+
+
+def _ensure_reservas_abonadas_confirmadas(*, socio_id, abono, clases, timestamp):
+    for clase in clases:
+        reserva = Reserva.query.filter_by(
+            clase_id=clase.clase_id,
             socio_id=socio_id,
-            actividad_id=actividad.actividad_id,
-            periodo_inicio=date(2026, 4, 6),
-            periodo_fin=date(2026, 4, 27),
-            hora_inicio=time(18, 0),
-            dia_semana="lunes",
-            fecha_limite_renovacion=date(2026, 5, 10),
-            estado="activo",
-        )
-        db.session.add(abono)
-    else:
-        abono.periodo_fin = date(2026, 4, 27)
-        abono.hora_inicio = time(18, 0)
-        abono.dia_semana = "lunes"
-        abono.fecha_limite_renovacion = date(2026, 5, 10)
-        abono.estado = "activo"
-        abono.prioridad_renovacion = False
+        ).first()
+        if reserva is None:
+            reserva = Reserva(
+                clase_id=clase.clase_id,
+                socio_id=socio_id,
+                creada_en=timestamp,
+            )
+            db.session.add(reserva)
+
+        reserva.abono_mensual_id = abono.abono_mensual_id
+        reserva.tipo_reserva = "abonada"
+        reserva.estado = "confirmada"
+        reserva.confirmada_en = reserva.confirmada_en or timestamp
+        reserva.cancelada_en = None
 
     db.session.flush()
-    return abono
+
+
+def _ensure_pago_abono_aprobado(*, socio_id, abono, clases, seed_datetime):
+    external_ref = f"seed-renovacion-abono-{abono.abono_mensual_id}"
+    monto_bruto = sum(
+        (Decimal(str(clase.precio or 0)).quantize(Decimal("0.01")) for clase in clases),
+        Decimal("0.00"),
+    )
+    descuento_pct = Decimal(str(abono.descuento_aplicado_pct or 0)).quantize(
+        Decimal("0.01")
+    )
+    monto_pagado = (
+        monto_bruto * (Decimal("100.00") - descuento_pct) / Decimal("100.00")
+    ).quantize(Decimal("0.01"))
+
+    pago = Pago.query.filter_by(external_ref=external_ref).first()
+    if pago is None:
+        pago = Pago(
+            socio_id=socio_id,
+            reserva_id=None,
+            abono_mensual_id=abono.abono_mensual_id,
+            proveedor="mercadopago",
+            external_ref=external_ref,
+        )
+        db.session.add(pago)
+
+    pago.socio_id = socio_id
+    pago.reserva_id = None
+    pago.abono_mensual_id = abono.abono_mensual_id
+    pago.monto_bruto = monto_bruto
+    pago.descuento_pct = descuento_pct
+    pago.monto_pagado = monto_pagado
+    pago.estado = "aprobado"
+    pago.fecha_pago = seed_datetime
+    db.session.flush()
+
+
+def _dia_semana_label(fecha):
+    dias = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"]
+    return dias[fecha.weekday()]
 
 
 def _ensure_reserva_confirmada(
