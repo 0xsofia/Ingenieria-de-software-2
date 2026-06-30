@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { obtenerConfirmacion, confirmarDesdeToken } from '../api/confirmaciones'
+import { useAuth } from '../hooks/useAuth'
 import './ActividadPage.css'
 
 export default function ConfirmarTurnoPage() {
   const { token } = useParams()
   const navigate = useNavigate()
+  const { setAuthenticatedSession } = useAuth()
   const [oferta, setOferta] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -48,6 +50,9 @@ export default function ConfirmarTurnoPage() {
       } else if (result.status === 'conflict') {
         setError(result.message || 'Ya posee una inscripción en ese horario.')
       } else if (result.status === 'confirmed') {
+        if (result.session) {
+          setAuthenticatedSession(result.session)
+        }
         // Redirigir a la página de actividad para completar la reserva
         const actividadSlug = getSlug(result.actividad)
         navigate(`/actividad/${actividadSlug}`, {

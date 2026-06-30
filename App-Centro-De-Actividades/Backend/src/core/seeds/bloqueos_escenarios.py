@@ -42,6 +42,17 @@ BLOQUEO_CLASS_TEMPLATES = {
         "hora": 18,
         "minuto": 0,
     },
+    "conflicto_lista_espera": {
+        "actividad": "Futbol",
+        "cancha": "Cancha Bloqueo 4",
+        "nivel": "Principiante",
+        "cupos": 1,
+        "profesor_dni": "12345678",
+        "precio": Decimal("5000.00"),
+        "dias_despues": 4,
+        "hora": 18,
+        "minuto": 0,
+    },
     "abandonar_espera": {
         "actividad": "Basquet",
         "cancha": "Cancha Bloqueo 3",
@@ -122,6 +133,27 @@ def seed_bloqueos_escenarios(seed_datetime=None):
         monto=Decimal("5000.00"),
     )
 
+    # bloqueo4: escenario para probar superposición de horarios al confirmar un turno.
+    bloqueo4_id = _ensure_socio_user(
+        email="bloqueo4@centro.test",
+        dni="40000008",
+        nombre="Juan",
+        apellido="Cuatro",
+        rol=rol_socio,
+    )
+    _set_sancion(bloqueo4_id, None)
+    _ensure_reserva_confirmada(
+        reserva_id=8105,
+        clase_id=clases["conflicto_lista_espera"].clase_id,
+        socio_id=bloqueo4_id,
+        confirmada_en=now,
+    )
+    _ensure_pago_aprobado(
+        socio_id=bloqueo4_id,
+        reserva_id=8105,
+        monto=Decimal("5000.00"),
+    )
+
     mate_id = _ensure_socio_user(
         email="mate@centro.test",
         dni="40000004",
@@ -156,6 +188,13 @@ def seed_bloqueos_escenarios(seed_datetime=None):
     # 1) Waitlist test "confirmar turno" (Waitlist 2)
     _ensure_lista_espera(
         clase_id=clases["con_lista_espera"].clase_id,
+        socio_id=mate_id,
+        posicion=1,
+    )
+    
+    # 1.5) Waitlist para test de conflicto horario (Waitlist)
+    _ensure_lista_espera(
+        clase_id=clases["conflicto_lista_espera"].clase_id,
         socio_id=mate_id,
         posicion=1,
     )
@@ -194,7 +233,8 @@ def seed_bloqueos_escenarios(seed_datetime=None):
     print("   - bloqueo1@centro.test (sin reservas, sin sanciones)")
     print("   - bloqueo2@centro.test (reserva paga, sin lista de espera, con sanciones)")
     print("   - bloqueo3@centro.test (reserva paga, con lista de espera)")
-    print("   - mate@centro.test (siguiente en 2 listas de espera)")
+    print("   - bloqueo4@centro.test (reserva paga, para superposición de horarios)")
+    print("   - mate@centro.test (siguiente en 3 listas de espera)")
     print(
         "   - mate@centro.test y sancion@centro.test "
         f"(abonos renovables hacia clase {renovacion_clases[0].fecha:%d/%m/%Y})"

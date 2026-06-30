@@ -12,6 +12,7 @@ function DynamicForm({
   serverErrors = {},
   generalError = '',
   errorCycle = 0,
+  disableIfUnchanged = false,
 }) {
   const [values, setValues] = useState(() => initialValues)
   const [clientErrors, setClientErrors] = useState({})
@@ -24,6 +25,8 @@ function DynamicForm({
   const hasFreshErrors = dismissedErrorState.cycle !== errorCycle
   const dismissedServerErrors = hasFreshErrors ? {} : dismissedErrorState.serverFields
   const dismissedGeneralError = hasFreshErrors ? false : dismissedErrorState.general
+
+  const isUnchanged = disableIfUnchanged && Object.keys(initialValues).every(key => values[key] === initialValues[key])
 
   function handleChange(event, field) {
     const { name, value } = event.target
@@ -135,7 +138,7 @@ function DynamicForm({
       </div>
 
       <div className="dynamic-form__actions">
-        <button className="primary-action" type="submit" disabled={isSubmitting}>
+        <button className="primary-action" type="submit" disabled={isSubmitting || isUnchanged}>
           {isSubmitting ? 'Enviando...' : submitLabel}
         </button>
       </div>

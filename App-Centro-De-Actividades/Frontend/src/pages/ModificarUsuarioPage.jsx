@@ -278,6 +278,7 @@ function ModificarUsuarioPage() {
             serverErrors={serverErrors}
             generalError={generalError}
             errorCycle={errorCycle}
+            disableIfUnchanged={true}
           />
         </div>
       </section>
