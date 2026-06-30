@@ -62,7 +62,13 @@ def autenticar_credenciales(email, password):
             "message": "La contraseña es incorrecta.",
         }, 401
 
-    if (persona.estado or "activo").lower() != "activo":
+    estado = (persona.estado or "activo").lower()
+    if estado == "bloqueado":
+        return {
+            "status": "error",
+            "message": "No es posible autenticarse. El usuario se encuentra actualmente bloqueado.",
+        }, 403
+    elif estado != "activo":
         return {
             "status": "error",
             "message": "El usuario no puede iniciar sesión con su estado actual.",
