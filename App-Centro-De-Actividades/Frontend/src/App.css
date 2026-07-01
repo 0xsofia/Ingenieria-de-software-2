@@ -199,9 +199,26 @@
 
 .primary-action:disabled,
 .role-card:disabled {
-  cursor: wait;
+  cursor: not-allowed;
   transform: none;
   opacity: 0.75;
+}
+
+.action-disabled,
+.primary-action.action-disabled,
+.danger-action.action-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.5 !important;
+  background-color: var(--border-subtle) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+.action-disabled:hover,
+.primary-action.action-disabled:hover,
+.danger-action.action-disabled:hover {
+  background-color: var(--border-subtle) !important;
+  transform: none !important;
 }
 
 .banner {

@@ -197,21 +197,27 @@ export default function ListadoClasesPage() {
               </div>
             ) : (
               <div className="listado-clases__cards">
-                {clases.map((clase) => (
-                  <ClaseCard
-                    key={clase.clase_id}
-                    clase={clase}
-                    onView={handleViewClass}
-                    onReserve={handleEditClass}
-                    onCancel={handleCancelClass}
-                    // onScanQR={handleScanQR}
-                    // viewScanLabel="Escanear QR"
-                    viewLabel="Ver detalle"
-                    reserveLabel="Modificar"
-                    onExtend={handleExtendClass}
+                {clases.map((clase) => {
+                  const classDateTime = new Date(`${clase.fecha}T${clase.horario_inicio}`)
+                  const isPasada = classDateTime < new Date()
 
-                  />
-                ))}
+                  return (
+                    <ClaseCard
+                      key={clase.clase_id}
+                      clase={clase}
+                      onView={handleViewClass}
+                      onReserve={handleEditClass}
+                      reserveDisabled={isPasada}
+                      onCancel={handleCancelClass}
+                      cancelDisabled={isPasada}
+                      // onScanQR={handleScanQR}
+                      // viewScanLabel="Escanear QR"
+                      viewLabel="Ver detalle"
+                      reserveLabel="Modificar"
+                      onExtend={handleExtendClass}
+                    />
+                  )
+                })}
               </div>
             )}
           </div>

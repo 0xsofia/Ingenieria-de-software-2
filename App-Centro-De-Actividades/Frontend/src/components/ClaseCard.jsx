@@ -18,7 +18,8 @@ export default function ClaseCard({
   viewScanLabel = 'Escanear QR',
   onExtend,
   extendLabel = 'Crear siguientes clases', // Prop configurable para mantener consistencia
-
+  reserveDisabled = false,
+  cancelDisabled = false,
 }) {
   return (
     <article className="clase-card">
@@ -27,7 +28,7 @@ export default function ClaseCard({
           <h2 className="clase-card__title">{clase.actividad}</h2>
           <p className="clase-card__subtitle">{clase.tipo_clase} · {clase.nivel}</p>
         </div>
-        <span className="clase-card__badge">{clase.cupos}/{Math.max(0, clase.cupos - (clase.cupos_ocupados || 0))} cupos</span>
+        <span className="clase-card__badge">{clase.cupos_ocupados || 0}/{clase.cupos} cupos</span>
       </div>
 
       <div className="clase-card__meta-grid">
@@ -69,12 +70,22 @@ export default function ClaseCard({
             {viewLabel}
           </button>
           {onReserve && (
-            <button type="button" className="primary-action" onClick={() => onReserve(clase)}>
+            <button
+              type="button"
+              className={`primary-action ${reserveDisabled ? 'action-disabled' : ''}`}
+              onClick={() => onReserve(clase)}
+              disabled={reserveDisabled}
+            >
               {reserveLabel}
             </button>
           )}
           {onCancel && (
-            <button type="button" className="danger-action" onClick={() => onCancel(clase)}>
+            <button
+              type="button"
+              className={`danger-action ${cancelDisabled ? 'action-disabled' : ''}`}
+              onClick={() => onCancel(clase)}
+              disabled={cancelDisabled}
+            >
               {cancelLabel}
             </button>
           )}
