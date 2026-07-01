@@ -101,7 +101,7 @@ export default function DetalleClasePage() {
     return (
       <section className="dashboard-shell">
         <section className="dashboard-frame">
-          <p className="banner banner--error">No se encontró la clase.</p>
+          <div className="banner banner--error">No se encontró la clase.<button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
           <button onClick={handleVolver} className="secondary-action">
             Volver
           </button>
@@ -123,8 +123,8 @@ export default function DetalleClasePage() {
           </div>
         </div>
 
-        {error && <p className="banner banner--error" role="alert">{error}</p>}
-        {success && <p className="banner banner--success" role="alert">{success}</p>}
+        {error && <div className="banner banner--error" role="alert">{error}<button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>}
+        {success && <div className="banner banner--success" role="alert">{success}<button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>}
 
         <div className="detalle-clase__info">
           <div className="detalle-clase__info-grid">

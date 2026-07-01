@@ -29,9 +29,9 @@ function PerfilPage() {
         </header>
 
         {successMessage ? (
-          <p className="banner banner--success" role="status" style={{ marginBottom: '1.5rem' }}>
+          <div className="banner banner--success" role="status" style={{ marginBottom: '1.5rem' }}>
             {successMessage}
-          </p>
+          <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
         ) : null}
 
         <div className="profile-grid">

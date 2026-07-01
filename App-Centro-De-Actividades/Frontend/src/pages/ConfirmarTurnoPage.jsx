@@ -102,9 +102,9 @@ export default function ConfirmarTurnoPage() {
           </header>
 
           {error && (
-            <p className="banner banner--error" role="alert">
+            <div className="banner banner--error" role="alert">
               {error}
-            </p>
+            <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
           )}
 
           <div className="actividad-placeholder-page__actions">
@@ -152,9 +152,9 @@ export default function ConfirmarTurnoPage() {
           ) : null}
 
           {error ? (
-            <p className="banner banner--error" role="alert">
+            <div className="banner banner--error" role="alert">
               {error}
-            </p>
+            <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
           ) : null}
 
           <div className="actividad-placeholder-page__actions">

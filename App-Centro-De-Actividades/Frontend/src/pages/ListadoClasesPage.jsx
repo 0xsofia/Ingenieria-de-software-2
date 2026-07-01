@@ -166,14 +166,14 @@ export default function ListadoClasesPage() {
         {loading ? (
           <p>Cargando clases...</p>
         ) : error ? (
-          <p className="banner banner--error" role="alert">{error}</p>
+          <div className="banner banner--error" role="alert">{error}<button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
         ) : (
           <>
             {successMessage && (
-              <p className="banner banner--success" role="status">{successMessage}</p>
+              <div className="banner banner--success" role="status">{successMessage}<button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
             )}
             {errorCancel && (
-              <p className="banner banner--error" role="status">{errorCancel}</p>
+              <div className="banner banner--error" role="status">{errorCancel}<button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
             )}
             <div className="listado-clases__controls">
               <FilterForm

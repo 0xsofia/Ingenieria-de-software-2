@@ -100,9 +100,9 @@ export default function ListadoPagosPage() {
           />
 
           {error && (
-            <p className="banner banner--error" role="alert">
+            <div className="banner banner--error" role="alert">
               {error}
-            </p>
+            <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
           )}
 
           {isLoading ? (

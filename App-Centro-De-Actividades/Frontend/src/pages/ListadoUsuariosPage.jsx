@@ -171,9 +171,9 @@ export default function ListadoUsuariosPage() {
           />
 
           {error ? (
-            <p className="banner banner--error" role="alert">
+            <div className="banner banner--error" role="alert">
               {error}
-            </p>
+            <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
           ) : null}
 
           {successMessages.length ? (
@@ -181,7 +181,7 @@ export default function ListadoUsuariosPage() {
               {successMessages.map((message, index) => (
                 <p key={`${message}-${index}`}>{message}</p>
               ))}
-            </div>
+            <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
           ) : null}
 
           {isLoading ? (
@@ -234,9 +234,9 @@ export default function ListadoUsuariosPage() {
               </p>
               
               {unblockError ? (
-                <p className="banner banner--error" role="alert" style={{ marginBottom: '1rem' }}>
+                <div className="banner banner--error" role="alert" style={{ marginBottom: '1rem' }}>
                   {unblockError}
-                </p>
+                <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
               ) : null}
 
               <div className="bloquear-usuario-modal__actions">
