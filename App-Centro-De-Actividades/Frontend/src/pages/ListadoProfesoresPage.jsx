@@ -79,15 +79,15 @@ export default function ListadoProfesoresPage() {
         {loading ? (
           <p>Cargando profesores...</p>
         ) : errorCarga ? (
-          <p className="banner banner--error" role="alert">{errorCarga}</p>
+          <div className="banner banner--error" role="alert">{errorCarga}<button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
         ) : (
           <div>
             {feedback ? (
-              <p className="banner banner--success" role="status">{feedback}</p>
+              <div className="banner banner--success" role="status">{feedback}<button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
             ) : null}
 
             {errorAccion ? (
-              <p className="banner banner--error" role="alert">{errorAccion}</p>
+              <div className="banner banner--error" role="alert">{errorAccion}<button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
             ) : null}
 
             <div className="mis-clases-table-wrapper">

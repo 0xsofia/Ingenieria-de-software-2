@@ -81,9 +81,9 @@ function DynamicForm({
   return (
     <form className="dynamic-form" onSubmit={handleSubmit} noValidate>
       {!dismissedGeneralError && generalError ? (
-        <p className="banner banner--error" role="alert">
+        <div className="banner banner--error" role="alert">
           {generalError}
-        </p>
+        <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
       ) : null}
 
       <div className="dynamic-form__grid">

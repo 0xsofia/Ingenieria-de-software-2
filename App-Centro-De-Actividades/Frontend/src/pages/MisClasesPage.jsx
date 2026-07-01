@@ -301,22 +301,24 @@ function handleRenovarAbono(abono) {
         </header>
         
         {error ? (
-          <p className="banner banner--error" role="alert">
+          <div className="banner banner--error" role="alert">
             {error}
-          </p>
+          <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
         ) : null}
 
         {feedback ? (
-          <p className="banner banner--success" role="status">
+          <div className="banner banner--success" role="status">
             {feedback}
-          </p>
+          <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
         ) : null}
 
-        {isLoading ? (
+ 
+        {
+        isLoading ? (
           <p className="dashboard-copy">Cargando reservas...</p>
         ) : (
           <div>
-            {ofertas.length > 0 ? (
+            {/* {ofertas.length > 0 ? (
               <div className="ofertas-list">
                 {ofertas.map((oferta) => {
                   const notificadoEn = oferta.notificado_en ? new Date(oferta.notificado_en) : null
@@ -330,7 +332,7 @@ function handleRenovarAbono(abono) {
                         <strong>
                           Turno disponible para {oferta.actividad || 'Actividad'} el {oferta.fecha || '-'} de {oferta.horario_inicio || '--:--'} a {oferta.horario_fin || '--:--'}
                         </strong>
-                        <div>Cancha: {oferta.cancha || '-'}</div>
+                        <div>Cancha: {oferta.cancha || '-'}<button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
                         <div>Ofertado el: {fechaHoraOferta}</div>
                       </div>
                       <div>
@@ -347,7 +349,7 @@ function handleRenovarAbono(abono) {
                   )
                 })}
               </div>
-            ) : null}
+            ) : null} */}
 
             <div className="mis-clases-table-wrapper">
               <h2>Abonos Mensuales</h2>

@@ -109,6 +109,15 @@
   text-transform: uppercase;
 }
 
+.clase-card__actions .danger-action.action-disabled {
+  background-color: var(--danger-bg) !important;
+  color: var(--danger) !important;
+  border-color: var(--danger-border) !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
 @media (max-width: 640px) {
   .clase-card {
     padding: 16px;

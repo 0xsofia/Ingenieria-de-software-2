@@ -58,7 +58,7 @@ CLASES_BASE_TEMPLATE = [
     },
     {
         "actividad": "Padel",
-        "cancha": "Cancha Padel 1",
+        "cancha": "ClaseSinReserva",
         "nivel": "Principiante",
         "cupos": 9,
         "profesor_dni": "11223344",
@@ -75,7 +75,7 @@ CLASES_BASE_TEMPLATE = [
     },
     {
         "actividad": "Voley",
-        "cancha": "Cancha Nueva 2",
+        "cancha": "ClaseSinReserva",
         "nivel": "Intermedio",
         "cupos": 10,
         "profesor_dni": "12345678",

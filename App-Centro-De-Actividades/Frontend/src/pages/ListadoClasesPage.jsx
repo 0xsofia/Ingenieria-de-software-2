@@ -118,6 +118,7 @@ export default function ListadoClasesPage() {
       setLoading(true)
       const result = await cancelarClase(clase.clase_id)
       setSuccessMessage(result?.message || 'La cancelación se realizó correctamente.')
+      setClases(prev => prev.filter(c => c.clase_id !== clase.clase_id))
       setError('')
       setErrorCancel('')
     } catch (err) {
@@ -165,14 +166,14 @@ export default function ListadoClasesPage() {
         {loading ? (
           <p>Cargando clases...</p>
         ) : error ? (
-          <p className="banner banner--error" role="alert">{error}</p>
+          <div className="banner banner--error" role="alert">{error}<button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
         ) : (
           <>
             {successMessage && (
-              <p className="banner banner--success" role="status">{successMessage}</p>
+              <div className="banner banner--success" role="status">{successMessage}<button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
             )}
             {errorCancel && (
-              <p className="banner banner--error" role="status">{errorCancel}</p>
+              <div className="banner banner--error" role="status">{errorCancel}<button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
             )}
             <div className="listado-clases__controls">
               <FilterForm
@@ -196,21 +197,27 @@ export default function ListadoClasesPage() {
               </div>
             ) : (
               <div className="listado-clases__cards">
-                {clases.map((clase) => (
-                  <ClaseCard
-                    key={clase.clase_id}
-                    clase={clase}
-                    onView={handleViewClass}
-                    onReserve={handleEditClass}
-                    onCancel={handleCancelClass}
-                    // onScanQR={handleScanQR}
-                    // viewScanLabel="Escanear QR"
-                    viewLabel="Ver detalle"
-                    reserveLabel="Modificar"
-                    onExtend={handleExtendClass}
+                {clases.map((clase) => {
+                  const classDateTime = new Date(`${clase.fecha}T${clase.horario_inicio}`)
+                  const isPasada = classDateTime < new Date()
 
-                  />
-                ))}
+                  return (
+                    <ClaseCard
+                      key={clase.clase_id}
+                      clase={clase}
+                      onView={handleViewClass}
+                      onReserve={handleEditClass}
+                      reserveDisabled={isPasada}
+                      onCancel={handleCancelClass}
+                      cancelDisabled={isPasada}
+                      // onScanQR={handleScanQR}
+                      // viewScanLabel="Escanear QR"
+                      viewLabel="Ver detalle"
+                      reserveLabel="Modificar"
+                      onExtend={handleExtendClass}
+                    />
+                  )
+                })}
               </div>
             )}
           </div>

@@ -144,9 +144,9 @@ export default function ActividadPage() {
           )}
 
           {requestError ? (
-            <p className="banner banner--error" role="alert">
+            <div className="banner banner--error" role="alert">
               {requestError}
-            </p>
+            <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
           ) : null}
 
           {successMessage ? (

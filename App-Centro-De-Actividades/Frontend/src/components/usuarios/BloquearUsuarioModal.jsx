@@ -26,9 +26,9 @@ export default function BloquearUsuarioModal({
         <h2 id="bloquear-usuario-title">Bloquear a {user.nombre_completo}</h2>
         
         {error ? (
-          <p className="banner banner--error" role="alert" style={{ marginBottom: '1rem' }}>
+          <div className="banner banner--error" role="alert" style={{ marginBottom: '1rem' }}>
             {error}
-          </p>
+          <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
         ) : null}
 
         <div className="bloquear-usuario-modal__body">

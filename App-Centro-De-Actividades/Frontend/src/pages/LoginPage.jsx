@@ -176,15 +176,15 @@ function LoginPage() {
 
         <div className="auth-form-shell">
           {successMessage ? (
-            <p className="banner banner--success" role="status">
+            <div className="banner banner--success" role="status">
               {successMessage}
-            </p>
+            <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
           ) : null}
 
           {requestError ? (
-            <p className="banner banner--error" role="alert">
+            <div className="banner banner--error" role="alert">
               {requestError}
-            </p>
+            <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
           ) : null}
 
           {pendingRoles.length > 0 ? (

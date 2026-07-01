@@ -57,9 +57,9 @@ function AuthenticatedLayout() {
       {flashMessage ? (
         <section className="shell-notice">
           <section className="dashboard-frame dashboard-frame--compact shell-notice__frame">
-            <p className="banner banner--success" role="status">
+            <div className="banner banner--success" role="status">
               {flashMessage}
-            </p>
+            <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
           </section>
         </section>
       ) : null}

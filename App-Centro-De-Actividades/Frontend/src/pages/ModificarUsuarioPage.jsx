@@ -242,9 +242,9 @@ function ModificarUsuarioPage() {
             </Link>
           </div>
 
-          <p className="banner banner--error" role="alert">
+          <div className="banner banner--error" role="alert">
             {generalError}
-          </p>
+          <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
         </section>
       </section>
     )
