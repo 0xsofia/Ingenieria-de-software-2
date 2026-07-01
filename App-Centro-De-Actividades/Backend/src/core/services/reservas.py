@@ -178,7 +178,8 @@ def iniciar_reserva_espontanea(clase_id):
     payment_url = _crear_checkout_mercadopago(pago=pago, reserva=reserva, clase=clase)
 
     if payment_url is None:
-        pago.estado = "error"
+        db.session.delete(pago)
+        db.session.delete(reserva)
         db.session.commit()
 
         return {
@@ -315,10 +316,10 @@ def iniciar_reserva_abonada(clase_id):
     payment_url = _crear_checkout_mercadopago(pago=pago, reserva=reservas[0], clase=clase_base)
 
     if payment_url is None:
-        pago.estado = "error"
+        db.session.delete(pago)
         for reserva in reservas:
-            reserva.estado = "pago_fallido"
-        abono.estado = "pago_fallido"
+            db.session.delete(reserva)
+        db.session.delete(abono)
         db.session.commit()
 
         return {
@@ -828,22 +829,23 @@ def procesar_retorno_pago(reserva_id, pago_status, payment_id=None, external_ref
             "reserva_id": reserva.reserva_id,
         }, 200
 
+    db.session.delete(pago)
+
     reservas_a_rechazar = _reservas_del_mismo_abono(reserva)
     for reserva_abono in reservas_a_rechazar:
-        reserva_abono.estado = "pago_fallido"
+        db.session.delete(reserva_abono)
 
     if reserva.abono_mensual_id is not None:
         abono = db.session.get(AbonoMensual, reserva.abono_mensual_id)
         if abono is not None:
-            abono.estado = "pago_fallido"
+            db.session.delete(abono)
 
-    pago.estado = "rechazado"
     db.session.commit()
 
     return {
         "status": "payment_failed",
         "message": "No se pudo realizar la inscripción por un error de pago.",
-        "reserva_id": reserva.reserva_id,
+        "reserva_id": None,
     }, 402
 
 
@@ -2094,10 +2096,10 @@ def renovar_abono_mensual(abono_mensual_id):
     payment_url = _crear_checkout_mercadopago(pago=pago, reserva=reservas[0], clase=clase_base_nueva)
 
     if payment_url is None:
-        pago.estado = "error"
+        db.session.delete(pago)
         for r in reservas:
-            r.estado = "pago_fallido"
-        nuevo_abono.estado = "pago_fallido"
+            db.session.delete(r)
+        db.session.delete(nuevo_abono)
         db.session.commit()
 
         return {
