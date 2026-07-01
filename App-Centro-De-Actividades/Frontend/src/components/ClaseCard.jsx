@@ -27,7 +27,7 @@ export default function ClaseCard({
           <h2 className="clase-card__title">{clase.actividad}</h2>
           <p className="clase-card__subtitle">{clase.tipo_clase} · {clase.nivel}</p>
         </div>
-        <span className="clase-card__badge">{clase.cupos} cupos</span>
+        <span className="clase-card__badge">{clase.cupos}/{Math.max(0, clase.cupos - (clase.cupos_ocupados || 0))} cupos</span>
       </div>
 
       <div className="clase-card__meta-grid">

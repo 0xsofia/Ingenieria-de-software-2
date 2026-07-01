@@ -118,6 +118,7 @@ export default function ListadoClasesPage() {
       setLoading(true)
       const result = await cancelarClase(clase.clase_id)
       setSuccessMessage(result?.message || 'La cancelación se realizó correctamente.')
+      setClases(prev => prev.filter(c => c.clase_id !== clase.clase_id))
       setError('')
       setErrorCancel('')
     } catch (err) {

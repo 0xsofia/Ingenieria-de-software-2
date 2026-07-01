@@ -339,7 +339,7 @@ def validar_payload_actualizar_clase(payload):
 
 def actualizar_clase(clase_id, payload):
     clase = Clase.query.get(clase_id)
-    if not clase:
+    if not clase or clase.is_eliminated:
         return {
             "status": "error",
             "message": "La clase no fue encontrada.",
@@ -560,7 +560,7 @@ def obtener_detalle_clase_con_socios(clase_id, dni=None):
     
     # Obtener la clase
     clase = Clase.query.get(clase_id)
-    if not clase:
+    if not clase or clase.is_eliminated:
         return None, 404
     
     estados_validos = ['confirmada', 'pendiente_pago', 'asistio']
@@ -628,7 +628,7 @@ def cancelar_clase(clase_id):
       y luego borra la clase.
     """
     clase = Clase.query.get(clase_id)
-    if not clase:
+    if not clase or clase.is_eliminated:
         return {"status": "error", "message": "La clase no fue encontrada."}, 404
 
     inicio_clase = datetime.combine(clase.fecha, clase.horario_inicio)
@@ -645,7 +645,7 @@ def cancelar_clase(clase_id):
     # Sin reservas: eliminar clase y devolver éxito
     if not reservas:
         try:
-            db.session.delete(clase)
+            clase.is_eliminated = True
             db.session.commit()
             return {"status": "success", "message": "La cancelación se realizó correctamente"}, 200
         except Exception:
