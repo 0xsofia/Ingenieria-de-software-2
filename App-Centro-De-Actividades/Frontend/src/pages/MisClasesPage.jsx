@@ -312,11 +312,13 @@ function handleRenovarAbono(abono) {
           <button type="button" className="banner__close" onClick={(e) => e.target.closest('.banner').style.display = 'none'}>×</button></div>
         ) : null}
 
-        {isLoading ? (
+ 
+        {
+        isLoading ? (
           <p className="dashboard-copy">Cargando reservas...</p>
         ) : (
           <div>
-            {ofertas.length > 0 ? (
+            {/* {ofertas.length > 0 ? (
               <div className="ofertas-list">
                 {ofertas.map((oferta) => {
                   const notificadoEn = oferta.notificado_en ? new Date(oferta.notificado_en) : null
@@ -347,7 +349,7 @@ function handleRenovarAbono(abono) {
                   )
                 })}
               </div>
-            ) : null}
+            ) : null} */}
 
             <div className="mis-clases-table-wrapper">
               <h2>Abonos Mensuales</h2>
