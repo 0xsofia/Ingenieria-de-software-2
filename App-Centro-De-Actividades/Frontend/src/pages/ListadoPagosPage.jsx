@@ -39,10 +39,10 @@ export default function ListadoPagosPage() {
           setPayments(result.pagos || [])
           setSubmittedFilters(INITIAL_PAYMENT_FILTERS)
         }
-      // } catch (requestError) {
-      //   if (!cancelled) {
-      //     setError(requestError?.data?.message || "No se encontraron pagos registrados.")
-      //   }
+      } catch (requestError) {
+        if (!cancelled) {
+          setError(requestError?.response?.data?.message || 'No se encontraron pagos registrados.')
+        }
       } finally {
         if (!cancelled) {
           setIsLoading(false)
@@ -59,6 +59,13 @@ export default function ListadoPagosPage() {
   }
 
   async function handleFilterSubmit(nextFilters) {
+    if (nextFilters.fecha_desde && nextFilters.fecha_hasta) {
+      if (nextFilters.fecha_desde > nextFilters.fecha_hasta) {
+        setError('La fecha desde no puede ser mayor a la fecha hasta')
+        return
+      }
+    }
+
     setIsLoading(true)
     setError('')
 
@@ -66,10 +73,9 @@ export default function ListadoPagosPage() {
       const result = await listarPagos(nextFilters)
       setPayments(result.pagos || [])
       setSubmittedFilters(nextFilters)
-    } 
-    // catch (requestError) {
-    //   setError(requestError?.data?.message || 'No se pudo filtrar el listado de pagos.')
-     finally {
+    } catch (requestError) {
+      setError(requestError?.response?.data?.message || 'No se pudo filtrar el listado de pagos.')
+    } finally {
       setIsLoading(false)
     }
   }
