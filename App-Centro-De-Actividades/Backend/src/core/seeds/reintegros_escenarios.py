@@ -18,7 +18,7 @@ from src.core.seeds.clases import get_seed_reference_datetime
 DEFAULT_PASSWORD = "123456."
 
 REINTEGROS_CLASS_TEMPLATES = {
-    "refund": {
+    "refund_1": {
         "actividad": "Basquet",
         "cancha": "Cancha Reintegro 1",
         "nivel": "Principiante",
@@ -29,7 +29,7 @@ REINTEGROS_CLASS_TEMPLATES = {
         "hora": 10,
         "minuto": 0,
     },
-    "no_refund": {
+    "no_refund_2": {
         "actividad": "Voley",
         "cancha": "Cancha Reintegro 2",
         "nivel": "Intermedio",
@@ -38,6 +38,28 @@ REINTEGROS_CLASS_TEMPLATES = {
         "precio": Decimal("5000.00"),
         "dias_despues": 1,
         "hora": 10,
+        "minuto": 0,
+    },
+    "refund_3": {
+        "actividad": "Basquet",
+        "cancha": "Cancha Reintegro 6",
+        "nivel": "Principiante",
+        "cupos": 10,
+        "profesor_dni": "12345678",
+        "precio": Decimal("5000.00"),
+        "dias_despues": 3,
+        "hora": 12,
+        "minuto": 0,
+    },
+    "no_refund_4": {
+        "actividad": "Voley",
+        "cancha": "Cancha Reintegro 7",
+        "nivel": "Intermedio",
+        "cupos": 10,
+        "profesor_dni": "87654321",
+        "precio": Decimal("5000.00"),
+        "dias_despues": 1,
+        "hora": 12,
         "minuto": 0,
     },
     "cancelled_1": {
@@ -109,7 +131,7 @@ def seed_reintegros_escenarios(seed_datetime=None):
             "nombre": "Reintegro",
             "apellido": "Escenario1",
             "target_reserva_id": 9101,
-            "target_clase": target_classes["refund"],
+            "target_clase": target_classes["refund_1"],
             "needs_sancion": False,
         },
         {
@@ -119,7 +141,7 @@ def seed_reintegros_escenarios(seed_datetime=None):
             "nombre": "Reintegro",
             "apellido": "Escenario2",
             "target_reserva_id": 9102,
-            "target_clase": target_classes["no_refund"],
+            "target_clase": target_classes["no_refund_2"],
             "needs_sancion": False,
         },
         {
@@ -129,7 +151,7 @@ def seed_reintegros_escenarios(seed_datetime=None):
             "nombre": "Reintegro",
             "apellido": "Escenario3",
             "target_reserva_id": 9103,
-            "target_clase": target_classes["refund"],
+            "target_clase": target_classes["refund_3"],
             "needs_sancion": True,
             "cancelled_base_id": 9200,
         },
@@ -140,7 +162,7 @@ def seed_reintegros_escenarios(seed_datetime=None):
             "nombre": "Reintegro",
             "apellido": "Escenario4",
             "target_reserva_id": 9104,
-            "target_clase": target_classes["no_refund"],
+            "target_clase": target_classes["no_refund_4"],
             "needs_sancion": True,
             "cancelled_base_id": 9300,
         },
@@ -285,8 +307,10 @@ def _ensure_reintegros_classes(seed_datetime=None):
         )
 
     return {
-        "refund": classes["refund"],
-        "no_refund": classes["no_refund"],
+        "refund_1": classes["refund_1"],
+        "no_refund_2": classes["no_refund_2"],
+        "refund_3": classes["refund_3"],
+        "no_refund_4": classes["no_refund_4"],
         "cancelled": [classes["cancelled_1"], classes["cancelled_2"], classes["cancelled_3"]],
     }
 
