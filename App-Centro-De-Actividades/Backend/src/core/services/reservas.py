@@ -1614,8 +1614,7 @@ def _abono_renovable_en_fecha(abono, hoy, fecha_limite):
         return False
 
     inicio_ventana = date(fecha_limite.year, fecha_limite.month, 1)
-    # return inicio_ventana <= hoy <= fecha_limite
-    return True
+    return inicio_ventana <= hoy <= fecha_limite
 
 
 def _reintegrar_mercadopago(pago, monto):
